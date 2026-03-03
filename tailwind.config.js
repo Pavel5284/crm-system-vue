@@ -4,7 +4,8 @@ export default {
     "./app/**/*.{vue,js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+      extend: {
+      },
   },
   plugins: [],
 }
