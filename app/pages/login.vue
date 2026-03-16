@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ID } from '~/utils/appwite'
+
 useSeoMeta({
   title: "Login | Kilka CRM",
 })
@@ -8,8 +10,47 @@ const passwordRef = ref('')
 const nameRef = ref('')
 
 const isLoadingStore = useIsLoadingStore()
+const authStore = useAuthStore()
 
 const router = useRouter()
+
+onMounted(async () => {
+  const {$appwrite} = useNuxtApp()
+  const account = $appwrite.account
+  try {
+    await account.get()
+    await router.push('/')
+  } catch (e) {}
+})
+
+const login = async () => {
+  isLoadingStore.set(true)
+  const {$appwrite} = useNuxtApp()
+  const account = $appwrite.account
+  await account.createEmailPasswordSession(emailRef.value, passwordRef.value)
+  const response = await account.get()
+  if (response){
+    authStore.set({
+     email: response.email,
+     name: response.name,
+     status: response.status,
+     isAuth: true,
+    })
+  }
+  emailRef.value = ''
+  passwordRef.value = ''
+  nameRef.value = ''
+
+  await router.push('/')
+  isLoadingStore.set(false)
+}
+
+const register = async () => {
+  const {$appwrite} = useNuxtApp()
+  const account = $appwrite.account
+  await account.create(ID.unique(), emailRef.value, passwordRef.value, nameRef.value)
+  await login()
+}
 
 </script>
 
@@ -22,8 +63,8 @@ const router = useRouter()
         <UiInput placeholder="Password" type="password" class="mb-3" v-model="passwordRef"/>
         <UiInput placeholder="Name" type="name" class="mb-3" v-model="nameRef"/>
         <div class="flex items-center justify-center gap-5">
-          <UiButton type="button">Login</UiButton>
-          <UiButton type="button">Register</UiButton>
+          <UiButton type="button" @click="login">Login</UiButton>
+          <UiButton type="button" @click="register">Register</UiButton>
         </div>
       </form>
     </div>

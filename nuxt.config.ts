@@ -18,7 +18,7 @@ export default defineNuxtConfig({
     }], 'nuxt-appwrite', '@pinia/nuxt'],
     appwrite: {
         endpoint: 'https://fra.cloud.appwrite.io/v1',
-        project: 'vue_crm',
+        project: '69a73a92003176567e1a',
         locale: 'en'
     },
     devtools: {enabled: false},
@@ -26,7 +26,7 @@ export default defineNuxtConfig({
         prefix: 'Ui',
     },
     pinia: {
-        storeDirs: ['./store/**']
+        storesDirs: ['./stores/**']
     },
     vite: {
         optimizeDeps: {
