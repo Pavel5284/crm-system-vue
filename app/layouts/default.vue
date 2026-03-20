@@ -30,7 +30,7 @@ const isAuth = computed(() => authStore.isAuth)
   <LayoutLoader v-if="isLoadingStore.isLoading"/>
   <section v-else :class="{grid: authStore.isAuth}" style="min-height: 100vh">
     <LayoutSidebar v-if="authStore.isAuth"/>
-    <div>
+    <div style="padding: 20px">
       <slot />
     </div>
   </section>
