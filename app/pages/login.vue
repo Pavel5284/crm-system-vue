@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ID } from '~/utils/appwite'
+import {ID} from '~/utils/appwite'
 
 useSeoMeta({
   title: "Login | Kilka CRM",
@@ -20,7 +20,8 @@ onMounted(async () => {
   try {
     await account.get()
     await router.push('/')
-  } catch (e) {}
+  } catch (e) {
+  }
 })
 
 const login = async () => {
@@ -29,12 +30,11 @@ const login = async () => {
   const account = $appwrite.account
   await account.createEmailPasswordSession(emailRef.value, passwordRef.value)
   const response = await account.get()
-  if (response){
+  if (response) {
     authStore.set({
-     email: response.email,
-     name: response.name,
-     status: response.status,
-     isAuth: true,
+      email: response.email,
+      name: response.name,
+      status: response.status,
     })
   }
   emailRef.value = ''
