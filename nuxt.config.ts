@@ -1,5 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
+    pages: true,
     srcDir: 'app',
     compatibilityDate: '2025-07-15',
     runtimeConfig: {
@@ -18,9 +19,12 @@ export default defineNuxtConfig({
         }
     }], 'nuxt-appwrite', '@pinia/nuxt', '@peterbud/nuxt-query'],
     appwrite: {
-        endpoint: 'https://fra.cloud.appwrite.io/v1',
-        project: process.env.NUXT_PUBLIC_APPWRITE_PROJECT_ID,
+        endpoint: process.env.NUXT_PUBLIC_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1',
+        project: process.env.NUXT_PUBLIC_APPWRITE_PROJECT_ID || '',
         locale: 'en'
+    },
+    routeRules: {
+        '/**': { ssr: false }
     },
     devtools: {enabled: false},
     shadcn: {
