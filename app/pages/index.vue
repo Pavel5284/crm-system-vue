@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import {useKanbanQuery} from '@/components/kanban/useKanbanQuery'
 import type {ICard, IColumn} from '~/components/kanban/kanban.types'
+import dayjs from 'dayjs'
+
 useSeoMeta({
   title: "Home | CRM System"
 })
@@ -13,6 +15,7 @@ const {data, isLoading, refetch} = useKanbanQuery()
 onMounted(() => {
   refetch()
 })
+console.log(data, "data")
 </script>
 
 <template>
@@ -23,17 +26,25 @@ onMounted(() => {
   <div v-else>
     <div class="grid grid-cols-5 gap-16">
       <div v-for="(column, index) in data"
-      :key="column.id"
+           :key="column.id"
       >
         <div class="rounded bg-slate-700 py-1 px-5 mb-2 text-center">
           {{ column.name }}
         </div>
+
+        <UiCard v-for="card in column.items"
+                :key="card.id"
+                class="mb-3"
+                draggable="true"
+        >
+          <UiCardHeader role="button">{{card.name}}</UiCardHeader>
+          <UiCardDescription>
+            {{convertCurrency(card.price)}}
+          </UiCardDescription>
+          <UiCardContent>Компания: {{card.companyName}}</UiCardContent>
+          <UiCardFooter>{{dayjs(card.$createdAt).format('DD MMMM YYYY')}}</UiCardFooter>
+        </UiCard>
       </div>
-      <UiCard class="mb-3" draggable="true">
-        <UiCardHeader role="button">name card</UiCardHeader>
-        <UiCardContent>Компания</UiCardContent>
-        <UiCardFooter>Date</UiCardFooter>
-      </UiCard>
     </div>
   </div>
 </template>
