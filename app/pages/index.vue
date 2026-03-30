@@ -37,11 +37,15 @@ console.log(data, "data")
                 class="mb-3"
                 draggable="true"
         >
-          <UiCardHeader role="button">{{card.name}}</UiCardHeader>
-          <UiCardDescription>
+          <UiCardHeader role="button">
+            <UiCardTitle>
+              {{card.name}}
+            </UiCardTitle>
+          <UiCardDescription class="mt-2 block">
             {{convertCurrency(card.price)}}
           </UiCardDescription>
-          <UiCardContent>Компания: {{card.companyName}}</UiCardContent>
+          </UiCardHeader>
+          <UiCardContent class="text-xs">Компания: {{card.companyName}}</UiCardContent>
           <UiCardFooter>{{dayjs(card.$createdAt).format('DD MMMM YYYY')}}</UiCardFooter>
         </UiCard>
       </div>
