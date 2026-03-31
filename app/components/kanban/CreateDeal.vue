@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import type {IDeal} from "~/types/deals.types";
+import {getDb, ID} from "~/utils/appwite"
+import {useDbId, COLLECTION_DEALS} from "~/app.constants"
+import {toRef} from "vue"
 
 const isOpenForm = ref<boolean>(false);
+const DB_ID = useDbId()
+
+const props = defineProps<{
+  status: string
+  refetch: () => void
+}>()
 
 interface IDealFormState extends Pick<IDeal, 'name' | "price"> {
   customer: {
@@ -11,19 +20,9 @@ interface IDealFormState extends Pick<IDeal, 'name' | "price"> {
   status: string;
 }
 
-const props = defineProps({
-  status: {
-    type: String,
-    default: '',
-  },
-  refetch: {
-    type: Function,
-  }
-})
-
 const {handleSubmit, defineField, handleReset} = useForm<IDealFormState>({
   initialValues: {
-    status: props.status,
+    status: toRef(props, 'status').value,
   }
 })
 
@@ -34,9 +33,15 @@ const [customerName, customerNamelAttrs] = defineField('customer.name')
 
 const {mutate, isPending} = useMutation({
   mutationKey: ['create a new deal'],
-  mutationFn: (data: IDealFormState) => DB.createDocument(DB_ID, COLLECTION_DEALS, data),
+  mutationFn: async (data: IDealFormState) => {
+    const DB = getDb()
+    return DB.createDocument(DB_ID, COLLECTION_DEALS, ID.unique(), {
+      ...data,
+      price: Number(data.price)
+    })
+  },
   onSuccess() {
-    props.refetch && props.refetch()
+    props.refetch()
     handleReset()
   }
 })
@@ -53,13 +58,13 @@ const onSubmit = handleSubmit(values => {
     >
       <Icon
           v-if="isOpenForm"
-          name="up"
+          name="line-md:arrow-up"
           class="fade-in-100 fade-out-0"
           size="35"
       />
       <Icon
           v-else
-          name="+"
+          name="line-md:plus"
           class="fade-in-100 fade-out-0"
           size="35"
       />
@@ -103,32 +108,47 @@ const onSubmit = handleSubmit(values => {
 
 <style scoped>
 .input {
-  @apply border-[#161c26] mb-2 placeholder:text-[#748092]
-  focus:border-border transition-colors;
+  border: 1px solid #161c26;
+  margin-bottom: 0.5rem;
+}
+.input::placeholder {
+  color: #748092;
+}
+.input:focus {
+  border-color: #a252c8;
+  transition: border-color 0.2s;
 }
 
 .btn {
-  @apply text-xs border py-1 px-2 rounded border-[#161c26]
-  hover:border-[#482c65] transition-colors text-[#aebed5]
-  hover:text-white;
+  font-size: 0.75rem;
+  border: 1px solid #161c26;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  color: #aebed5;
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn:hover {
+  border-color: #482c65;
+  color: white;
 }
 
 .form {
-  @apply mb-3 block;
+  margin-bottom: 0.75rem;
+  display: block;
   animation: show 0.3s ease-in-out;
 }
 
 @keyframes show {
   from {
-    @apply border-[#a252c83d];
+    border-color: #a252c83d;
     transform: translateY(-35px);
     opacity: 0.4;
   }
   90% {
-    @apply border-[#a252c83d];
+    border-color: #a252c83d;
   }
   to {
-    @apply border-transparent;
+    border-color: transparent;
     transform: translateY(0);
     opacity: 1;
   }

@@ -31,7 +31,7 @@ console.log(data, "data")
         <div class="rounded bg-slate-700 py-1 px-5 mb-2 text-center">
           {{ column.name }}
         </div>
-<KanbanCreateDeal :refetch="refetch"  :status="column.id" />
+        <KanbanCreateDeal :refetch="refetch" :status="column.id"/>
         <UiCard v-for="card in column.items"
                 :key="card.id"
                 class="mb-3"
@@ -39,14 +39,14 @@ console.log(data, "data")
         >
           <UiCardHeader role="button">
             <UiCardTitle>
-              {{card.name}}
+              {{ card.name }}
             </UiCardTitle>
-          <UiCardDescription class="mt-2 block">
-            {{convertCurrency(card.price)}}
-          </UiCardDescription>
+            <UiCardDescription class="mt-2 block">
+              {{ convertCurrency(card.price) }}
+            </UiCardDescription>
           </UiCardHeader>
-          <UiCardContent class="text-xs">Компания: {{card.companyName}}</UiCardContent>
-          <UiCardFooter>{{dayjs(card.$createdAt).format('DD MMMM YYYY')}}</UiCardFooter>
+          <UiCardContent class="text-xs">Компания: {{ card.companyName }}</UiCardContent>
+          <UiCardFooter>{{ dayjs(card.$createdAt).format('DD MMMM YYYY') }}</UiCardFooter>
         </UiCard>
       </div>
     </div>
