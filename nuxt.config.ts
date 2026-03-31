@@ -17,7 +17,7 @@ export default defineNuxtConfig({
                 ital: [300],
             }
         }
-    }], 'nuxt-appwrite', '@pinia/nuxt', '@peterbud/nuxt-query'],
+    }], 'nuxt-appwrite', '@pinia/nuxt', '@peterbud/nuxt-query', '@vee-validate/nuxt'],
     appwrite: {
         endpoint: process.env.NUXT_PUBLIC_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1',
         project: process.env.NUXT_PUBLIC_APPWRITE_PROJECT_ID || '',
@@ -27,6 +27,10 @@ export default defineNuxtConfig({
         '/**': { ssr: false }
     },
     devtools: {enabled: false},
+    veeValidate: {
+        // disable or enable auto imports
+        autoImports: true,
+      },
     shadcn: {
         prefix: 'Ui',
     },
