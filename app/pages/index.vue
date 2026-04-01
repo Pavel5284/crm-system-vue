@@ -3,8 +3,9 @@ import {useKanbanQuery} from '@/components/kanban/useKanbanQuery'
 import type {ICard, IColumn} from '~/components/kanban/kanban.types'
 import dayjs from 'dayjs'
 import type {EnumStatus} from "~/types/deals.types"
-import { COLLECTION_DEALS, useDbId} from "~/app.constants"
+import {COLLECTION_DEALS, useDbId} from "~/app.constants"
 import {getDb} from "~/utils/appwite"
+import {generateColumnStyle} from "@/components/kanban/generate-gradient"
 
 useSeoMeta({
   title: "Home | CRM System"
@@ -26,11 +27,12 @@ type TypeMutationVariables = {
 const DB_ID = useDbId()
 const {mutate} = useMutation({
   mutationKey: ['move card'],
-  mutationFn: ({docId, status}: TypeMutationVariables) =>{
-  const DB = getDb()
-  return DB.updateDocument(DB_ID, COLLECTION_DEALS, docId, {
-    status
-  })},
+  mutationFn: ({docId, status}: TypeMutationVariables) => {
+    const DB = getDb()
+    return DB.updateDocument(DB_ID, COLLECTION_DEALS, docId, {
+      status
+    })
+  },
   onSuccess: () => {
     refetch()
   }
@@ -39,7 +41,7 @@ const {mutate} = useMutation({
 function onDragStart(event: DragEvent, card: ICard, column: IColumn) {
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = 'move'
-    event.dataTransfer.setData('text/plain', JSON.stringify({ card, columnId: column.id }))
+    event.dataTransfer.setData('text/plain', JSON.stringify({card, columnId: column.id}))
   }
   dragCardRef.value = card
   sourceColumnRef.value = column
@@ -74,21 +76,24 @@ function onCardDragStart(event: DragEvent, card: ICard, column: IColumn) {
   <div v-if="isLoading">Loading...</div>
   <div v-else>
     <div class="grid grid-cols-5 gap-16">
-      <div v-for="column in data"
+      <div v-for="(column, index) in data"
            :key="column.id"
            @dragover="onDragOver"
            @drop="onDrop($event, column)"
+           class="min-h-screen"
       >
-        <div class="rounded bg-slate-700 py-1 px-5 mb-2 text-center">
+        <div class="rounded bg-slate-700 py-1 px-5 mb-2 text-center"
+             :style="generateColumnStyle(index, data?.length)"
+        >
           {{ column.name }}
         </div>
         <KanbanCreateDeal :refetch="refetch" :status="column.id"/>
-<UiCard v-for="card in column.items"
+        <UiCard v-for="card in column.items"
                 :key="card.id"
                 class="mb-3"
                 draggable="true"
                 @dragstart="onCardDragStart($event, card, column)"
->
+        >
           <UiCardHeader role="button">
             <UiCardTitle>
               {{ card.name }}
