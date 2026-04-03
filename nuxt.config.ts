@@ -10,7 +10,7 @@ export default defineNuxtConfig({
             appwriteDatabaseId: process.env.NUXT_PUBLIC_APPWRITE_DATABASE_ID || ''
         }
     },
-    modules: ['@nuxtjs/tailwindcss', 'shadcn-nuxt', '@nuxt/image', '@nuxt/icon', ['@nuxtjs/google-fonts', {
+    modules: ['@nuxt/ui', '@nuxtjs/tailwindcss', 'shadcn-nuxt', '@nuxt/image', '@nuxt/icon', ['@nuxtjs/google-fonts', {
         families: {
             Lato: {
                 wght: [300, 400, 700],

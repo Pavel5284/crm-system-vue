@@ -15,6 +15,7 @@ const dragCardRef = ref<ICard | null>(null)
 const sourceColumnRef = ref<IColumn | null>(null)
 
 const {data, isLoading, refetch} = useKanbanQuery()
+const store = useDealSlideStore()
 
 onMounted(() => {
   refetch()
@@ -94,7 +95,7 @@ function onCardDragStart(event: DragEvent, card: ICard, column: IColumn) {
                 draggable="true"
                 @dragstart="onCardDragStart($event, card, column)"
         >
-          <UiCardHeader role="button">
+          <UiCardHeader role="button" @click="store.set(card)">
             <UiCardTitle>
               {{ card.name }}
             </UiCardTitle>
@@ -106,6 +107,7 @@ function onCardDragStart(event: DragEvent, card: ICard, column: IColumn) {
           <UiCardFooter>{{ dayjs(card.$createdAt).format('DD MMMM YYYY') }}</UiCardFooter>
         </UiCard>
       </div>
+      <KanbanSlideover/>
     </div>
   </div>
 </template>
