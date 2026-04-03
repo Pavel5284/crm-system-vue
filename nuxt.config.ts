@@ -10,7 +10,8 @@ export default defineNuxtConfig({
             appwriteDatabaseId: process.env.NUXT_PUBLIC_APPWRITE_DATABASE_ID || ''
         }
     },
-    modules: ['@nuxt/ui', '@nuxtjs/tailwindcss', 'shadcn-nuxt', '@nuxt/image', '@nuxt/icon', ['@nuxtjs/google-fonts', {
+    css: ['~/assets/css/tailwind.css'],
+    modules: ['@nuxt/ui', '@nuxt/image', '@nuxt/icon', ['@nuxtjs/google-fonts', {
         families: {
             Lato: {
                 wght: [300, 400, 700],
@@ -28,11 +29,7 @@ export default defineNuxtConfig({
     },
     devtools: {enabled: false},
     veeValidate: {
-        // disable or enable auto imports
         autoImports: true,
-      },
-    shadcn: {
-        prefix: 'Ui',
     },
     pinia: {
         storesDirs: ['./stores/**']
@@ -43,29 +40,12 @@ export default defineNuxtConfig({
         }
     },
     nuxtQuery: {
-        /**
-         * Specify which Vue Query composables to auto-import
-         * Default: `false`, set to `true` to auto-import all Vue Query composables
-         */
         autoImports: ['useQuery', 'useMutation'],
-
-        // Enable/disable Nuxt DevTools integration (default: true)
         devtools: true,
-
-        /**
-         * These are the same options as the QueryClient
-         * from @tanstack/vue-query, which will be passed
-         * to the QueryClient constructor
-         * More details: https://tanstack.com/query/v5/docs/reference/QueryClient
-         */
-
         queryClientOptions: {
             defaultOptions: {
                 queries: {
-                    // for example disable refetching on window focus
                     refetchOnWindowFocus: false,
-
-                    // or change the default refetch interval
                     refetchInterval: 5000,
                 },
             },
