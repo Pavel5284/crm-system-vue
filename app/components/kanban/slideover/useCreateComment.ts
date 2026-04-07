@@ -4,6 +4,7 @@ import {ID} from '~/utils/appwite'
 export function useCreateComment ({refetch}: {refetch: ()=>void}) {
     const DB_ID = useDbId()
     const store = useDealSlideStore()
+    const authStore = useAuthStore()
     const commentRef = ref<string>('')
 
     const {mutate} = useMutation({
@@ -14,6 +15,8 @@ export function useCreateComment ({refetch}: {refetch: ()=>void}) {
             return DB.createDocument(DB_ID, COLLECTION_COMMENTS, ID.unique(), {
                 text: commentRef.value,
                 deal: store.card?.id,
+                userName: authStore.user.name,
+                userEmail: authStore.user.email,
             })
         },
         onSuccess: ()=>{
