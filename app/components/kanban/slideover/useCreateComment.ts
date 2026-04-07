@@ -1,25 +1,23 @@
-import {COLLECTION_DEALS, COLLECTION_CUSTOMERS, useDbId, COLLECTION_COMMENTS} from '~/app.constants'
-import type {IDeal} from '~/types/deals.types'
-import type {IColumn} from './kanban.types'
-import {KANBAN_DATA} from './kanban.data'
+import {COLLECTION_COMMENTS, useDbId} from '~/app.constants'
+import {ID} from '~/utils/appwite'
 
 export function useCreateComment ({refetch}: {refetch: ()=>void}) {
     const DB_ID = useDbId()
     const store = useDealSlideStore()
-    const commentRef = ref<string>()
+    const commentRef = ref<string>('')
 
     const {mutate} = useMutation({
-        mutationKey: ['add comments', commentRef.value],
+        mutationKey: ['add comments'],
         mutationFn: async () => {
             const { getDb } = await import('~/utils/appwite')
             const DB = getDb()
-            DB.createDocument(DB_ID, COLLECTION_COMMENTS, {
+            return DB.createDocument(DB_ID, COLLECTION_COMMENTS, ID.unique(), {
                 text: commentRef.value,
-                    deal: store.card?.id,
-            }
-        }),
+                deal: store.card?.id,
+            })
+        },
         onSuccess: ()=>{
-                refetch()
+            refetch()
             commentRef.value = ''
         }
     })

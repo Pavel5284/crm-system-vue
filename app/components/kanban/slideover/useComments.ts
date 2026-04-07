@@ -1,7 +1,7 @@
 import {COLLECTION_DEALS, useDbId} from '~/app.constants'
 
 
-export function useCommentsByDeal() {
+export function useComments() {
     const DB_ID = useDbId()
     const store = useDealSlideStore()
     const cardId = store.card?.id || ''
