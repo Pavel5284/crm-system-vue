@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import type { IDeal } from "~/types/deals.types";
 import {useComments} from "./useComments";
 import {useCreateComment} from "./useCreateComment";
 import dayjs from 'dayjs';
@@ -7,22 +6,25 @@ import dayjs from 'dayjs';
 const {data, refetch, isLoading} = useComments()
 const {commentRef, writeComment} = useCreateComment({refetch})
 
-const card = data as unknown as IDeal
 
 </script>
 
 <template>
-  <div>
+  <div class="flex gap-2">
     <UiInput
         placeholder="Оставить комментарий"
         v-model="commentRef"
         @keyup.enter="writeComment"
+        class="flex-1"
     />
+    <UiButton @click="writeComment" size="sm" class="px-2">
+      <Icon name="heroicons:arrow-right" size="18"/>
+    </UiButton>
   </div>
   <UiSkeleton v-if="isLoading" class="w-full h-[76px] rounded mt-5"/>
-  <div v-else-if="card">
+  <div v-else-if="data?.length">
     <div
-        v-for="comment in card?.comments"
+        v-for="comment in data"
         :key="comment.$id"
         class="flex items-start mt-5"
     >

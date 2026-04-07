@@ -1,5 +1,5 @@
-import {COLLECTION_DEALS, useDbId} from '~/app.constants'
-
+import {COLLECTION_COMMENTS, useDbId} from '~/app.constants'
+import {Query} from '~/utils/appwite'
 
 export function useComments() {
     const DB_ID = useDbId()
@@ -7,11 +7,14 @@ export function useComments() {
     const cardId = store.card?.id || ''
 
     return useQuery({
-        queryKey: ['deal', cardId],
+        queryKey: ['comments', cardId],
         queryFn: async () => {
             const { getDb } = await import('~/utils/appwite')
             const DB = getDb()
-            return DB.getDocument(DB_ID, COLLECTION_DEALS, cardId)
+            const response = await DB.listDocuments(DB_ID, COLLECTION_COMMENTS, [
+                Query.equal('deal', cardId),
+            ])
+            return response.documents
         },
     })
 }

@@ -42,4 +42,4 @@ export const getStorage = () => {
   return storage
 }
 
-export { ID } from 'appwrite'
+export { ID, Query } from 'appwrite'
