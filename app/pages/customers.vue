@@ -1,16 +1,22 @@
 <script lang="ts" setup>
 import type { ICustomer } from "~/types/deals.types";
+import { COLLECTION_CUSTOMERS, useDbId } from "~/app.constants"
+import { getDb } from "~/utils/appwite"
 
 useSeoMeta({
   title: 'Customers | CRM System'
 })
 
+const DB_ID = useDbId()
+const DB = getDb()
+
 const {data, isLoading} = useQuery({
   queryKey: ['customers'],
-  queryFn: () => DB.listDocuments(DB_ID, COLLECTION_CUSTOMERS)
+  queryFn: () => DB.listDocuments(DB_ID, COLLECTION_CUSTOMERS),
+  refetchInterval: false
 })
 
-const customers = (data?.value?.documents as unknown as ICustomer[])
+const customers = computed(() => (data.value?.documents as unknown as ICustomer[]) ?? [])
 </script>
 
 

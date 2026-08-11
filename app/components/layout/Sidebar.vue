@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { logoutApi } from '~/utils/auth.api'
+
 const isLoadingStore = useIsLoadingStore()
 const authStore = useAuthStore()
 
@@ -6,12 +8,14 @@ const router = useRouter()
 
 const logout = async () => {
   isLoadingStore.set(true)
-  const {$appwrite} = useNuxtApp()
-  const account = $appwrite.account
-  await account.deleteSession('current')
-  authStore.clear()
-  await router.push('/login')
-  isLoadingStore.set(false)
+  try {
+    await logoutApi()
+  } catch (e) {
+  } finally {
+    authStore.clear()
+    await router.push('/login')
+    isLoadingStore.set(false)
+  }
 }
 </script>
 

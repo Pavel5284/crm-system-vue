@@ -1,16 +1,18 @@
 <script setup lang="ts">
+import { clearTokens } from '~/utils/api'
+import { getMeApi } from '~/utils/auth.api'
+
 const isLoadingStore = useIsLoadingStore()
 const authStore = useAuthStore()
 
 const router = useRouter()
 
 const checkAuth = async () => {
-  const {$appwrite} = useNuxtApp()
-  const account = $appwrite.account
   try{
-    const user = await account.get()
-    if (user) authStore.set({email: user.email, name: user.name, status: user.status})
+    const user = await getMeApi()
+    if (user) authStore.set({email: user.email, name: user.name, status: true})
   } catch (error) {
+    clearTokens()
     await router.push('/login')
   } finally {
     isLoadingStore.set(false)
@@ -27,13 +29,15 @@ const isAuth = computed(() => authStore.isAuth)
 
 
 <template>
-  <LayoutLoader v-if="isLoadingStore.isLoading"/>
-  <section v-else :class="{grid: authStore.isAuth}" style="min-height: 100vh">
-    <LayoutSidebar v-if="authStore.isAuth"/>
-    <div style="padding: 20px">
-      <slot />
-    </div>
-  </section>
+  <UApp>
+    <LayoutLoader v-if="isLoadingStore.isLoading"/>
+    <section v-else :class="{grid: authStore.isAuth}" style="min-height: 100vh">
+      <LayoutSidebar v-if="authStore.isAuth"/>
+      <div style="padding: 20px">
+        <slot />
+      </div>
+    </section>
+  </UApp>
 </template>
 
 <style scoped>

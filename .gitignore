@@ -9,6 +9,10 @@ dist
 # Node dependencies
 node_modules
 
+# Backend
+/back
+/backProd
+
 # Logs
 logs
 *.log

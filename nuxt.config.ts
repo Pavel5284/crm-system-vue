@@ -7,10 +7,23 @@ export default defineNuxtConfig({
         public: {
             appwriteEndpoint: process.env.NUXT_PUBLIC_APPWRITE_ENDPOINT || '',
             appwriteProjectId: process.env.NUXT_PUBLIC_APPWRITE_PROJECT_ID || '',
-            appwriteDatabaseId: process.env.NUXT_PUBLIC_APPWRITE_DATABASE_ID || ''
+            appwriteDatabaseId: process.env.NUXT_PUBLIC_APPWRITE_DATABASE_ID || '',
+            apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || '/api'
         }
     },
-    css: ['~/assets/css/tailwind.css'],
+    nitro: {
+        devProxy: {
+            '/api/': {
+                target: 'http://localhost:3001/api',
+                changeOrigin: true,
+            },
+        },
+    },
+css: ['~/assets/css/tailwind.css'],
+    icon: {
+        serverBundle: 'remote',
+        localApiEndpoint: '/_nuxt_icon',
+    },
     modules: ['@nuxt/ui', '@nuxt/image', '@nuxt/icon', ['@nuxtjs/google-fonts', {
         families: {
             Lato: {
@@ -34,6 +47,7 @@ export default defineNuxtConfig({
     pinia: {
         storesDirs: ['./stores/**']
     },
+
     vite: {
         optimizeDeps: {
             include: ['json-bigint']

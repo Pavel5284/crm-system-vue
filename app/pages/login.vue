@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import {ID} from '~/utils/appwite'
+import { getApiErrorMessage } from '~/utils/api'
+import { getMeApi, loginApi, registerApi } from '~/utils/auth.api'
 
 useSeoMeta({
   title: "Login | Kilka CRM",
@@ -8,6 +9,7 @@ useSeoMeta({
 const emailRef = ref('')
 const passwordRef = ref('')
 const nameRef = ref('')
+const errorRef = ref('')
 
 const isLoadingStore = useIsLoadingStore()
 const authStore = useAuthStore()
@@ -15,42 +17,43 @@ const authStore = useAuthStore()
 const router = useRouter()
 
 onMounted(async () => {
-  const {$appwrite} = useNuxtApp()
-  const account = $appwrite.account
   try {
-    await account.get()
-    await router.push('/')
+    const user = await getMeApi()
+    if (user) {
+      authStore.set({ email: user.email, name: user.name, status: true })
+      await router.push('/')
+    }
   } catch (e) {
   }
 })
 
-const login = async () => {
+const authorize = async (action: () => Promise<void>) => {
+  errorRef.value = ''
   isLoadingStore.set(true)
-  const {$appwrite} = useNuxtApp()
-  const account = $appwrite.account
-  await account.createEmailPasswordSession(emailRef.value, passwordRef.value)
-  const response = await account.get()
-  if (response) {
-    authStore.set({
-      email: response.email,
-      name: response.name,
-      status: response.status,
-    })
+  try {
+    await action()
+    emailRef.value = ''
+    passwordRef.value = ''
+    nameRef.value = ''
+    await router.push('/')
+  } catch (e) {
+    errorRef.value = getApiErrorMessage(e)
+  } finally {
+    isLoadingStore.set(false)
   }
-  emailRef.value = ''
-  passwordRef.value = ''
-  nameRef.value = ''
-
-  await router.push('/')
-  isLoadingStore.set(false)
 }
 
-const register = async () => {
-  const {$appwrite} = useNuxtApp()
-  const account = $appwrite.account
-  await account.create(ID.unique(), emailRef.value, passwordRef.value, nameRef.value)
-  await login()
-}
+const login = () => authorize(async () => {
+  await loginApi(emailRef.value, passwordRef.value)
+  const user = await getMeApi()
+  authStore.set({ email: user.email, name: user.name, status: true })
+})
+
+const register = () => authorize(async () => {
+  await registerApi(emailRef.value, passwordRef.value, nameRef.value)
+  const user = await getMeApi()
+  authStore.set({ email: user.email, name: user.name, status: true })
+})
 
 </script>
 
@@ -58,6 +61,7 @@ const register = async () => {
   <div class="flex items-center justify-center min-h-screen w-full">
     <div class="rounded bg-sidebar w-1/4 p-5">
       <h1 class="text-2xl font-bold text-center mb-5">Login</h1>
+      <p v-if="errorRef" class="text-red-500 text-sm text-center mb-3">{{ errorRef }}</p>
       <form>
         <UiInput placeholder="Email" type="email" class="mb-3" v-model="emailRef"/>
         <UiInput placeholder="Password" type="password" class="mb-3" v-model="passwordRef"/>
