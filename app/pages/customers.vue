@@ -1,22 +1,20 @@
 <script lang="ts" setup>
-import type { ICustomer } from "~/types/deals.types";
-import { COLLECTION_CUSTOMERS, useDbId } from "~/app.constants"
-import { getDb } from "~/utils/appwite"
+import type { ICustomer } from "~/types/deals.types"
+import { getCustomersApi } from "~/utils/crm.api"
 
 useSeoMeta({
   title: 'Customers | CRM System'
 })
 
-const DB_ID = useDbId()
-const DB = getDb()
+const store = useCustomerSlideStore()
 
-const {data, isLoading} = useQuery({
+const {data, isLoading, refetch} = useQuery({
   queryKey: ['customers'],
-  queryFn: () => DB.listDocuments(DB_ID, COLLECTION_CUSTOMERS),
+  queryFn: () => getCustomersApi(),
   refetchInterval: false
 })
 
-const customers = computed(() => (data.value?.documents as unknown as ICustomer[]) ?? [])
+const customers = computed(() => (data.value as ICustomer[]) ?? [])
 </script>
 
 
@@ -36,25 +34,34 @@ const customers = computed(() => (data.value?.documents as unknown as ICustomer[
       <UiTableBody>
         <UiTableRow
         v-for="customer in customers"
-        :key="customer.$id"
+        :key="customer.id"
+        class="cursor-pointer hover:bg-white/5 transition-colors"
+        @click="store.set(customer)"
         >
           <UiTableCell>
-            <NuxtLink :href="`/customers/edit/${customer.$id}`">
-              <NuxtImg
-              :src="customer.avatar_url"
-              :alt="customer.name"
-              width="50"
-              height="50"
-              class="rounded-full"
-              />
-            </NuxtLink>
+            <img
+                v-if="customer.avatarUrl"
+                :src="customer.avatarUrl"
+                :alt="customer.name"
+                width="50"
+                height="50"
+                class="w-[50px] h-[50px] rounded-full object-cover shrink-0"
+            />
+            <div
+                v-else
+                class="w-[50px] h-[50px] rounded-full bg-[#1a2332] border border-[#161c26] flex items-center justify-center shrink-0"
+            >
+              <Icon name="lucide:user" size="22" class="text-slate-500" />
+            </div>
           </UiTableCell>
           <UiTableCell class="font-medium">{{customer.name}}</UiTableCell>
           <UiTableCell class="font-medium">{{customer.email}}</UiTableCell>
-          <UiTableCell class="font-medium">{{customer.from_source}}</UiTableCell>
+          <UiTableCell class="font-medium">{{customer.fromSource}}</UiTableCell>
 
         </UiTableRow>
       </UiTableBody>
     </UiTable>
+
+    <CustomersSlideover :refetch="refetch"/>
   </div>
 </template>

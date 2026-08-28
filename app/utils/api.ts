@@ -7,6 +7,7 @@ interface ApiFetchOptions extends Omit<RequestInit, 'headers' | 'body'> {
     headers?: Record<string, string>
     body?: unknown
     auth?: boolean
+    query?: Record<string, string | number>
 }
 
 const ACCESS_TOKEN_KEY = 'kilka_access_token'

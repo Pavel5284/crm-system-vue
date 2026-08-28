@@ -3,8 +3,7 @@ import {useKanbanQuery} from '@/components/kanban/useKanbanQuery'
 import type {ICard, IColumn} from '~/components/kanban/kanban.types'
 import dayjs from 'dayjs'
 import type {EnumStatus} from "~/types/deals.types"
-import {COLLECTION_DEALS, useDbId} from "~/app.constants"
-import {getDb} from "~/utils/appwite"
+import {updateDealStatusApi} from "~/utils/crm.api"
 import {generateColumnStyle} from "@/components/kanban/generate-gradient"
 
 useSeoMeta({
@@ -25,15 +24,10 @@ type TypeMutationVariables = {
   docId: string
   status?: EnumStatus
 }
-const DB_ID = useDbId()
 const {mutate} = useMutation({
   mutationKey: ['move card'],
-  mutationFn: ({docId, status}: TypeMutationVariables) => {
-    const DB = getDb()
-    return DB.updateDocument(DB_ID, COLLECTION_DEALS, docId, {
-      status
-    })
-  },
+  mutationFn: ({docId, status}: TypeMutationVariables) =>
+      updateDealStatusApi(docId, status as EnumStatus),
   onSuccess: () => {
     refetch()
   }
@@ -104,7 +98,7 @@ function onCardDragStart(event: DragEvent, card: ICard, column: IColumn) {
             </UiCardDescription>
           </UiCardHeader>
           <UiCardContent class="text-xs">Компания: {{ card.companyName }}</UiCardContent>
-          <UiCardFooter>{{ dayjs(card.$createdAt).format('DD MMMM YYYY') }}</UiCardFooter>
+          <UiCardFooter>{{ dayjs(card.createdAt).format('DD MMMM YYYY') }}</UiCardFooter>
         </UiCard>
       </div>
       <KanbanSlideover/>

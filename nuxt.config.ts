@@ -5,9 +5,6 @@ export default defineNuxtConfig({
     compatibilityDate: '2025-07-15',
     runtimeConfig: {
         public: {
-            appwriteEndpoint: process.env.NUXT_PUBLIC_APPWRITE_ENDPOINT || '',
-            appwriteProjectId: process.env.NUXT_PUBLIC_APPWRITE_PROJECT_ID || '',
-            appwriteDatabaseId: process.env.NUXT_PUBLIC_APPWRITE_DATABASE_ID || '',
             apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || '/api'
         }
     },
@@ -31,12 +28,7 @@ css: ['~/assets/css/tailwind.css'],
                 ital: [300],
             }
         }
-    }], 'nuxt-appwrite', '@pinia/nuxt', '@peterbud/nuxt-query', '@vee-validate/nuxt'],
-    appwrite: {
-        endpoint: process.env.NUXT_PUBLIC_APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1',
-        project: process.env.NUXT_PUBLIC_APPWRITE_PROJECT_ID || '',
-        locale: 'en'
-    },
+    }], '@pinia/nuxt', '@peterbud/nuxt-query', '@vee-validate/nuxt'],
     routeRules: {
         '/**': { ssr: false }
     },

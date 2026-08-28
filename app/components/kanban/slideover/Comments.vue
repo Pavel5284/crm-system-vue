@@ -26,7 +26,7 @@ const {deleteComment} = useDeleteComment({refetch})
   <div v-else-if="data?.length">
     <div
         v-for="comment in data"
-        :key="comment.$id"
+        :key="comment.id"
         class="flex items-start mt-5"
     >
       <Icon name="line-md:comment" class="mr-3 mt-1" size="20"/>
@@ -34,13 +34,13 @@ const {deleteComment} = useDeleteComment({refetch})
         <div class="mb-2 text-sm flex items-center justify-between">
           <div>
             <span class="font-medium">{{ comment.userName || comment.userEmail }}</span>
-            <span class="text-xs text-gray-400 ml-2">{{dayjs(comment.$createdAt).format('YYYY-MM-DD HH:mm:ss.SSS')}}</span>
+            <span class="text-xs text-gray-400 ml-2">{{dayjs(comment.createdAt).format('YYYY-MM-DD HH:mm:ss.SSS')}}</span>
           </div>
           <Icon
               name="heroicons:x-mark"
               size="16"
               class="cursor-pointer hover:opacity-70"
-              @click="deleteComment(comment.$id)"
+              @click="deleteComment(comment.id)"
           />
         </div>
         <p>{{comment.text}}</p>

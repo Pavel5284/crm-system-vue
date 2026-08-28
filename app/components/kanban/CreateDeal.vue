@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import type {IDeal} from "~/types/deals.types";
-import {getDb, ID} from "~/utils/appwite"
-import {useDbId, COLLECTION_DEALS} from "~/app.constants"
+import type {IDeal, EnumStatus} from "~/types/deals.types";
+import {createDealApi} from "~/utils/crm.api"
 import {toRef} from "vue"
 
 const isOpenForm = ref<boolean>(false);
-const DB_ID = useDbId()
 
 const props = defineProps<{
   status: string
@@ -34,10 +32,12 @@ const [customerName, customerNamelAttrs] = defineField('customer.name')
 const {mutate, isPending} = useMutation({
   mutationKey: ['create a new deal'],
   mutationFn: async (data: IDealFormState) => {
-    const DB = getDb()
-    return DB.createDocument(DB_ID, COLLECTION_DEALS, ID.unique(), {
-      ...data,
-      price: Number(data.price)
+    return createDealApi({
+      name: data.name,
+      price: Number(data.price),
+      customerEmail: data.customer.email,
+      customerName: data.customer.name,
+      status: data.status as EnumStatus,
     })
   },
   onSuccess() {

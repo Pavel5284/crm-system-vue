@@ -1,7 +1,5 @@
 interface ImportMetaEnv {
-  readonly NUXT_PUBLIC_APPWRITE_PROJECT_ID: string
-  readonly NUXT_PUBLIC_APPWRITE_PROJECT_NAME: string
-  readonly NUXT_PUBLIC_APPWRITE_ENDPOINT: string
+  readonly NUXT_PUBLIC_API_BASE_URL: string
 }
 
 interface ImportMeta {

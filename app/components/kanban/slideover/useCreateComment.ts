@@ -1,24 +1,15 @@
-import {COLLECTION_COMMENTS, useDbId} from '~/app.constants'
-import {ID} from '~/utils/appwite'
+import { createCommentApi } from '~/utils/crm.api'
 
 export function useCreateComment ({refetch}: {refetch: ()=>void}) {
-    const DB_ID = useDbId()
     const store = useDealSlideStore()
-    const authStore = useAuthStore()
     const commentRef = ref<string>('')
 
     const {mutate} = useMutation({
         mutationKey: ['add comments'],
-        mutationFn: async () => {
-            const { getDb } = await import('~/utils/appwite')
-            const DB = getDb()
-            return DB.createDocument(DB_ID, COLLECTION_COMMENTS, ID.unique(), {
-                text: commentRef.value,
-                deal: store.card?.id,
-                userName: authStore.user.name,
-                userEmail: authStore.user.email,
-            })
-        },
+        mutationFn: async () => createCommentApi({
+            dealId: store.card?.id || '',
+            text: commentRef.value,
+        }),
         onSuccess: ()=>{
             refetch()
             commentRef.value = ''

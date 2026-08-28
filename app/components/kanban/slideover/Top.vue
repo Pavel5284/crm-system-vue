@@ -28,7 +28,7 @@ const store = useDealSlideStore()
       {{ store.card?.companyName }}
     </KanbanSlideoverLabel>
     <KanbanSlideoverLabel label-text="Дата создания">
-      {{ dayjs(store.card?.$createdAt).format('DD MMM YYYY') }}
+      {{ dayjs(store.card?.createdAt).format('DD MMM YYYY') }}
     </KanbanSlideoverLabel>
   </div>
 </template>

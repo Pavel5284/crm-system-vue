@@ -30,9 +30,11 @@ const isAuth = computed(() => authStore.isAuth)
 
 <template>
   <UApp>
-    <LayoutLoader v-if="isLoadingStore.isLoading"/>
-    <section v-else :class="{grid: authStore.isAuth}" style="min-height: 100vh">
-      <LayoutSidebar v-if="authStore.isAuth"/>
+    <div v-if="isLoadingStore.isLoading" class="fixed inset-0 grid place-items-center bg-background z-50">
+      <LayoutLoader />
+    </div>
+    <section :class="{grid: isAuth}" style="min-height: 100vh">
+      <LayoutSidebar v-if="isAuth"/>
       <div style="padding: 20px">
         <slot />
       </div>

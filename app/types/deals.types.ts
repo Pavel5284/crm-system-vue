@@ -1,17 +1,20 @@
 export interface IBaseField {
-    $createdAt: string
-    $id: string
+    id: string
+    createdAt: string
 }
 
 export interface ICustomer extends IBaseField {
     name: string
     email: string
-    avatar_url: string
-    from_source?: string
+    avatarUrl: string
+    fromSource?: string | null
 }
 
 export interface IComment extends IBaseField {
     text: string
+    dealId: string
+    userName: string
+    userEmail: string
 }
 
 export enum EnumStatus {
@@ -23,9 +26,10 @@ export enum EnumStatus {
 }
 
 export interface IDeal extends IBaseField {
-    comments: IComment[]
-    customer: string
     name: string
     price: number
     status: EnumStatus
+    customerId: string
+    customerName: string
+    customerEmail: string
 }
