@@ -29,7 +29,7 @@ const {deleteComment} = useDeleteComment({refetch})
         :key="comment.id"
         class="flex items-start mt-5"
     >
-      <Icon name="line-md:comment" class="mr-3 mt-1" size="20"/>
+      <Icon name="lucide:message-circle" class="mr-3 mt-1" size="20"/>
       <div class="border-border bg-black/20 rounded p-3 w-full relative">
         <div class="mb-2 text-sm flex items-center justify-between">
           <div>

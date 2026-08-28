@@ -4,12 +4,16 @@ export function useCreateComment ({refetch}: {refetch: ()=>void}) {
     const store = useDealSlideStore()
     const commentRef = ref<string>('')
 
-    const {mutate} = useMutation({
+    const {mutate, error: mutationError} = useMutation({
         mutationKey: ['add comments'],
-        mutationFn: async () => createCommentApi({
-            dealId: store.card?.id || '',
-            text: commentRef.value,
-        }),
+        mutationFn: async () => {
+            const dealId = store.card?.id
+            if (!dealId) throw new Error('Сделка не выбрана')
+            return createCommentApi({
+                dealId,
+                text: commentRef.value,
+            })
+        },
         onSuccess: ()=>{
             refetch()
             commentRef.value = ''
@@ -17,11 +21,13 @@ export function useCreateComment ({refetch}: {refetch: ()=>void}) {
     })
 
     const writeComment = () => {
-        if (!commentRef.value) return
+        if (!commentRef.value.trim()) return
+        if (!store.card?.id) return
         mutate()
     }
     return {
         writeComment,
         commentRef,
+        mutationError,
     }
 }

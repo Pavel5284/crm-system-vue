@@ -2,10 +2,10 @@ import { getCommentsApi } from '~/utils/crm.api'
 
 export function useComments() {
     const store = useDealSlideStore()
-    const cardId = store.card?.id || ''
 
     return useQuery({
-        queryKey: ['comments', cardId],
-        queryFn: () => getCommentsApi(cardId),
+        queryKey: ['comments', computed(() => store.card?.id || '')],
+        queryFn: () => getCommentsApi(store.card?.id || ''),
+        enabled: computed(() => !!store.card?.id),
     })
 }
