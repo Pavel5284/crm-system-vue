@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { getApiErrorMessage } from '~/utils/api'
-import { getMeApi, loginApi, registerApi } from '~/utils/auth.api'
+import { getMeApi, loginApi } from '~/utils/auth.api'
 
 useSeoMeta({
   title: "Login | Kilka CRM",
 })
 
+definePageMeta({
+  layout: false,
+})
+
 const emailRef = ref('')
 const passwordRef = ref('')
-const nameRef = ref('')
 const errorRef = ref('')
 
 const isLoadingStore = useIsLoadingStore()
@@ -34,7 +37,6 @@ const authorize = async (action: () => Promise<void>) => {
     await action()
     emailRef.value = ''
     passwordRef.value = ''
-    nameRef.value = ''
     await router.push('/')
   } catch (e) {
     errorRef.value = getApiErrorMessage(e)
@@ -49,12 +51,6 @@ const login = () => authorize(async () => {
   authStore.set({ email: user.email, name: user.name, status: true })
 })
 
-const register = () => authorize(async () => {
-  await registerApi(emailRef.value, passwordRef.value, nameRef.value)
-  const user = await getMeApi()
-  authStore.set({ email: user.email, name: user.name, status: true })
-})
-
 </script>
 
 <template>
@@ -62,13 +58,14 @@ const register = () => authorize(async () => {
     <div class="rounded bg-sidebar w-1/4 p-5">
       <h1 class="text-2xl font-bold text-center mb-5">Login</h1>
       <p v-if="errorRef" class="text-red-500 text-sm text-center mb-3">{{ errorRef }}</p>
-      <form>
+      <form @submit.prevent="login">
         <UiInput placeholder="Email" type="email" class="mb-3" v-model="emailRef"/>
         <UiInput placeholder="Password" type="password" class="mb-3" v-model="passwordRef"/>
-        <UiInput placeholder="Name" type="name" class="mb-3" v-model="nameRef"/>
-        <div class="flex items-center justify-center gap-5">
-          <UiButton type="button" @click="login">Login</UiButton>
-          <UiButton type="button" @click="register">Register</UiButton>
+        <div class="flex flex-col items-center gap-3">
+          <UiButton type="submit">Login</UiButton>
+          <NuxtLink to="/register" class="text-sm text-muted-foreground hover:text-white">
+            Don't have an account? Register
+          </NuxtLink>
         </div>
       </form>
     </div>

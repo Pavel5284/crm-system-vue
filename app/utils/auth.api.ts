@@ -20,13 +20,23 @@ export const loginApi = async (email: string, password: string) => {
 }
 
 export const registerApi = async (email: string, password: string, name: string) => {
-    const tokens = await apiFetch<AuthTokens>('/auth/register', {
+    return apiFetch<{ message: string }>('/auth/register', {
         method: 'POST',
         body: { email, password, name },
         auth: false,
     })
-    setTokens(tokens)
-    return tokens
+}
+
+export const verifyEmailApi = async (token: string) => {
+    return apiFetch<{ message: string }>(`/auth/verify-email?token=${encodeURIComponent(token)}`, { auth: false })
+}
+
+export const resendVerificationApi = async (email: string) => {
+    return apiFetch<{ message: string }>('/auth/resend-verification', {
+        method: 'POST',
+        body: { email },
+        auth: false,
+    })
 }
 
 export const getMeApi = () => apiFetch<AuthUser>('/users/me')
