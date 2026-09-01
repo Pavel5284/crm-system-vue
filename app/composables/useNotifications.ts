@@ -11,16 +11,17 @@ export const useNotifications = () => {
     let socket: Socket | null = null
 
     const connect = () => {
-        const token = localStorage.getItem('kilka_access_token')
-        if (!token) {
-            status.value = 'unauthorized'
-            error.value = 'Нет токена в localStorage — сначала залогинься'
-            return
-        }
-
         status.value = 'connecting'
-        socket = io('http://localhost:3001/notifications', {
-            auth: { token },
+
+        // httpOnly cookie отправляется автоматически (withCredentials).
+        // Бэкенд также поддерживает auth.token как fallback, но он больше не нужен.
+        const baseUrl = useRuntimeConfig().public.apiBaseUrl as string
+        // apiBaseUrl = '/api' (через devProxy) или 'http://localhost:3000/api'
+        // для сокета нужен origin без /api
+        const socketOrigin = baseUrl.replace(/\/api\/?$/, '') || 'http://localhost:3000'
+
+        socket = io(`${socketOrigin}/notifications`, {
+            withCredentials: true,
             transports: ['websocket'],
         })
 

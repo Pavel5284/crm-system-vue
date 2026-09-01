@@ -8,15 +8,26 @@ export default defineNuxtConfig({
             apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || '/api'
         }
     },
-    nitro: {
-        devProxy: {
-            '/api/': {
-                target: 'http://localhost:3000/api',
-                changeOrigin: true,
-            },
-        },
-    },
-css: ['~/assets/css/tailwind.css'],
+     devServer: {
+         port: 3001
+     },
+     nitro: {
+         devProxy: {
+             '/api/': {
+                 target: 'http://localhost:3000/api',
+                 changeOrigin: true,
+             },
+         },
+     },
+     components: [
+         {
+             path: '~/components',
+             pattern: '**/*.vue',
+             pathPrefix: true
+         }
+     ],
+     fonts: false,
+     css: ['~/assets/css/tailwind.css'],
     icon: {
         serverBundle: 'remote',
         localApiEndpoint: '/_nuxt_icon',
@@ -36,18 +47,18 @@ css: ['~/assets/css/tailwind.css'],
     veeValidate: {
         autoImports: true,
     },
-    pinia: {
-        storesDirs: ['./stores/**']
-    },
+     pinia: {
+         storesDirs: ['./stores']
+     },
 
-    vite: {
-        optimizeDeps: {
-            include: ['json-bigint']
-        }
-    },
-    nuxtQuery: {
-        autoImports: ['useQuery', 'useMutation'],
-        devtools: true,
+     vite: {
+         optimizeDeps: {
+             exclude: ['json-bigint']
+         }
+     },
+     nuxtQuery: {
+         autoImports: ['useQuery', 'useMutation'],
+         devtools: false,
         queryClientOptions: {
             defaultOptions: {
                 queries: {

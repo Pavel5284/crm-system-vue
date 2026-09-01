@@ -21,7 +21,7 @@ const router = useRouter()
 
 onMounted(async () => {
   try {
-    const user = await getMeApi()
+    const user = await getMeApi({ retry: false })
     if (user) {
       authStore.set({ email: user.email, name: user.name, status: true })
       await router.push('/')

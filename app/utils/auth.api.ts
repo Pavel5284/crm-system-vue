@@ -1,8 +1,7 @@
-import { apiFetch, clearTokens, setTokens } from '~/utils/api'
+import { apiFetch } from '~/utils/api'
 
 export interface AuthTokens {
     accessToken: string
-    refreshToken: string
 }
 
 export interface AuthUser {
@@ -14,9 +13,8 @@ export interface AuthUser {
 }
 
 export const loginApi = async (email: string, password: string) => {
-    const tokens = await apiFetch<AuthTokens>('/auth/login', { method: 'POST', body: { email, password }, auth: false })
-    setTokens(tokens)
-    return tokens
+    // бэкенд ставит accessToken+refreshToken в httpOnly cookie, тело ответа — { accessToken } для совместимости
+    return apiFetch<AuthTokens>('/auth/login', { method: 'POST', body: { email, password }, auth: false })
 }
 
 export const registerApi = async (email: string, password: string, name: string) => {
@@ -39,12 +37,9 @@ export const resendVerificationApi = async (email: string) => {
     })
 }
 
-export const getMeApi = () => apiFetch<AuthUser>('/users/me')
+export const getMeApi = (opts?: { retry?: boolean }) =>
+    apiFetch<AuthUser>('/users/me', { retry: opts?.retry ?? true })
 
 export const logoutApi = async () => {
-    try {
-        await apiFetch<null>('/auth/logout', { method: 'POST' })
-    } finally {
-        clearTokens()
-    }
+    await apiFetch<null>('/auth/logout', { method: 'POST', retry: false })
 }

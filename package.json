@@ -7,16 +7,17 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare && node scripts/apply-patches.mjs"
   },
   "dependencies": {
     "@nuxt/icon": "^2.4.1",
     "@nuxt/image": "^2.1.0",
     "@nuxt/ui": "^4.10.0",
     "@nuxtjs/google-fonts": "3.2.0",
-    "@peterbud/nuxt-query": "^1.9.0",
-    "@pinia/nuxt": "^1.0.1",
-    "@tanstack/vue-query": "^5.101.4",
+    "@peterbud/nuxt-query": "1.10.0",
+    "@pinia/nuxt": "1.0.2",
+    "pinia": "4.0.3",
+    "@tanstack/vue-query": "5.102.8",
     "@tanstack/vue-table": "^8.21.3",
     "@vee-validate/nuxt": "^4.15.1",
     "@vueuse/core": "^14.4.0",

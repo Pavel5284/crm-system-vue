@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { clearTokens } from '~/utils/api'
 import { getMeApi } from '~/utils/auth.api'
 
 const isLoadingStore = useIsLoadingStore()
@@ -9,10 +8,11 @@ const router = useRouter()
 
 const checkAuth = async () => {
   try{
-    const user = await getMeApi()
+    // гостевая проба: если нет кук — сразу 401, не нужно тратить POST /auth/refresh
+    const user = await getMeApi({ retry: false })
     if (user) authStore.set({email: user.email, name: user.name, status: true})
   } catch (error) {
-    clearTokens()
+    authStore.clear()
     await router.push('/login')
   } finally {
     isLoadingStore.set(false)
