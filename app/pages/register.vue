@@ -82,11 +82,11 @@ const resend = async () => {
       <h1 class="text-2xl font-bold text-center mb-5">Register</h1>
       <p v-if="errorRef" class="text-red-500 text-sm text-center mb-3">{{ errorRef }}</p>
       <p v-if="successRef" class="text-green-500 text-sm text-center mb-3">{{ successRef }}</p>
-      <form v-if="!successRef" @submit.prevent="register">
-        <UiInput placeholder="Name" type="text" class="mb-3" v-model="nameRef" />
-        <UiInput placeholder="Email" type="email" class="mb-3" v-model="emailRef" />
-        <UiInputPassword placeholder="Password" class="mb-3" v-model="passwordRef" autocomplete="new-password" />
-        <UiInputPassword placeholder="Confirm password" class="mb-1" v-model="confirmPasswordRef" autocomplete="new-password" />
+      <form v-if="!successRef" @submit.prevent="register" autocomplete="on">
+        <UiInput placeholder="Name" type="text" autocomplete="name" name="name" class="mb-3" v-model="nameRef" />
+        <UiInput placeholder="Email" type="email" autocomplete="email" name="email" class="mb-3" v-model="emailRef" />
+        <UiInputPassword placeholder="Password" class="mb-3" v-model="passwordRef" autocomplete="new-password" name="new-password" />
+        <UiInputPassword placeholder="Confirm password" class="mb-1" v-model="confirmPasswordRef" autocomplete="new-password" name="confirm-password" />
         <p v-if="passwordsMismatch" class="text-red-500 text-xs mb-3">Пароли не совпадают</p>
         <div v-else class="mb-3" />
         <div class="flex flex-col items-center gap-3">

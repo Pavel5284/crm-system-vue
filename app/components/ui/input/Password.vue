@@ -9,6 +9,7 @@ const props = defineProps<{
   placeholder?: string
   class?: HTMLAttributes["class"]
   autocomplete?: string
+  name?: string
   disabled?: boolean
 }>()
 
@@ -31,6 +32,7 @@ const show = ref(false)
       :type="show ? 'text' : 'password'"
       :placeholder="props.placeholder"
       :autocomplete="props.autocomplete"
+      :name="props.name"
       :disabled="props.disabled"
       data-slot="input"
       :class="cn(
