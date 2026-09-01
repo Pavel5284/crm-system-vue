@@ -66,7 +66,7 @@ function onCardDragStart(event: DragEvent, card: ICard, column: IColumn) {
 
 <template>
   <div class="mb-5">
-    <h1 class="text-2xl font-bold">Kilka CRM</h1>
+    <h1 class="text-2xl font-bold">CRM System</h1>
   </div>
   <div v-if="isLoading">Loading...</div>
   <div v-else>

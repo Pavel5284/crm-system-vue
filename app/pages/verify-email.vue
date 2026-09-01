@@ -2,7 +2,7 @@
 import { getApiErrorMessage } from '~/utils/api'
 import { verifyEmailApi } from '~/utils/auth.api'
 
-useSeoMeta({ title: 'Verify Email | Kilka CRM' })
+useSeoMeta({ title: 'Verify Email | CRM System' })
 definePageMeta({ layout: false })
 
 const route = useRoute()

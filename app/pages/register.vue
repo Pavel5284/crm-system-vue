@@ -3,7 +3,7 @@ import { getApiErrorMessage } from '~/utils/api'
 import { getMeApi, registerApi, resendVerificationApi } from '~/utils/auth.api'
 
 useSeoMeta({
-  title: "Register | Kilka CRM",
+  title: "Register | CRM System",
 })
 
 definePageMeta({
@@ -12,6 +12,7 @@ definePageMeta({
 
 const emailRef = ref('')
 const passwordRef = ref('')
+const confirmPasswordRef = ref('')
 const nameRef = ref('')
 const errorRef = ref('')
 const successRef = ref('')
@@ -19,6 +20,10 @@ const successRef = ref('')
 const isLoadingStore = useIsLoadingStore()
 const authStore = useAuthStore()
 const router = useRouter()
+
+const passwordsMismatch = computed(() => {
+  return confirmPasswordRef.value.length > 0 && passwordRef.value !== confirmPasswordRef.value
+})
 
 onMounted(async () => {
   try {
@@ -34,6 +39,16 @@ onMounted(async () => {
 const register = async () => {
   errorRef.value = ''
   successRef.value = ''
+
+  if (!passwordRef.value || passwordRef.value.length < 8) {
+    errorRef.value = 'Пароль должен содержать минимум 8 символов'
+    return
+  }
+  if (passwordRef.value !== confirmPasswordRef.value) {
+    errorRef.value = 'Пароли не совпадают'
+    return
+  }
+
   isLoadingStore.set(true)
   try {
     const res = await registerApi(emailRef.value, passwordRef.value, nameRef.value)
@@ -70,9 +85,12 @@ const resend = async () => {
       <form v-if="!successRef" @submit.prevent="register">
         <UiInput placeholder="Name" type="text" class="mb-3" v-model="nameRef" />
         <UiInput placeholder="Email" type="email" class="mb-3" v-model="emailRef" />
-        <UiInput placeholder="Password" type="password" class="mb-3" v-model="passwordRef" />
+        <UiInputPassword placeholder="Password" class="mb-3" v-model="passwordRef" autocomplete="new-password" />
+        <UiInputPassword placeholder="Confirm password" class="mb-1" v-model="confirmPasswordRef" autocomplete="new-password" />
+        <p v-if="passwordsMismatch" class="text-red-500 text-xs mb-3">Пароли не совпадают</p>
+        <div v-else class="mb-3" />
         <div class="flex flex-col items-center gap-3">
-          <UiButton type="submit">Register</UiButton>
+          <UiButton type="submit" :disabled="passwordsMismatch">Register</UiButton>
           <NuxtLink to="/login" class="text-sm text-muted-foreground hover:text-white">
             Already have an account? Login
           </NuxtLink>

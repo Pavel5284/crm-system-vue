@@ -22,11 +22,13 @@ export const setTokens = (_tokens: { accessToken: string; refreshToken: string }
 export const hasTokens = () => false
 export const clearTokens = () => {}
 
-// миграция: подчистить остатки localStorage после перехода на httpOnly
+// миграция: подчистить остатки localStorage после перехода на httpOnly (legacy ключи)
 if (typeof window !== 'undefined') {
     try {
-        localStorage.removeItem('kilka_access_token')
-        localStorage.removeItem('kilka_refresh_token')
+        localStorage.removeItem('noname_access_token')
+        localStorage.removeItem('noname_refresh_token')
+        localStorage.removeItem('access_token')
+        localStorage.removeItem('refresh_token')
     } catch {}
 }
 

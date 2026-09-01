@@ -3,7 +3,7 @@ import { getApiErrorMessage } from '~/utils/api'
 import { getMeApi, loginApi } from '~/utils/auth.api'
 
 useSeoMeta({
-  title: "Login | Kilka CRM",
+  title: "Login | CRM System",
 })
 
 definePageMeta({
@@ -60,7 +60,7 @@ const login = () => authorize(async () => {
       <p v-if="errorRef" class="text-red-500 text-sm text-center mb-3">{{ errorRef }}</p>
       <form @submit.prevent="login">
         <UiInput placeholder="Email" type="email" class="mb-3" v-model="emailRef"/>
-        <UiInput placeholder="Password" type="password" class="mb-3" v-model="passwordRef"/>
+        <UiInputPassword placeholder="Password" class="mb-3" v-model="passwordRef" autocomplete="current-password"/>
         <div class="flex flex-col items-center gap-3">
           <UiButton type="submit">Login</UiButton>
           <NuxtLink to="/register" class="text-sm text-muted-foreground hover:text-white">
