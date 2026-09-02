@@ -89,30 +89,44 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions = {}): 
 }
 
 export const getApiErrorMessage = (error: unknown): string => {
-    const err = error as { data?: { message?: unknown } }
-    const message = err?.data?.message
-    if (typeof message === 'string') return message
-    if (Array.isArray(message)) {
-        // Nest ValidationPipe: [{ property, constraints: { matches: '...' } }, ...]
-        const parts = (message as unknown[]).map((m) => {
-            if (typeof m === 'string') return m
-            if (m && typeof m === 'object' && 'constraints' in (m as Record<string, unknown>)) {
-                const c = (m as { constraints?: Record<string, string> }).constraints
-                if (c) return Object.values(c).join('; ')
-            }
-            if (m && typeof m === 'object' && 'message' in (m as Record<string, unknown>)) {
-                const mm = (m as { message?: string }).message
-                if (typeof mm === 'string') return mm
-            }
-            try { return JSON.stringify(m) } catch { return String(m) }
-        }).filter(Boolean)
-        if (parts.length) return parts.join('; ')
+    const e = error as Record<string, unknown>
+    // $fetch FetchError может хранить в data / _data / response._data / cause
+    const candidates: unknown[] = [
+        (e as { data?: unknown })?.data,
+        (e as { _data?: unknown })?._data,
+        (e as { response?: { _data?: unknown } })?.response?._data,
+        (e as { cause?: unknown })?.cause,
+        e,
+    ]
+    for (const c of candidates) {
+        if (!c || typeof c !== 'object') continue
+        const msg = (c as { message?: unknown }).message ?? (c as { data?: unknown })?.data
+        if (typeof msg === 'string' && msg && msg !== '[object Object]') return msg
+        if (Array.isArray(msg)) {
+            const parts = (msg as unknown[]).map((m) => {
+                if (typeof m === 'string') return m
+                if (m && typeof m === 'object') {
+                    const o = m as Record<string, unknown>
+                    if (o.constraints && typeof o.constraints === 'object') return Object.values(o.constraints as Record<string, string>).join('; ')
+                    if (typeof o.message === 'string') return o.message
+                    if (Array.isArray(o.issues)) return (o.issues as Array<{ message?: string }>).map(i=>i.message).filter(Boolean).join('; ')
+                    try { const s = JSON.stringify(m); return s !== '{}' ? s : '' } catch { return '' }
+                }
+                return ''
+            }).filter(Boolean)
+            if (parts.length) return parts.join('; ')
+        }
+        if (msg && typeof msg === 'object') {
+            const m = msg as Record<string, unknown>
+            if (typeof m.message === 'string') return m.message
+            if (Array.isArray(m.issues)) return (m.issues as Array<{ message?: string }>).map(i=>i.message).filter(Boolean).join('; ')
+        }
     }
-    if (message && typeof message === 'object' && 'message' in message && typeof (message as { message?: unknown }).message === 'string') {
-        return (message as { message: string }).message
-    }
-    // fallback: statusText
-    const statusMessage = (error as { statusMessage?: string })?.statusMessage
-    if (statusMessage) return statusMessage
+    const direct = (e as { message?: unknown })?.message
+    if (typeof direct === 'string' && direct && direct !== '[object Object]') return direct
+    const statusMessage = (e as { statusMessage?: unknown })?.statusMessage
+    if (typeof statusMessage === 'string' && statusMessage) return statusMessage
+    const statusText = (e as { statusText?: unknown })?.statusText
+    if (typeof statusText === 'string' && statusText) return statusText
     return 'Не удалось выполнить запрос'
 }

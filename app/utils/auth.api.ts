@@ -42,7 +42,16 @@ export const removeAvatarApi = () =>
 
 export const getProfileApi = () => apiFetch<ProfileData>('/users/profile')
 
-export const getVisitsApi = () => apiFetch<Visit[]>('/users/me/visits')
+export interface VisitsPaginated {
+  data: Visit[]
+  total: number
+  page: number
+  limit: number
+  totalPages: number
+}
+
+export const getVisitsApi = (params?: { page?: number; limit?: 10 | 25 | 50 }) =>
+  apiFetch<VisitsPaginated>('/users/me/visits', { query: params as Record<string, string | number> })
 
 export const loginApi = async (email: string, password: string) => {
     // бэкенд ставит accessToken+refreshToken в httpOnly cookie, тело ответа — { accessToken } для совместимости
