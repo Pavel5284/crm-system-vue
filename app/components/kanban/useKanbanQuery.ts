@@ -4,6 +4,7 @@ import { KANBAN_DATA } from './kanban.data'
 import { getDealsApi } from '~/utils/crm.api'
 
 export function useKanbanQuery() {
+    const authStore = useAuthStore()
     return useQuery<IDeal[], Error, IColumn[]>({
         queryKey: ['deals'],
         queryFn: () => getDealsApi(),
@@ -25,7 +26,7 @@ export function useKanbanQuery() {
             }
             return newBoard
         },
-        enabled: false,
+        enabled: computed(() => authStore.isAuth),
         staleTime: 0,
     })
 }

@@ -7,6 +7,11 @@ const authStore = useAuthStore()
 const router = useRouter()
 
 const checkAuth = async () => {
+  // уже залогинены из login.vue:50 — не дублируем GET /users/me
+  if (authStore.isAuth) {
+    isLoadingStore.set(false)
+    return
+  }
   try{
     // гостевая проба: если нет кук — сразу 401, не нужно тратить POST /auth/refresh
     const user = await getMeApi({ retry: false })

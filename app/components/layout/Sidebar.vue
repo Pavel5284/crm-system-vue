@@ -13,6 +13,8 @@ const logout = async () => {
   } catch (e) {
   } finally {
     authStore.clear()
+    // флаг чтобы login.vue не делал лишний GET /me сразу после выхода
+    if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('justLoggedOut', '1')
     await router.push('/login')
     isLoadingStore.set(false)
   }
@@ -23,7 +25,7 @@ const logout = async () => {
   <aside class="px-5 py-8 bg-gray-800 h-full relative text-white">
     <div class="mb-10 flex justify-center">
       <NuxtLink to="/" >
-        <NuxtImg src="/logo.svg" alt="logo" width="100px" />
+        <NuxtImg src="/logo.svg" alt="logo" width="140px" />
       </NuxtLink>
     </div>
 

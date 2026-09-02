@@ -26,6 +26,14 @@ const passwordsMismatch = computed(() => {
 })
 
 onMounted(async () => {
+  if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('justLoggedOut')) {
+    sessionStorage.removeItem('justLoggedOut')
+    return
+  }
+  if (authStore.isAuth) {
+    await router.push('/')
+    return
+  }
   try {
     const user = await getMeApi({ retry: false })
     if (user) {

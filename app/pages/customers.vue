@@ -7,11 +7,13 @@ useSeoMeta({
 })
 
 const store = useCustomerSlideStore()
+const authStore = useAuthStore()
 
 const {data, isLoading, refetch} = useQuery({
   queryKey: ['customers'],
   queryFn: () => getCustomersApi(),
-  refetchInterval: false
+  refetchInterval: false,
+  enabled: computed(() => authStore.isAuth),
 })
 
 const customers = computed(() => (data.value as ICustomer[]) ?? [])

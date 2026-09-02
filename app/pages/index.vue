@@ -16,10 +16,6 @@ const sourceColumnRef = ref<IColumn | null>(null)
 const {data, isLoading, refetch} = useKanbanQuery()
 const store = useDealSlideStore()
 
-onMounted(() => {
-  refetch()
-})
-
 type TypeMutationVariables = {
   docId: string
   status?: EnumStatus

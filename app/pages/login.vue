@@ -20,6 +20,16 @@ const authStore = useAuthStore()
 const router = useRouter()
 
 onMounted(async () => {
+  // после logout не нужно проверять сессию — куки уже очищены, сэкономим 1 запрос
+  if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('justLoggedOut')) {
+    sessionStorage.removeItem('justLoggedOut')
+    return
+  }
+  // если уже в сторе — тоже не дергаем
+  if (authStore.isAuth) {
+    await router.push('/')
+    return
+  }
   try {
     const user = await getMeApi({ retry: false })
     if (user) {
