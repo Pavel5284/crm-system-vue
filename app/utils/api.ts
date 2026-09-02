@@ -3,12 +3,16 @@ interface ApiResponse<T> {
     data: T
 }
 
-interface ApiFetchOptions extends Omit<RequestInit, 'headers' | 'body'> {
+type ApiFetchOptions = {
+    method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS' | string
     headers?: Record<string, string>
     body?: unknown
     auth?: boolean
     retry?: boolean
     query?: Record<string, string | number>
+    signal?: AbortSignal
+    // совместимость с NitroFetchOptions — остальные поля прокидываем как есть
+    [key: string]: unknown
 }
 
 export const useApiBaseUrl = () => {
@@ -59,14 +63,14 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions = {}): 
 
     const request = async () => {
         const res = await $fetch<ApiResponse<T> | T>(path, {
-            ...fetchOptions,
+            ...(fetchOptions as Record<string, unknown>),
             baseURL: useApiBaseUrl(),
             body: fetchOptions.body as BodyInit | Record<string, unknown> | null | undefined,
             credentials: 'include' as RequestCredentials,
             headers: {
                 ...fetchOptions.headers,
             },
-        })
+        } as Parameters<typeof $fetch>[1])
         return res && typeof res === 'object' && 'success' in res ? (res as ApiResponse<T>).data : (res as T)
     }
 
@@ -85,12 +89,30 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions = {}): 
 }
 
 export const getApiErrorMessage = (error: unknown): string => {
-    const err = error as { data?: { message?: string | string[] | { message?: string } } }
+    const err = error as { data?: { message?: unknown } }
     const message = err?.data?.message
     if (typeof message === 'string') return message
-    if (Array.isArray(message)) return message.join('; ')
-    if (message && typeof message === 'object' && 'message' in message && typeof message.message === 'string') {
-        return message.message
+    if (Array.isArray(message)) {
+        // Nest ValidationPipe: [{ property, constraints: { matches: '...' } }, ...]
+        const parts = (message as unknown[]).map((m) => {
+            if (typeof m === 'string') return m
+            if (m && typeof m === 'object' && 'constraints' in (m as Record<string, unknown>)) {
+                const c = (m as { constraints?: Record<string, string> }).constraints
+                if (c) return Object.values(c).join('; ')
+            }
+            if (m && typeof m === 'object' && 'message' in (m as Record<string, unknown>)) {
+                const mm = (m as { message?: string }).message
+                if (typeof mm === 'string') return mm
+            }
+            try { return JSON.stringify(m) } catch { return String(m) }
+        }).filter(Boolean)
+        if (parts.length) return parts.join('; ')
     }
+    if (message && typeof message === 'object' && 'message' in message && typeof (message as { message?: unknown }).message === 'string') {
+        return (message as { message: string }).message
+    }
+    // fallback: statusText
+    const statusMessage = (error as { statusMessage?: string })?.statusMessage
+    if (statusMessage) return statusMessage
     return 'Не удалось выполнить запрос'
 }

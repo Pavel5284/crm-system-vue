@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { getApiErrorMessage } from '~/utils/api'
-import { getMeApi, registerApi, resendVerificationApi } from '~/utils/auth.api'
+import { getMeApi, getProfileApi, registerApi, resendVerificationApi } from '~/utils/auth.api'
 
 useSeoMeta({
   title: "Register | CRM System",
@@ -35,9 +35,10 @@ onMounted(async () => {
     return
   }
   try {
-    const user = await getMeApi({ retry: false })
-    if (user) {
-      authStore.set({ email: user.email, name: user.name, status: true })
+    const me = await getMeApi({ retry: false })
+    if (me.authenticated) {
+      const profile = await getProfileApi()
+      authStore.set({ email: profile.email, name: profile.name, status: true, avatarUrl: profile.avatarUrl, position: profile.position, phone: profile.phone, telegram: profile.telegram, isEmailVerified: profile.isEmailVerified })
       await router.push('/')
     }
   } catch (e) {

@@ -9,8 +9,40 @@ export interface AuthUser {
     email: string
     name: string
     role: string
+    avatarUrl: string | null
+    isEmailVerified: boolean
     createdAt: string
 }
+
+export interface ProfileData extends AuthUser {
+    position: string | null
+    phone: string | null
+    telegram: string | null
+    updatedAt: string
+}
+
+export interface Visit {
+    id: string
+    ip: string
+    userAgent: string
+    device: string | null
+    browser: string | null
+    os: string | null
+    createdAt: string
+}
+
+export const updateProfileApi = (payload: Partial<{ name: string; position: string | null; phone: string | null; telegram: string | null }>) =>
+    apiFetch<ProfileData>('/users/updateUserData', { method: 'PATCH', body: payload })
+
+export const updateAvatarApi = (avatarUrl: string) =>
+    apiFetch<{ success: boolean }>('/users/profile/avatar', { method: 'POST', body: { avatarUrl } })
+
+export const removeAvatarApi = () =>
+    apiFetch<{ success: boolean }>('/users/profile/avatar', { method: 'DELETE' })
+
+export const getProfileApi = () => apiFetch<ProfileData>('/users/profile')
+
+export const getVisitsApi = () => apiFetch<Visit[]>('/users/me/visits')
 
 export const loginApi = async (email: string, password: string) => {
     // бэкенд ставит accessToken+refreshToken в httpOnly cookie, тело ответа — { accessToken } для совместимости
@@ -38,7 +70,7 @@ export const resendVerificationApi = async (email: string) => {
 }
 
 export const getMeApi = (opts?: { retry?: boolean }) =>
-    apiFetch<AuthUser>('/users/me', { retry: opts?.retry ?? true })
+    apiFetch<{ authenticated: boolean }>('/users/me', { retry: opts?.retry ?? true })
 
 export const logoutApi = async () => {
     await apiFetch<null>('/auth/logout', { method: 'POST', retry: false })

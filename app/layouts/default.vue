@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getMeApi } from '~/utils/auth.api'
+import { getMeApi, getProfileApi } from '~/utils/auth.api'
 
 const isLoadingStore = useIsLoadingStore()
 const authStore = useAuthStore()
@@ -13,9 +13,20 @@ const checkAuth = async () => {
     return
   }
   try{
-    // гостевая проба: если нет кук — сразу 401, не нужно тратить POST /auth/refresh
-    const user = await getMeApi({ retry: false })
-    if (user) authStore.set({email: user.email, name: user.name, status: true})
+    // me — только проверка авторизации {authenticated}, данные — из /profile
+    const me = await getMeApi()
+    if (!me.authenticated) throw new Error('Not authenticated')
+    const profile = await getProfileApi()
+    authStore.set({
+      email: profile.email,
+      name: profile.name,
+      status: true,
+      avatarUrl: profile.avatarUrl,
+      position: profile.position,
+      phone: profile.phone,
+      telegram: profile.telegram,
+      isEmailVerified: profile.isEmailVerified,
+    })
   } catch (error) {
     authStore.clear()
     await router.push('/login')
@@ -40,8 +51,11 @@ const isAuth = computed(() => authStore.isAuth)
     </div>
     <section :class="{grid: isAuth}" style="min-height: 100vh">
       <LayoutSidebar v-if="isAuth"/>
-      <div style="padding: 20px">
-        <slot />
+      <div :class="isAuth ? 'flex flex-col min-h-screen min-w-0' : ''">
+        <LayoutHeader v-if="isAuth" />
+        <div :style="isAuth ? 'padding:20px' : ''" class="flex-1 min-w-0">
+          <slot />
+        </div>
       </div>
     </section>
   </UApp>
@@ -50,7 +64,7 @@ const isAuth = computed(() => authStore.isAuth)
 <style scoped>
 .grid{
   display: grid;
-  grid-template-columns: 1fr 6fr;
+  grid-template-columns: 240px 1fr;
 
 }
 </style>

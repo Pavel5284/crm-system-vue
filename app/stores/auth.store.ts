@@ -4,6 +4,11 @@ interface IAuthStore {
     email: string,
     name: string,
     status: boolean,
+    avatarUrl: string | null,
+    position: string | null,
+    phone: string | null,
+    telegram: string | null,
+    isEmailVerified: boolean,
 }
 
 export const useAuthStore = defineStore('auth', {
@@ -12,6 +17,11 @@ export const useAuthStore = defineStore('auth', {
             email: '',
             name: '',
             status: false,
+            avatarUrl: null,
+            position: null,
+            phone: null,
+            telegram: null,
+            isEmailVerified: false,
         } as IAuthStore,
         isAuth: false,
     }),
