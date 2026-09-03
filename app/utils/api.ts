@@ -3,6 +3,11 @@ interface ApiResponse<T> {
     data: T
 }
 
+export type ToastOptions = false | {
+    success?: string | false
+    error?: string | false
+}
+
 type ApiFetchOptions = {
     method?: 'GET' | 'POST' | 'PATCH' | 'PUT' | 'DELETE' | 'HEAD' | 'OPTIONS' | string
     headers?: Record<string, string>
@@ -11,8 +16,37 @@ type ApiFetchOptions = {
     retry?: boolean
     query?: Record<string, string | number>
     signal?: AbortSignal
+    toast?: ToastOptions
     // совместимость с NitroFetchOptions — остальные поля прокидываем как есть
     [key: string]: unknown
+}
+
+// Центральный реестр - в одном месте управляешь для каких запросов показывать тост
+// ключ: "METHOD path" или просто "path" (без метода - для любого метода)
+const SUCCESS_TOAST_MAP: Record<string, string> = {
+    'PATCH /users/updateUserData': 'Профиль обновлён',
+    'POST /users/profile/avatar': 'Фото обновлено',
+    'DELETE /users/profile/avatar': 'Фото удалено',
+    // добавь другие: 'POST /deals': 'Сделка создана',
+}
+
+const getSuccessMessageForRequest = (path: string, method?: string): string | null => {
+    const keyWithMethod = `${method ?? 'GET'} ${path}`
+    if (SUCCESS_TOAST_MAP[keyWithMethod]) return SUCCESS_TOAST_MAP[keyWithMethod]
+    if (SUCCESS_TOAST_MAP[path]) return SUCCESS_TOAST_MAP[path]
+    // поддержка матчинга по вхождению (напр. '/users/profile/avatar' матчит '/users/profile/avatar')
+    for (const [k, v] of Object.entries(SUCCESS_TOAST_MAP)) {
+        if (path.includes(k) || keyWithMethod.includes(k)) return v
+    }
+    return null
+}
+
+const getToast = () => {
+    try {
+        return useToast()
+    } catch {
+        return null
+    }
 }
 
 export const useApiBaseUrl = () => {
@@ -59,7 +93,7 @@ const refreshAccessToken = async (): Promise<boolean | null> => {
 }
 
 export const apiFetch = async <T>(path: string, options: ApiFetchOptions = {}): Promise<T> => {
-    const { auth = true, retry = true, ...fetchOptions } = options
+    const { auth = true, retry = true, toast: toastOpt, ...fetchOptions } = options
 
     const request = async () => {
         const res = await $fetch<ApiResponse<T> | T>(path, {
@@ -74,16 +108,67 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions = {}): 
         return res && typeof res === 'object' && 'success' in res ? (res as ApiResponse<T>).data : (res as T)
     }
 
+    const showSuccessToast = (method?: string) => {
+        if (toastOpt === false) return
+        if (typeof toastOpt === 'object' && toastOpt.success === false) return
+        const toast = getToast()
+        if (!toast) return
+        // явный success из опций имеет приоритет
+        if (typeof toastOpt === 'object' && typeof toastOpt.success === 'string') {
+            toast.add({ title: toastOpt.success, color: 'success' })
+            return
+        }
+        const autoMsg = getSuccessMessageForRequest(path, method ?? (fetchOptions.method as string))
+        if (autoMsg) {
+            if (autoMsg === 'Профиль обновлён') {
+                toast.add({ title: 'Сохранено', description: 'Профиль обновлён', color: 'success' })
+            } else {
+                toast.add({ title: autoMsg, color: 'success' })
+            }
+        }
+    }
+
+    const showErrorToast = (error: unknown) => {
+        if (toastOpt === false) return
+        if (typeof toastOpt === 'object' && toastOpt.error === false) return
+        // не показываем тост для 401 на проверках авторизации и ретраях
+        const statusCode = (error as { statusCode?: number })?.statusCode
+        const isAuthCheck = path.includes('/users/me') || path.includes('/auth/refresh') || path.includes('/users/profile')
+        const isSilentAuthError = statusCode === 401 && isAuthCheck
+        if (isSilentAuthError) return
+        const toast = getToast()
+        if (!toast) return
+        if (typeof toastOpt === 'object' && typeof toastOpt.error === 'string') {
+            toast.add({ title: 'Ошибка', description: toastOpt.error, color: 'error' })
+            return
+        }
+        const msg = getApiErrorMessage(error)
+        toast.add({ title: 'Ошибка', description: msg, color: 'error' })
+    }
+
     try {
-        return await request()
+        const data = await request()
+        // показываем success только для мутаций, но мапа уже фильтрует
+        showSuccessToast(fetchOptions.method as string)
+        return data
     } catch (error) {
         const statusCode = (error as { statusCode?: number })?.statusCode
         // не ретраим сам /auth/refresh чтобы не зациклить, и уважаем retry=false для гостевых проб (первый заход без кук)
         const isRefreshPath = path.includes('/auth/refresh')
         if (auth && retry && !isRefreshPath && statusCode === 401) {
             const ok = await refreshAccessToken()
-            if (ok) return await request()
+            if (ok) {
+                try {
+                    const data = await request()
+                    showSuccessToast(fetchOptions.method as string)
+                    return data
+                } catch (retryError) {
+                    showErrorToast(retryError)
+                    throw retryError
+                }
+            }
         }
+        showErrorToast(error)
         throw error
     }
 }

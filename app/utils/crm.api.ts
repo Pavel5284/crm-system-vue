@@ -29,10 +29,15 @@ export const updateCustomerApi = (
     payload: {
         name?: string
         email?: string
-        avatarUrl?: string
         fromSource?: string | null
     },
 ) => apiFetch<ICustomer>(`/customers/${customerId}`, { method: 'PATCH', body: payload })
+
+export const updateCustomerAvatarApi = (customerId: string, avatarUrl: string) =>
+    apiFetch<{ success: boolean }>(`/customers/${customerId}/avatar`, { method: 'POST', body: { avatarUrl } })
+
+export const deleteCustomerAvatarApi = (customerId: string) =>
+    apiFetch<{ success: boolean }>(`/customers/${customerId}/avatar`, { method: 'DELETE' })
 
 export const getCommentsApi = (dealId: string) =>
     apiFetch<IComment[]>('/comments', { query: { dealId } })

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 
 interface IAuthStore {
+    id: string,
     email: string,
     name: string,
     status: boolean,
@@ -14,6 +15,7 @@ interface IAuthStore {
 export const useAuthStore = defineStore('auth', {
     state: () => ({
         user: {
+            id: '',
             email: '',
             name: '',
             status: false,

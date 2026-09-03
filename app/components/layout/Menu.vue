@@ -1,5 +1,25 @@
 <script setup lang="ts">
 import { MENU_DATA } from '@/components/layout/menu'
+
+const chatStore = useChatStore()
+const authStore = useAuthStore()
+
+watch(() => authStore.isAuth, (v) => {
+  if (v) chatStore.fetchUnreadCount()
+})
+
+// также обновляем при новых сообщениях через сокет (уже в receiveMessage)
+// периодический полл как фолбэк если сокет отвалился
+let poll: ReturnType<typeof setInterval> | null = null
+onMounted(() => {
+  if (authStore.isAuth) chatStore.fetchUnreadCount()
+  poll = setInterval(() => {
+    if (authStore.isAuth) chatStore.fetchUnreadCount()
+  }, 15000)
+})
+onUnmounted(() => {
+  if (poll) clearInterval(poll)
+})
 </script>
 
 <template>
@@ -12,7 +32,13 @@ import { MENU_DATA } from '@/components/layout/menu'
         :to="item.url"
     >
       <Icon :name="item.icon" class="mr-3"/>
-      <span>{{item.name}}</span>
+      <span class="flex-1">{{item.name}}</span>
+      <span
+        v-if="item.url === '/chats' && chatStore.unreadCount > 0"
+        class="ml-auto bg-red-500 text-white text-[10px] font-bold min-w-[20px] h-5 grid place-items-center rounded-full px-1.5"
+      >
+        {{ chatStore.unreadCount > 99 ? '99+' : chatStore.unreadCount }}
+      </span>
     </NuxtLink>
   </div>
 </template>

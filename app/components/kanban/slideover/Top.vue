@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import dayjs from 'dayjs'
 import {useDealSlideStore} from '@/stores/deal-slide.store'
+import { formatDate } from '~/utils/formatDate'
 
 const store = useDealSlideStore()
 
@@ -28,7 +28,7 @@ const store = useDealSlideStore()
       {{ store.card?.companyName }}
     </KanbanSlideoverLabel>
     <KanbanSlideoverLabel label-text="Дата создания">
-      {{ dayjs(store.card?.createdAt).format('DD MMM YYYY') }}
+      {{ formatDate(store.card?.createdAt, 'short') }}
     </KanbanSlideoverLabel>
   </div>
 </template>

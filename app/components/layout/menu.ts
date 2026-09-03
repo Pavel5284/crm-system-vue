@@ -31,6 +31,11 @@ export const MENU_DATA: IMenuItem[] = [
         url: "/customers"
     },
     {
+        icon: 'lucide:messages-square',
+        name: 'Чаты',
+        url: "/chats"
+    },
+    {
         icon: 'fluent:person-feedback-48-regular',
         name: 'Feedback',
         url: "/feedback"

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { getApiErrorMessage } from '~/utils/api.ts'
 import { getVisitsApi, type Visit } from '~/utils/auth.api.ts'
+import { formatDate } from '~/utils/formatDate.ts'
 
 const visits = ref<Visit[]>([])
 const visitsLoading = ref(false)
@@ -35,12 +35,6 @@ watch(visitsPerPage, async () => { visitsPage.value = 1; await loadVisits() })
 watch(visitsPage, async () => { await loadVisits() })
 
 onMounted(loadVisits)
-
-const formatDate = (iso: string) => {
-  try {
-    return new Date(iso).toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-  } catch { return iso }
-}
 
 defineExpose({ loadVisits })
 </script>

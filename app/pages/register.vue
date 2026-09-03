@@ -38,7 +38,7 @@ onMounted(async () => {
     const me = await getMeApi({ retry: false })
     if (me.authenticated) {
       const profile = await getProfileApi()
-      authStore.set({ email: profile.email, name: profile.name, status: true, avatarUrl: profile.avatarUrl, position: profile.position, phone: profile.phone, telegram: profile.telegram, isEmailVerified: profile.isEmailVerified })
+      authStore.set({ id: profile.id, email: profile.email, name: profile.name, status: true, avatarUrl: profile.avatarUrl, position: profile.position, phone: profile.phone, telegram: profile.telegram, isEmailVerified: profile.isEmailVerified })
       await router.push('/')
     }
   } catch (e) {

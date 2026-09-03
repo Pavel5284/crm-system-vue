@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {useKanbanQuery} from '@/components/kanban/useKanbanQuery'
 import type {ICard, IColumn} from '~/components/kanban/kanban.types'
-import dayjs from 'dayjs'
 import type {EnumStatus} from "~/types/deals.types"
 import {updateDealStatusApi} from "~/utils/crm.api"
 import {generateColumnStyle} from "@/components/kanban/generate-gradient"
+import { formatDate } from '~/utils/formatDate'
 
 useSeoMeta({
   title: "Home | CRM System"
@@ -94,7 +94,7 @@ function onCardDragStart(event: DragEvent, card: ICard, column: IColumn) {
             </UiCardDescription>
           </UiCardHeader>
           <UiCardContent class="text-xs">Компания: {{ card.companyName }}</UiCardContent>
-          <UiCardFooter>{{ dayjs(card.createdAt).format('DD MMMM YYYY') }}</UiCardFooter>
+          <UiCardFooter>{{ formatDate(card.createdAt, 'long') }}</UiCardFooter>
         </UiCard>
       </div>
       <KanbanSlideover/>

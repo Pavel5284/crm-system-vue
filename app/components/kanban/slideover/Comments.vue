@@ -2,7 +2,7 @@
 import {useComments} from "./useComments";
 import {useCreateComment} from "./useCreateComment";
 import {useDeleteComment} from "./useDeleteComment";
-import dayjs from 'dayjs';
+import { formatDate } from '~/utils/formatDate';
 
 const {data, refetch, isLoading} = useComments()
 const {commentRef, writeComment} = useCreateComment({refetch})
@@ -34,7 +34,7 @@ const {deleteComment} = useDeleteComment({refetch})
         <div class="mb-2 text-sm flex items-center justify-between">
           <div>
             <span class="font-medium">{{ comment.userName || comment.userEmail }}</span>
-            <span class="text-xs text-gray-400 ml-2">{{dayjs(comment.createdAt).format('YYYY-MM-DD HH:mm:ss.SSS')}}</span>
+            <span class="text-xs text-gray-400 ml-2">{{ formatDate(comment.createdAt, 'datetime') }}</span>
           </div>
           <Icon
               name="heroicons:x-mark"

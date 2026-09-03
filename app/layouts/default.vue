@@ -18,6 +18,7 @@ const checkAuth = async () => {
     if (!me.authenticated) throw new Error('Not authenticated')
     const profile = await getProfileApi()
     authStore.set({
+      id: profile.id,
       email: profile.email,
       name: profile.name,
       status: true,
@@ -41,24 +42,32 @@ onNuxtReady(async () => {
 
 const isAuth = computed(() => authStore.isAuth)
 
+// чат глобально: только unread + сокет для тостов, полный список грузит только /chats
+const chatStore = useChatStore()
+useChatSocket() // коннектит namespace:'chat' когда isAuth, слушает chat:message
+
+watch(isAuth, async (v) => {
+  if (v) {
+    await chatStore.fetchUnreadCount()
+  }
+})
+
 </script>
 
 
 <template>
-  <UApp>
-    <div v-if="isLoadingStore.isLoading" class="fixed inset-0 grid place-items-center bg-background z-50">
-      <LayoutLoader />
-    </div>
-    <section :class="{grid: isAuth}" style="min-height: 100vh">
-      <LayoutSidebar v-if="isAuth"/>
-      <div :class="isAuth ? 'flex flex-col min-h-screen min-w-0' : ''">
-        <LayoutHeader v-if="isAuth" />
-        <div :style="isAuth ? 'padding:20px' : ''" class="flex-1 min-w-0">
-          <slot />
-        </div>
+  <div v-if="isLoadingStore.isLoading" class="fixed inset-0 grid place-items-center bg-background z-50">
+    <LayoutLoader />
+  </div>
+  <section :class="{grid: isAuth}" style="min-height: 100vh">
+    <LayoutSidebar v-if="isAuth"/>
+    <div :class="isAuth ? 'flex flex-col min-h-screen min-w-0' : ''">
+      <LayoutHeader v-if="isAuth" />
+      <div :style="isAuth ? 'padding:20px' : ''" class="flex-1 min-w-0">
+        <slot />
       </div>
-    </section>
-  </UApp>
+    </div>
+  </section>
 </template>
 
 <style scoped>
