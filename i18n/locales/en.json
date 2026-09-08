@@ -1,0 +1,230 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "add": "Add",
+    "adding": "Adding...",
+    "close": "Close",
+    "clear": "Clear",
+    "refresh": "Refresh",
+    "search": "Search",
+    "searching": "Searching...",
+    "noData": "No data",
+    "error": "Error",
+    "success": "Success"
+  },
+  "menu": {
+    "home": "Home",
+    "products": "Products",
+    "payments": "Payments",
+    "orders": "Orders",
+    "customers": "Customers",
+    "chats": "Chats",
+    "feedback": "Feedback",
+    "settings": "Settings",
+    "help": "Help center"
+  },
+  "header": {
+    "crmSystem": "CRM System",
+    "notifications": "Notifications",
+    "noNotifications": "No new notifications",
+    "clear": "Clear",
+    "wsTest": "WS-test",
+    "notificationsCount": "{count} notifications",
+    "status": {
+      "connected": "connected",
+      "connecting": "connecting",
+      "disconnected": "disconnected",
+      "unauthorized": "unauthorized",
+      "error": "error"
+    },
+    "settings": "Settings",
+    "language": "Language"
+  },
+  "sidebar": {
+    "logout": "Logout"
+  },
+  "login": {
+    "title": "Login",
+    "seoTitle": "Login | CRM System",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "loginButton": "Login",
+    "noAccount": "Don't have an account? Register",
+    "error": "Error"
+  },
+  "register": {
+    "title": "Register",
+    "seoTitle": "Register | CRM System",
+    "namePlaceholder": "Name",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Password",
+    "confirmPasswordPlaceholder": "Confirm password",
+    "registerButton": "Register",
+    "haveAccount": "Already have an account? Login",
+    "passwordTooShort": "Password must be at least 8 characters",
+    "passwordsMismatch": "Passwords do not match",
+    "enterEmail": "Enter email",
+    "success": "Success",
+    "resendButton": "Resend",
+    "resendQuestion": "Didn't receive email?",
+    "goToLogin": "Go to login"
+  },
+  "verifyEmail": {
+    "title": "Email verification",
+    "seoTitle": "Verify Email | CRM System",
+    "loading": "Verifying...",
+    "success": "Email verified successfully",
+    "error": "Verification error",
+    "tokenMissing": "Token not found",
+    "goToLogin": "Go to login",
+    "goToRegister": "Back to register"
+  },
+  "kanban": {
+    "title": "CRM System",
+    "seoTitle": "Home | CRM System",
+    "loading": "Loading...",
+    "company": "Company",
+    "createDeal": {
+      "namePlaceholder": "Name",
+      "pricePlaceholder": "Price",
+      "emailPlaceholder": "Email",
+      "companyPlaceholder": "Company",
+      "addButton": "Add",
+      "adding": "Adding..."
+    },
+    "slideover": {
+      "title": "About deal",
+      "description": "Deal details",
+      "name": "Name",
+      "price": "Amount",
+      "status": "Status",
+      "company": "Company",
+      "createdAt": "Created at",
+      "commentsPlaceholder": "Add a comment",
+      "comments": "Comments",
+      "aboutDeal": "About deal"
+    }
+  },
+  "customers": {
+    "title": "Customers",
+    "seoTitle": "Customers | CRM System",
+    "listTitle": "Customer list",
+    "loading": "Loading...",
+    "table": {
+      "avatar": "Avatar",
+      "name": "Name",
+      "email": "Email",
+      "source": "Source"
+    },
+    "slideover": {
+      "title": "About customer",
+      "description": "Customer information",
+      "namePlaceholder": "Name",
+      "emailPlaceholder": "Email",
+      "sourcePlaceholder": "Source",
+      "save": "Save",
+      "saving": "Saving..."
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "seoTitle": "Settings | CRM System",
+    "profile": {
+      "title": "Profile",
+      "description": "Name, position, contacts and avatar",
+      "nameLabel": "Name *",
+      "namePlaceholder": "Enter your name",
+      "positionLabel": "Position",
+      "positionPlaceholder": "Product Manager",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "+79991234567",
+      "phoneHint": "Format: +7 and 7-20 digits",
+      "telegramLabel": "Telegram",
+      "telegramPlaceholder": "{'@'}username",
+      "telegramHint": "3-32 chars, a-z 0-9 _",
+      "emailLabel": "Email",
+      "emailHint": "Email cannot be changed",
+      "emailVerified": "Email verified",
+      "phoneNotSpecified": "Phone not specified",
+      "telegramNotSpecified": "Telegram not specified",
+      "save": "Save",
+      "saving": "Saving...",
+      "validation": {
+        "nameMin": "Minimum 2 characters",
+        "nameMax": "Maximum 100 characters",
+        "positionMax": "Maximum 100",
+        "phoneInvalid": "Invalid phone",
+        "telegramInvalid": "Invalid Telegram"
+      }
+    },
+    "history": {
+      "title": "Visit history",
+      "description": "Date, device, browser, OS and IP • {range}",
+      "refresh": "Refresh",
+      "loading": "Loading...",
+      "noVisits": "No visits yet (appear after login)",
+      "table": {
+        "time": "Time",
+        "device": "Device",
+        "browser": "Browser",
+        "os": "OS",
+        "ip": "IP"
+      },
+      "pagination": {
+        "page": "Page {page} of {total} ({totalItems} records)",
+        "prev": "Prev",
+        "next": "Next"
+      }
+    }
+  },
+  "avatar": {
+    "upload": "Upload avatar",
+    "remove": "Remove avatar",
+    "fileTooLarge": "File up to 2MB",
+    "onlyImage": "Only image",
+    "readError": "Failed to read file",
+    "hint": "PNG, JPG, WEBP, GIF up to 2MB"
+  },
+  "chats": {
+    "title": "Chats",
+    "seoTitle": "Chats | CRM System",
+    "description": "Start a dialog with any user by email",
+    "searchPlaceholder": "Search by name or email...",
+    "searching": "Searching...",
+    "searchResults": "Found: {count}",
+    "noConversations": "No chats",
+    "noConversationsHint": "Find user via search above and start dialog",
+    "noMessages": "Select a chat to start",
+    "noMessagesHint": "Find user by name or email and start conversation",
+    "close": "Close",
+    "inputPlaceholder": "Message...",
+    "typing": "typing...",
+    "you": "You",
+    "conversationsLoading": "Loading chats..."
+  },
+  "comments": {
+    "placeholder": "Add a comment",
+    "loading": "Loading comments...",
+    "delete": "Delete"
+  },
+  "currency": "RUB",
+  "date": {
+    "notSpecified": "-"
+  },
+  "errors": {
+    "unknown": "Unknown error"
+  },
+  "api": {
+    "profileUpdated": "Profile updated",
+    "avatarUpdated": "Avatar updated",
+    "avatarRemoved": "Avatar removed",
+    "save": "Saving...",
+    "error": "Error"
+  }
+}

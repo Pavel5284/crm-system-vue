@@ -24,9 +24,9 @@ type ApiFetchOptions = {
 // Центральный реестр - в одном месте управляешь для каких запросов показывать тост
 // ключ: "METHOD path" или просто "path" (без метода - для любого метода)
 const SUCCESS_TOAST_MAP: Record<string, string> = {
-    'PATCH /users/updateUserData': 'Профиль обновлён',
-    'POST /users/profile/avatar': 'Фото обновлено',
-    'DELETE /users/profile/avatar': 'Фото удалено',
+    'PATCH /users/updateUserData': 'api.profileUpdated',
+    'POST /users/profile/avatar': 'api.avatarUpdated',
+    'DELETE /users/profile/avatar': 'api.avatarRemoved',
     // добавь другие: 'POST /deals': 'Сделка создана',
 }
 
@@ -41,6 +41,7 @@ const getSuccessMessageForRequest = (path: string, method?: string): string | nu
     return null
 }
 
+const getI18nT = () => { try { const { t } = useI18n(); return t } catch { try { const nuxtApp = useNuxtApp(); return (nuxtApp.$i18n as any)?.t ?? ((k:string)=>k) } catch { return (k:string)=>k } } }
 const getToast = () => {
     try {
         return useToast()
@@ -55,7 +56,7 @@ export const useApiBaseUrl = () => {
 }
 
 // --- deprecated stubs: оставлены для совместимости, httpOnly куки нельзя читать из JS ---
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 export const setTokens = (_tokens: { accessToken: string; refreshToken: string }) => {}
 export const hasTokens = () => false
 export const clearTokens = () => {}
@@ -120,10 +121,10 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions = {}): 
         }
         const autoMsg = getSuccessMessageForRequest(path, method ?? (fetchOptions.method as string))
         if (autoMsg) {
-            if (autoMsg === 'Профиль обновлён') {
-                toast.add({ title: 'Сохранено', description: 'Профиль обновлён', color: 'success' })
+            if (autoMsg === 'api.profileUpdated') {
+                toast.add({ title: getI18nT()('api.save'), description: getI18nT()('api.profileUpdated'), color: 'success' })
             } else {
-                toast.add({ title: autoMsg, color: 'success' })
+                toast.add({ title: getI18nT()(autoMsg), color: 'success' })
             }
         }
     }
@@ -139,11 +140,11 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions = {}): 
         const toast = getToast()
         if (!toast) return
         if (typeof toastOpt === 'object' && typeof toastOpt.error === 'string') {
-            toast.add({ title: 'Ошибка', description: toastOpt.error, color: 'error' })
+            toast.add({ title: getI18nT()('api.error'), description: toastOpt.error, color: 'error' })
             return
         }
         const msg = getApiErrorMessage(error)
-        toast.add({ title: 'Ошибка', description: msg, color: 'error' })
+        toast.add({ title: getI18nT()('api.error'), description: msg, color: 'error' })
     }
 
     try {

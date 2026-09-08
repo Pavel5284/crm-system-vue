@@ -1,9 +1,11 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { getApiErrorMessage } from '~/utils/api'
 import { getMeApi, getProfileApi, loginApi } from '~/utils/auth.api'
 
+const { t } = useI18n()
+
 useSeoMeta({
-  title: "Login | CRM System",
+  title: t('login.seoTitle'),
 })
 
 definePageMeta({
@@ -20,12 +22,10 @@ const authStore = useAuthStore()
 const router = useRouter()
 
 onMounted(async () => {
-  // после logout не нужно проверять сессию — куки уже очищены, сэкономим 1 запрос
   if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('justLoggedOut')) {
     sessionStorage.removeItem('justLoggedOut')
     return
   }
-  // если уже в сторе — тоже не дергаем
   if (authStore.isAuth) {
     await router.push('/')
     return
@@ -68,18 +68,22 @@ const login = () => authorize(async () => {
 <template>
   <div class="flex items-center justify-center min-h-screen w-full">
     <div class="rounded bg-sidebar w-1/4 p-5">
-      <h1 class="text-2xl font-bold text-center mb-5">Login</h1>
+      <div class="flex justify-end mb-2">
+        <LayoutLangSwitcher />
+      </div>
+      <h1 class="text-2xl font-bold text-center mb-5">{{ t('login.title') }}</h1>
       <p v-if="errorRef" class="text-red-500 text-sm text-center mb-3">{{ errorRef }}</p>
       <form @submit.prevent="login" autocomplete="on">
-        <UiInput placeholder="Email" type="email" autocomplete="email" name="email" class="mb-3" v-model="emailRef"/>
-        <UiInputPassword placeholder="Password" class="mb-3" v-model="passwordRef" autocomplete="current-password" name="password"/>
+        <UiInput :placeholder="t('login.emailPlaceholder')" type="email" autocomplete="email" name="email" class="mb-3" v-model="emailRef"/>
+        <UiInputPassword :placeholder="t('login.passwordPlaceholder')" class="mb-3" v-model="passwordRef" autocomplete="current-password" name="password"/>
         <div class="flex flex-col items-center gap-3">
-          <UiButton type="submit">Login</UiButton>
+          <UiButton type="submit">{{ t('login.loginButton') }}</UiButton>
           <NuxtLink to="/register" class="text-sm text-muted-foreground hover:text-white">
-            Don't have an account? Register
+            {{ t('login.noAccount') }}
           </NuxtLink>
         </div>
       </form>
     </div>
   </div>
 </template>
+

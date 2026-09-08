@@ -1,6 +1,7 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { useNotifications } from '~/composables/useNotifications'
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 const { status, notifications, connect, disconnect, clear } = useNotifications()
 
@@ -57,18 +58,17 @@ watch(() => authStore.isAuth, (v) => {
 
 <template>
   <header class="h-14 px-6 flex items-center justify-between border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
-    <!-- left: spacer / breadcrumb could go here -->
     <div class="flex items-center gap-2 text-sm text-muted-foreground">
       <span class="hidden sm:inline">CRM System</span>
     </div>
 
     <div class="flex items-center gap-3">
-      <!-- notifications -->
+      <LayoutLangSwitcher />
       <div ref="dropdownRef" class="relative">
         <button
           type="button"
           class="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border hover:bg-accent transition-colors"
-          aria-label="Уведомления"
+          :aria-label="t('header.notifications')"
           @click.stop="showNotifications = !showNotifications"
         >
           <Icon name="lucide:bell" size="18" />
@@ -86,11 +86,11 @@ watch(() => authStore.isAuth, (v) => {
           class="absolute right-0 mt-2 w-80 sm:w-96 rounded-lg border border-border bg-card shadow-lg overflow-hidden"
         >
           <div class="px-4 py-3 flex items-center justify-between border-b border-border">
-            <p class="text-sm font-semibold">Уведомления</p>
+            <p class="text-sm font-semibold">{{ t('header.notifications') }}</p>
             <div class="flex items-center gap-2">
               <span :class="['h-2 w-2 rounded-full', statusColor[status]]" />
-              <span class="text-xs text-muted-foreground capitalize">{{ status }}</span>
-              <button v-if="unreadCount" type="button" class="text-xs text-primary hover:underline ml-2" @click="clear">Очистить</button>
+              <span class="text-xs text-muted-foreground capitalize">{{ t('header.status.' + status) }}</span>
+              <button v-if="unreadCount" type="button" class="text-xs text-primary hover:underline ml-2" @click="clear">{{ t('header.clear') }}</button>
             </div>
           </div>
 
@@ -100,20 +100,18 @@ watch(() => authStore.isAuth, (v) => {
             </div>
           </div>
           <div v-else class="px-4 py-10 text-center text-sm text-muted-foreground">
-            Пока нет уведомлений
+            {{ t('header.noNotifications') }}
           </div>
 
           <div class="px-4 py-2 border-t border-border bg-muted/30 flex justify-between items-center">
-            <NuxtLink to="/ws-test" class="text-xs text-primary hover:underline" @click="showNotifications=false">WS-тест</NuxtLink>
-            <span class="text-[11px] text-muted-foreground">{{ unreadCount }} всего</span>
+            <NuxtLink to="/ws-test" class="text-xs text-primary hover:underline" @click="showNotifications=false">{{ t('header.wsTest') }}</NuxtLink>
+            <span class="text-[11px] text-muted-foreground">{{ t('header.notificationsCount', { count: unreadCount }) }}</span>
           </div>
         </div>
       </div>
 
-      <!-- divider -->
       <div class="h-6 w-px bg-border mx-1" />
 
-      <!-- profile -->
       <div ref="profileRef" class="relative">
         <button
           type="button"
@@ -146,7 +144,7 @@ watch(() => authStore.isAuth, (v) => {
           </div>
           <div class="border-t border-border p-1">
             <NuxtLink to="/settings" class="flex items-center gap-2 px-2 py-1.5 rounded-md text-sm hover:bg-accent" @click="showProfile=false">
-              <Icon name="radix-icons:gear" size="14" /> Настройки
+              <Icon name="radix-icons:gear" size="14" /> {{ t('header.settings') }}
             </NuxtLink>
           </div>
         </div>
@@ -154,3 +152,4 @@ watch(() => authStore.isAuth, (v) => {
     </div>
   </header>
 </template>
+

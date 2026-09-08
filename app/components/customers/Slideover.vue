@@ -1,6 +1,8 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { getApiErrorMessage } from '~/utils/api'
 import { deleteCustomerAvatarApi, updateCustomerApi, updateCustomerAvatarApi } from '~/utils/crm.api'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   refetch: () => Promise<unknown>
@@ -101,26 +103,26 @@ async function onSave() {
   <USlideover
     v-model:open="isLocalOpen"
     side="right"
-    title="О клиенте"
-    description="Редактирование клиента"
+    :title="t('customers.slideover.title')"
+    :description="t('customers.slideover.description')"
   >
     <template #body>
       <div class="mb-5 flex flex-col items-center gap-3">
         <UiAvatarUploader v-model="avatarUrlRef" :initials="customerInitials" :size="96" v-model:saving="isAvatarSaving" @upload="onCustomerAvatarUpload" @remove="onCustomerAvatarRemove" />
-        <p class="text-xs text-muted-foreground">PNG, JPG, WEBP, GIF до 2MB</p>
+        <p class="text-xs text-muted-foreground">{{ t('avatar.hint') }}</p>
       </div>
 
       <div class="space-y-3">
-        <UiInput placeholder="Наименование" type="text" class="input" v-model="nameRef"/>
+        <UiInput :placeholder="t('customers.slideover.namePlaceholder')" type="text" class="input" v-model="nameRef"/>
         <UiInput placeholder="Email" type="email" class="input" v-model="emailRef"/>
-        <UiInput placeholder="Откуда пришёл" type="text" class="input" v-model="fromSourceRef"/>
+        <UiInput :placeholder="t('customers.slideover.sourcePlaceholder')" type="text" class="input" v-model="fromSourceRef"/>
       </div>
 
       <p v-if="errorRef" class="text-red-500 text-sm mt-3">{{ errorRef }}</p>
 
       <div class="flex items-center gap-3 mt-5">
         <UiButton type="button" :disabled="isSaving || !isDirty" @click="onSave">
-          {{ isSaving ? 'Сохранение...' : 'Сохранить' }}
+          {{ isSaving ? t('customers.slideover.saving') : t('customers.slideover.save') }}
         </UiButton>
       </div>
     </template>
@@ -135,3 +137,4 @@ async function onSave() {
   color: #748092;
 }
 </style>
+

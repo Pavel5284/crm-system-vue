@@ -7,13 +7,16 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare && node scripts/apply-patches.mjs"
+    "postinstall": "nuxt prepare && node scripts/apply-patches.mjs",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
     "@nuxt/icon": "^2.4.1",
     "@nuxt/image": "^2.1.0",
     "@nuxt/ui": "^4.10.0",
     "@nuxtjs/google-fonts": "3.2.0",
+    "@nuxtjs/i18n": "^10.6.0",
     "@peterbud/nuxt-query": "1.10.0",
     "@pinia/nuxt": "1.0.2",
     "@tanstack/vue-form": "^1.33.5",
@@ -38,8 +41,10 @@
     "zod": "^4.5.4"
   },
   "devDependencies": {
+    "@nuxt/eslint": "^1.17.0",
     "@nuxtjs/tailwindcss": "7.0.0-beta.1",
     "@types/node": "^26.1.2",
+    "eslint": "^9.39.5",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "vue-tsc": "2.2.12"

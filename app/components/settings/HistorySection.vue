@@ -1,6 +1,8 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { getVisitsApi, type Visit } from '~/utils/auth.api.ts'
 import { formatDate } from '~/utils/formatDate.ts'
+
+const { t, locale } = useI18n()
 
 const visits = ref<Visit[]>([])
 const visitsLoading = ref(false)
@@ -13,7 +15,7 @@ const visitsRangeText = computed(() => {
   if (!visitsTotal.value) return ''
   const start = (visitsPage.value - 1) * visitsPerPage.value + 1
   const end = Math.min(visitsPage.value * visitsPerPage.value, visitsTotal.value)
-  return `${start}–${end} из ${visitsTotal.value}`
+  return `${start}-${end} / ${visitsTotal.value}`
 })
 
 const loadVisits = async () => {
@@ -43,8 +45,8 @@ defineExpose({ loadVisits })
   <div class="rounded-lg border border-border bg-card">
     <div class="px-6 py-4 border-b border-border flex items-center justify-between gap-4">
       <div>
-        <h2 class="text-base font-semibold">История посещений</h2>
-        <p class="text-xs text-muted-foreground">Когда, устройство, браузер, IP — {{ visitsRangeText }}</p>
+        <h2 class="text-base font-semibold">{{ t('settings.history.title') }}</h2>
+        <p class="text-xs text-muted-foreground">{{ t('settings.history.description', { range: visitsRangeText }) }}</p>
       </div>
       <div class="flex items-center gap-2">
         <select v-model.number="visitsPerPage" class="h-8 rounded-md border border-input bg-background px-2 text-xs">
@@ -52,42 +54,43 @@ defineExpose({ loadVisits })
           <option :value="25">25</option>
           <option :value="50">50</option>
         </select>
-        <UiButton variant="outline" size="sm" @click="loadVisits" :disabled="visitsLoading">Обновить</UiButton>
+        <UiButton variant="outline" size="sm" @click="loadVisits" :disabled="visitsLoading">{{ t('settings.history.refresh') }}</UiButton>
       </div>
     </div>
 
-    <div v-if="!visitsTotal && !visitsLoading" class="p-6 text-sm text-muted-foreground text-center">Пока нет записей (войдите заново чтобы создать визит)</div>
+    <div v-if="!visitsTotal && !visitsLoading" class="p-6 text-sm text-muted-foreground text-center">{{ t('settings.history.noVisits') }}</div>
     <div v-else>
-      <div v-if="visitsLoading" class="px-4 py-2 text-xs text-muted-foreground flex items-center gap-2"><Icon name="lucide:loader-2" size="12" class="animate-spin"/> Загрузка…</div>
+      <div v-if="visitsLoading" class="px-4 py-2 text-xs text-muted-foreground flex items-center gap-2"><Icon name="lucide:loader-2" size="12" class="animate-spin"/> {{ t('settings.history.loading') }}</div>
       <div class="overflow-auto min-h-[120px]">
         <table class="w-full text-sm">
           <thead class="text-xs text-muted-foreground border-b border-border">
             <tr>
-              <th class="text-left px-4 py-2 font-medium">Дата</th>
-              <th class="text-left px-4 py-2 font-medium">Устройство</th>
-              <th class="text-left px-4 py-2 font-medium">Браузер</th>
-              <th class="text-left px-4 py-2 font-medium">ОС</th>
-              <th class="text-left px-4 py-2 font-medium">IP</th>
+              <th class="text-left px-4 py-2 font-medium">{{ t('settings.history.table.time') }}</th>
+              <th class="text-left px-4 py-2 font-medium">{{ t('settings.history.table.device') }}</th>
+              <th class="text-left px-4 py-2 font-medium">{{ t('settings.history.table.browser') }}</th>
+              <th class="text-left px-4 py-2 font-medium">{{ t('settings.history.table.os') }}</th>
+              <th class="text-left px-4 py-2 font-medium">{{ t('settings.history.table.ip') }}</th>
             </tr>
           </thead>
           <tbody :class="visitsLoading && 'opacity-50 pointer-events-none'">
             <tr v-for="v in visits" :key="v.id" class="border-b border-border/60 hover:bg-accent/40">
-              <td class="px-4 py-2 whitespace-nowrap">{{ formatDate(v.createdAt) }}</td>
-              <td class="px-4 py-2">{{ v.device || '—' }}</td>
-              <td class="px-4 py-2">{{ v.browser || '—' }}</td>
-              <td class="px-4 py-2">{{ v.os || '—' }}</td>
+              <td class="px-4 py-2 whitespace-nowrap">{{ formatDate(v.createdAt, 'full', locale) }}</td>
+              <td class="px-4 py-2">{{ v.device || t('common.noData') }}</td>
+              <td class="px-4 py-2">{{ v.browser || t('common.noData') }}</td>
+              <td class="px-4 py-2">{{ v.os || t('common.noData') }}</td>
               <td class="px-4 py-2 font-mono text-xs">{{ v.ip }}</td>
             </tr>
           </tbody>
         </table>
       </div>
       <div v-if="visitsTotalPages > 1" class="flex items-center justify-between px-4 py-3 border-t border-border">
-        <span class="text-xs text-muted-foreground">Стр. {{ visitsPage }} из {{ visitsTotalPages }} ({{ visitsTotal }} всего)</span>
+        <span class="text-xs text-muted-foreground">{{ t('settings.history.pagination.page', { page: visitsPage, total: visitsTotalPages, totalItems: visitsTotal }) }}</span>
         <div class="flex gap-1">
-          <UiButton type="button" variant="outline" size="sm" :disabled="visitsPage <= 1 || visitsLoading" @click.stop="visitsPage--">Назад</UiButton>
-          <UiButton type="button" variant="outline" size="sm" :disabled="visitsPage >= visitsTotalPages || visitsLoading" @click.stop="visitsPage++">Вперёд</UiButton>
+          <UiButton type="button" variant="outline" size="sm" :disabled="visitsPage <= 1 || visitsLoading" @click.stop="visitsPage--">{{ t('settings.history.pagination.prev') }}</UiButton>
+          <UiButton type="button" variant="outline" size="sm" :disabled="visitsPage >= visitsTotalPages || visitsLoading" @click.stop="visitsPage++">{{ t('settings.history.pagination.next') }}</UiButton>
         </div>
       </div>
     </div>
   </div>
 </template>
+

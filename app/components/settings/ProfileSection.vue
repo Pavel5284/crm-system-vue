@@ -1,7 +1,9 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { useForm } from '@tanstack/vue-form'
 import { z } from 'zod'
 import { getProfileApi, removeAvatarApi, updateAvatarApi, updateProfileApi } from '~/utils/auth.api.ts'
+
+const { t } = useI18n()
 
 type ProfileFormValues = {
   name: string
@@ -41,7 +43,6 @@ const onAvatarUpload = async (dataUrl: string) => {
       authStore.user.avatarUrl = dataUrl
     }
   } catch {
-    // ошибка уже показана глобально через apiFetch toast
   }
 }
 
@@ -52,16 +53,15 @@ const onAvatarRemove = async () => {
       authStore.user.avatarUrl = null
     }
   } catch {
-    // ошибка уже показана глобально
   }
 }
 
-const profileSchema = z.object({
-  name: z.string().trim().min(2, 'Минимум 2 символа').max(100, 'До 100 символов'),
-  position: z.string().trim().max(100, 'До 100'),
-  phone: z.string().trim().refine(v => !v || /^\+?[0-9\s\-()]{7,20}$/.test(v), 'Неверный телефон'),
-  telegram: z.string().trim().refine(v => !v || /^@?[a-zA-Z0-9_]{3,32}$/.test(v), 'Неверный Telegram'),
-})
+const profileSchema = computed(() => z.object({
+  name: z.string().trim().min(2, t('settings.profile.validation.nameMin')).max(100, t('settings.profile.validation.nameMax')),
+  position: z.string().trim().max(100, t('settings.profile.validation.positionMax')),
+  phone: z.string().trim().refine(v => !v || /^\+?[0-9\s\-()]{7,20}$/.test(v), t('settings.profile.validation.phoneInvalid')),
+  telegram: z.string().trim().refine(v => !v || /^@?[a-zA-Z0-9_]{3,32}$/.test(v), t('settings.profile.validation.telegramInvalid')),
+}))
 
 const profileForm = useForm({
   defaultValues: {
@@ -71,7 +71,7 @@ const profileForm = useForm({
     telegram: '',
   } satisfies ProfileFormValues,
   validators: {
-    onChange: profileSchema,
+    onChange: computed(() => profileSchema.value) as any,
   },
   onSubmit: async ({ value }) => {
     const payload = {
@@ -129,7 +129,6 @@ const loadMe = async () => {
     initialProfile.value = { ...init }
     profileForm.reset(init)
   } catch {
-    // 401 для /users/me|/profile - silent (см. api.ts), остальные - тост уже показан
   }
 }
 
@@ -139,8 +138,8 @@ onMounted(loadMe)
 <template>
   <div class="rounded-lg border border-border bg-card">
     <div class="px-6 py-4 border-b border-border">
-      <h2 class="text-base font-semibold">Профиль</h2>
-      <p class="text-xs text-muted-foreground">Фото, имя, должность и контакты</p>
+      <h2 class="text-base font-semibold">{{ t('settings.profile.title') }}</h2>
+      <p class="text-xs text-muted-foreground">{{ t('settings.profile.description') }}</p>
     </div>
 
     <form class="p-6" @submit.prevent="() => profileForm.handleSubmit()">
@@ -150,27 +149,26 @@ onMounted(loadMe)
           <p class="mt-4 text-sm font-semibold">{{ authStore.user.name }}</p>
           <p class="text-xs text-muted-foreground">{{ authStore.user.email }}</p>
           <p v-if="authStore.user.position" class="text-xs text-muted-foreground mt-1">{{ authStore.user.position }}</p>
-          <span v-if="authStore.user.isEmailVerified" class="mt-2 text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 border border-green-500/20">Email подтверждён</span>
+          <span v-if="authStore.user.isEmailVerified" class="mt-2 text-xs px-2 py-0.5 rounded-full bg-green-500/10 text-green-600 border border-green-500/20">{{ t('settings.profile.emailVerified') }}</span>
           <div class="mt-4 w-full text-left space-y-2 text-xs text-muted-foreground">
-            <div class="flex items-center gap-2"><Icon name="lucide:phone" size="14"/> <span>{{ authStore.user.phone || 'Телефон не указан' }}</span></div>
-            <div class="flex items-center gap-2"><Icon name="lucide:send" size="14"/> <span>{{ authStore.user.telegram || 'Telegram не указан' }}</span></div>
+            <div class="flex items-center gap-2"><Icon name="lucide:phone" size="14"/> <span>{{ authStore.user.phone || t('settings.profile.phoneNotSpecified') }}</span></div>
+            <div class="flex items-center gap-2"><Icon name="lucide:send" size="14"/> <span>{{ authStore.user.telegram || t('settings.profile.telegramNotSpecified') }}</span></div>
           </div>
         </div>
 
-        <!-- fields via TanStack Form -->
         <div class="flex-1 space-y-4 min-w-0">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <ProfileFormField name="name" v-slot="{ field }">
               <div>
-                <label class="text-xs font-medium">Имя *</label>
-                <UiInput :modelValue="field.state.value" @update:modelValue="(val: string | number) => field.handleChange(val as string)" @blur="field.handleBlur" placeholder="Иван Иванов" autocomplete="name" class="mt-1" />
+                <label class="text-xs font-medium">{{ t('settings.profile.nameLabel') }}</label>
+                <UiInput :modelValue="field.state.value" @update:modelValue="(val: string | number) => field.handleChange(val as string)" @blur="field.handleBlur" :placeholder="t('settings.profile.namePlaceholder')" autocomplete="name" class="mt-1" />
                 <p v-if="field.state.meta.errors.length" class="text-red-500 text-[11px] mt-1">{{ formatFieldErrors(field.state.meta.errors) }}</p>
               </div>
             </ProfileFormField>
             <ProfileFormField name="position" v-slot="{ field }">
               <div>
-                <label class="text-xs font-medium">Должность</label>
-                <UiInput :modelValue="field.state.value" @update:modelValue="(val: string | number) => field.handleChange(val as string)" @blur="field.handleBlur" placeholder="Product Manager" class="mt-1" />
+                <label class="text-xs font-medium">{{ t('settings.profile.positionLabel') }}</label>
+                <UiInput :modelValue="field.state.value" @update:modelValue="(val: string | number) => field.handleChange(val as string)" @blur="field.handleBlur" :placeholder="t('settings.profile.positionPlaceholder')" class="mt-1" />
                 <p v-if="field.state.meta.errors.length" class="text-red-500 text-[11px] mt-1">{{ formatFieldErrors(field.state.meta.errors) }}</p>
               </div>
             </ProfileFormField>
@@ -179,35 +177,36 @@ onMounted(loadMe)
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <ProfileFormField name="phone" v-slot="{ field }">
               <div>
-                <label class="text-xs font-medium">Телефон</label>
-                <UiInput :modelValue="field.state.value" @update:modelValue="(val: string | number) => field.handleChange(val as string)" @blur="field.handleBlur" placeholder="+79991234567" autocomplete="tel" class="mt-1" />
+                <label class="text-xs font-medium">{{ t('settings.profile.phoneLabel') }}</label>
+                <UiInput :modelValue="field.state.value" @update:modelValue="(val: string | number) => field.handleChange(val as string)" @blur="field.handleBlur" :placeholder="t('settings.profile.phonePlaceholder')" autocomplete="tel" class="mt-1" />
                 <p v-if="field.state.meta.errors.length" class="text-red-500 text-[11px] mt-1">{{ formatFieldErrors(field.state.meta.errors) }}</p>
-                <p v-else class="text-[11px] text-muted-foreground mt-1">Формат: +7… 7-20 символов</p>
+                <p v-else class="text-[11px] text-muted-foreground mt-1">{{ t('settings.profile.phoneHint') }}</p>
               </div>
             </ProfileFormField>
             <ProfileFormField name="telegram" v-slot="{ field }">
               <div>
                 <label class="text-xs font-medium">Telegram</label>
-                <UiInput :modelValue="field.state.value" @update:modelValue="(val: string | number) => field.handleChange(val as string)" @blur="field.handleBlur" placeholder="@username" class="mt-1" />
+                <UiInput :modelValue="field.state.value" @update:modelValue="(val: string | number) => field.handleChange(val as string)" @blur="field.handleBlur" :placeholder="t('settings.profile.telegramPlaceholder')" class="mt-1" />
                 <p v-if="field.state.meta.errors.length" class="text-red-500 text-[11px] mt-1">{{ formatFieldErrors(field.state.meta.errors) }}</p>
-                <p v-else class="text-[11px] text-muted-foreground mt-1">3-32 символа, a-z 0-9 _</p>
+                <p v-else class="text-[11px] text-muted-foreground mt-1">{{ t('settings.profile.telegramHint') }}</p>
               </div>
             </ProfileFormField>
           </div>
 
           <div>
-            <label class="text-xs font-medium">Email</label>
+            <label class="text-xs font-medium">{{ t('settings.profile.emailLabel') }}</label>
             <UiInput :model-value="authStore.user.email" disabled class="mt-1 opacity-70" />
-            <p class="text-[11px] text-muted-foreground mt-1">Email меняется отдельно</p>
+            <p class="text-[11px] text-muted-foreground mt-1">{{ t('settings.profile.emailHint') }}</p>
           </div>
         </div>
       </div>
 
       <div class="flex justify-end pt-6">
         <UiButton type="submit" :disabled="!isProfileDirty || isSaving">
-          Сохранить
+          {{ t('settings.profile.save') }}
         </UiButton>
       </div>
     </form>
   </div>
 </template>
+

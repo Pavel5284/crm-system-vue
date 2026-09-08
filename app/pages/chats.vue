@@ -1,8 +1,9 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import { formatDate } from '~/utils/formatDate'
 import { useDebounceFn } from '@vueuse/core'
 
-useSeoMeta({ title: 'Чаты | CRM System' })
+const { t, locale } = useI18n()
+useSeoMeta({ title: t('chats.seoTitle') })
 
 const authStore = useAuthStore()
 const chatStore = useChatStore()
@@ -98,32 +99,29 @@ const showSearchResults = computed(() => !!searchQuery.value.trim() && chatStore
 
 <template>
   <div class="flex flex-col h-[calc(100vh-80px)] rounded-lg border border-border bg-card overflow-hidden">
-    <!-- header -->
     <div class="px-6 py-4 border-b border-border flex items-center justify-between">
       <div>
-        <h1 class="text-base font-semibold">Чаты</h1>
-        <p class="text-xs text-muted-foreground">Найди пользователя и напиши личное сообщение</p>
+        <h1 class="text-base font-semibold">{{ t('chats.title') }}</h1>
+        <p class="text-xs text-muted-foreground">{{ t('chats.description') }}</p>
       </div>
       <div class="text-xs text-muted-foreground hidden sm:block">
-        {{ authStore.user.name }} · {{ authStore.user.email }}
+        {{ authStore.user.name }} - {{ authStore.user.email }}
       </div>
     </div>
 
     <div class="flex flex-1 min-h-0">
-      <!-- left: search + conversations -->
       <div class="w-full sm:w-[340px] border-r border-border flex flex-col min-h-0 shrink-0">
         <div class="p-3 border-b border-border">
           <div class="relative">
             <Icon name="lucide:search" size="16" class="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <UiInput v-model="searchQuery" placeholder="Поиск по имени или email..." class="pl-9" />
+            <UiInput v-model="searchQuery" :placeholder="t('chats.searchPlaceholder')" class="pl-9" />
           </div>
-          <p v-if="chatStore.isSearching" class="text-[11px] text-muted-foreground mt-2 flex items-center gap-1"><Icon name="lucide:loader-2" size="12" class="animate-spin"/> Поиск...</p>
+          <p v-if="chatStore.isSearching" class="text-[11px] text-muted-foreground mt-2 flex items-center gap-1"><Icon name="lucide:loader-2" size="12" class="animate-spin"/> {{ t('chats.searching') }}</p>
         </div>
 
         <div class="flex-1 overflow-auto">
-          <!-- search results -->
           <div v-if="showSearchResults" class="p-2">
-            <p class="text-[11px] text-muted-foreground px-2 py-1">Найдено: {{ chatStore.searchResults.length }}</p>
+            <p class="text-[11px] text-muted-foreground px-2 py-1">{{ t('chats.searchResults', { count: chatStore.searchResults.length }) }}</p>
             <button
               v-for="u in chatStore.searchResults"
               :key="u.id"
@@ -142,13 +140,12 @@ const showSearchResults = computed(() => !!searchQuery.value.trim() && chatStore
             </button>
           </div>
 
-          <!-- conversations -->
           <div v-else>
-            <div v-if="chatStore.isLoadingConversations" class="p-4 text-xs text-muted-foreground flex items-center gap-2"><Icon name="lucide:loader-2" size="14" class="animate-spin"/> Загрузка чатов...</div>
+            <div v-if="chatStore.isLoadingConversations" class="p-4 text-xs text-muted-foreground flex items-center gap-2"><Icon name="lucide:loader-2" size="14" class="animate-spin"/> {{ t('chats.conversationsLoading') }}</div>
             <div v-else-if="!filteredConversations.length" class="p-6 text-center">
               <Icon name="lucide:messages-square" size="32" class="mx-auto text-muted-foreground mb-2" />
-              <p class="text-sm text-muted-foreground">Пока нет чатов</p>
-              <p class="text-xs text-muted-foreground mt-1">Найди пользователя выше и начни диалог</p>
+              <p class="text-sm text-muted-foreground">{{ t('chats.noConversations') }}</p>
+              <p class="text-xs text-muted-foreground mt-1">{{ t('chats.noConversationsHint') }}</p>
             </div>
             <div v-else class="p-2 space-y-1">
               <button
@@ -167,7 +164,7 @@ const showSearchResults = computed(() => !!searchQuery.value.trim() && chatStore
                   <p class="text-xs text-muted-foreground truncate">{{ c.lastMessage.text }}</p>
                 </div>
                 <div class="text-[10px] text-muted-foreground shrink-0">
-                  {{ formatDate(c.lastMessage.createdAt, 'full') }}
+                  {{ formatDate(c.lastMessage.createdAt, 'full', locale) }}
                 </div>
               </button>
             </div>
@@ -175,18 +172,16 @@ const showSearchResults = computed(() => !!searchQuery.value.trim() && chatStore
         </div>
       </div>
 
-      <!-- right: messages -->
       <div class="flex-1 flex flex-col min-w-0 bg-background/50">
         <div v-if="!chatStore.selectedPartner" class="flex-1 grid place-items-center p-8 text-center">
           <div>
             <Icon name="lucide:message-circle-more" size="48" class="mx-auto text-muted-foreground mb-3" />
-            <p class="text-sm font-medium">Выбери чат или найди пользователя</p>
-            <p class="text-xs text-muted-foreground mt-1">Поиск работает по имени и email зарегистрированных пользователей</p>
+            <p class="text-sm font-medium">{{ t('chats.noMessages') }}</p>
+            <p class="text-xs text-muted-foreground mt-1">{{ t('chats.noMessagesHint') }}</p>
           </div>
         </div>
 
         <template v-else>
-          <!-- chat header -->
           <div class="px-4 py-3 border-b border-border flex items-center gap-3 bg-card">
             <img v-if="chatStore.selectedPartner.avatarUrl" :src="chatStore.selectedPartner.avatarUrl" class="w-8 h-8 rounded-full object-cover border border-border" />
             <div v-else class="w-8 h-8 rounded-full bg-primary text-primary-foreground grid place-items-center text-xs font-bold">
@@ -196,30 +191,28 @@ const showSearchResults = computed(() => !!searchQuery.value.trim() && chatStore
               <p class="text-sm font-semibold truncate">{{ displayName(chatStore.selectedPartner) }}</p>
               <p class="text-xs text-muted-foreground truncate">{{ chatStore.selectedPartner.email }}</p>
             </div>
-            <UiButton variant="ghost" size="sm" class="ml-auto" @click="chatStore.clearSelected()">Закрыть</UiButton>
+            <UiButton variant="ghost" size="sm" class="ml-auto" @click="chatStore.clearSelected()">{{ t('chats.close') }}</UiButton>
           </div>
 
-          <!-- messages -->
           <div ref="messagesContainer" class="flex-1 overflow-auto p-4 space-y-3">
-            <div v-if="chatStore.isLoadingMessages" class="text-xs text-muted-foreground flex items-center gap-2"><Icon name="lucide:loader-2" size="14" class="animate-spin"/> Загрузка...</div>
+            <div v-if="chatStore.isLoadingMessages" class="text-xs text-muted-foreground flex items-center gap-2"><Icon name="lucide:loader-2" size="14" class="animate-spin"/> {{ t('common.loading') }}</div>
             <div v-else-if="!chatStore.selectedMessages.length" class="text-center py-12">
-              <p class="text-sm text-muted-foreground">Нет сообщений. Начни диалог!</p>
+              <p class="text-sm text-muted-foreground">{{ t('chats.noMessagesHint') }}</p>
             </div>
             <div v-else v-for="m in chatStore.selectedMessages" :key="m.id" class="flex" :class="m.senderId === authStore.user.id ? 'justify-end' : 'justify-start'">
               <div class="max-w-[70%] rounded-2xl px-3 py-2 text-sm" :class="m.senderId === authStore.user.id ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-card border border-border rounded-bl-sm'">
                 <p class="whitespace-pre-wrap break-words">{{ m.text }}</p>
-                <p class="text-[10px] mt-1 opacity-70">{{ formatDate(m.createdAt, 'full') }}</p>
+                <p class="text-[10px] mt-1 opacity-70">{{ formatDate(m.createdAt, 'full', locale) }}</p>
               </div>
             </div>
-            <p v-if="isTyping" class="text-xs text-muted-foreground italic">собеседник печатает...</p>
+            <p v-if="isTyping" class="text-xs text-muted-foreground italic">{{ t('chats.typing') }}</p>
           </div>
 
-          <!-- input -->
           <div class="p-3 border-t border-border bg-card">
             <div class="flex gap-2 items-end">
               <UiInput
                 v-model="messageText"
-                placeholder="Написать сообщение..."
+                :placeholder="t('chats.inputPlaceholder')"
                 class="flex-1"
                 @keydown="onKeyDown"
                 :disabled="chatStore.isSending"
@@ -229,10 +222,10 @@ const showSearchResults = computed(() => !!searchQuery.value.trim() && chatStore
                 <Icon v-else name="lucide:send" size="16" />
               </UiButton>
             </div>
-            <p class="text-[10px] text-muted-foreground mt-1">Enter - отправить, Shift+Enter - новая строка</p>
           </div>
         </template>
       </div>
     </div>
   </div>
 </template>
+

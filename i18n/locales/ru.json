@@ -1,0 +1,230 @@
+{
+  "common": {
+    "loading": "Загрузка...",
+    "save": "Сохранить",
+    "saving": "Сохранение...",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "create": "Создать",
+    "add": "Добавить",
+    "adding": "Добавление...",
+    "close": "Закрыть",
+    "clear": "Очистить",
+    "refresh": "Обновить",
+    "search": "Поиск",
+    "searching": "Поиск...",
+    "noData": "Нет данных",
+    "error": "Ошибка",
+    "success": "Успешно"
+  },
+  "menu": {
+    "home": "Главная",
+    "products": "Продукты",
+    "payments": "Платежи",
+    "orders": "Заказы",
+    "customers": "Клиенты",
+    "chats": "Чаты",
+    "feedback": "Обратная связь",
+    "settings": "Настройки",
+    "help": "Помощь"
+  },
+  "header": {
+    "crmSystem": "CRM Система",
+    "notifications": "Уведомления",
+    "noNotifications": "Нет новых уведомлений",
+    "clear": "Очистить",
+    "wsTest": "WS-тест",
+    "notificationsCount": "{count} уведомлений",
+    "status": {
+      "connected": "подключено",
+      "connecting": "подключение",
+      "disconnected": "отключено",
+      "unauthorized": "не авторизован",
+      "error": "ошибка"
+    },
+    "settings": "Настройки",
+    "language": "Язык"
+  },
+  "sidebar": {
+    "logout": "Выйти"
+  },
+  "login": {
+    "title": "Вход",
+    "seoTitle": "Вход | CRM Система",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Пароль",
+    "loginButton": "Войти",
+    "noAccount": "Нет аккаунта? Зарегистрироваться",
+    "error": "Ошибка"
+  },
+  "register": {
+    "title": "Регистрация",
+    "seoTitle": "Регистрация | CRM Система",
+    "namePlaceholder": "Имя",
+    "emailPlaceholder": "Email",
+    "passwordPlaceholder": "Пароль",
+    "confirmPasswordPlaceholder": "Подтвердите пароль",
+    "registerButton": "Зарегистрироваться",
+    "haveAccount": "Уже есть аккаунт? Войти",
+    "passwordTooShort": "Пароль должен содержать минимум 8 символов",
+    "passwordsMismatch": "Пароли не совпадают",
+    "enterEmail": "Введите email",
+    "success": "Успешно",
+    "resendButton": "Отправить повторно",
+    "resendQuestion": "Не пришло письмо?",
+    "goToLogin": "Перейти ко входу"
+  },
+  "verifyEmail": {
+    "title": "Подтверждение email",
+    "seoTitle": "Подтверждение Email | CRM Система",
+    "loading": "Подтверждаем...",
+    "success": "Email успешно подтвержден",
+    "error": "Ошибка подтверждения",
+    "tokenMissing": "Токен не найден",
+    "goToLogin": "Перейти ко входу",
+    "goToRegister": "Вернуться к регистрации"
+  },
+  "kanban": {
+    "title": "CRM Система",
+    "seoTitle": "Главная | CRM Система",
+    "loading": "Загрузка...",
+    "company": "Компания",
+    "createDeal": {
+      "namePlaceholder": "Название",
+      "pricePlaceholder": "Цена",
+      "emailPlaceholder": "Email",
+      "companyPlaceholder": "Компания",
+      "addButton": "Добавить",
+      "adding": "Добавление..."
+    },
+    "slideover": {
+      "title": "О сделке",
+      "description": "Детали сделки",
+      "name": "Название",
+      "price": "Сумма",
+      "status": "Статус",
+      "company": "Компания",
+      "createdAt": "Дата создания",
+      "commentsPlaceholder": "Добавить комментарий",
+      "comments": "Комментарии",
+      "aboutDeal": "О сделке"
+    }
+  },
+  "customers": {
+    "title": "Клиенты",
+    "seoTitle": "Клиенты | CRM Система",
+    "listTitle": "Список клиентов",
+    "loading": "Загрузка...",
+    "table": {
+      "avatar": "Изображение",
+      "name": "Наименование",
+      "email": "Email",
+      "source": "Источник привлечения"
+    },
+    "slideover": {
+      "title": "О клиенте",
+      "description": "Информация о клиенте",
+      "namePlaceholder": "Имя",
+      "emailPlaceholder": "Email",
+      "sourcePlaceholder": "Источник привлечения",
+      "save": "Сохранить",
+      "saving": "Сохранение..."
+    }
+  },
+  "settings": {
+    "title": "Настройки",
+    "seoTitle": "Настройки | CRM Система",
+    "profile": {
+      "title": "Профиль",
+      "description": "Имя, должность, контакты и аватар",
+      "nameLabel": "Имя *",
+      "namePlaceholder": "Введите ваше имя",
+      "positionLabel": "Должность",
+      "positionPlaceholder": "Product Manager",
+      "phoneLabel": "Телефон",
+      "phonePlaceholder": "+79991234567",
+      "phoneHint": "Формат: +7 и 7-20 цифр",
+      "telegramLabel": "Telegram",
+      "telegramPlaceholder": "{'@'}username",
+      "telegramHint": "3-32 символа, a-z 0-9 _",
+      "emailLabel": "Email",
+      "emailHint": "Email нельзя изменить",
+      "emailVerified": "Email подтвержден",
+      "phoneNotSpecified": "Телефон не указан",
+      "telegramNotSpecified": "Telegram не указан",
+      "save": "Сохранить",
+      "saving": "Сохранение...",
+      "validation": {
+        "nameMin": "Минимум 2 символа",
+        "nameMax": "Максимум 100 символов",
+        "positionMax": "Максимум 100",
+        "phoneInvalid": "Неверный телефон",
+        "telegramInvalid": "Неверный Telegram"
+      }
+    },
+    "history": {
+      "title": "История входов",
+      "description": "Дата, устройство, браузер, ОС и IP • {range}",
+      "refresh": "Обновить",
+      "loading": "Загрузка...",
+      "noVisits": "Пока нет посещений (появляются после входа)",
+      "table": {
+        "time": "Время",
+        "device": "Устройство",
+        "browser": "Браузер",
+        "os": "ОС",
+        "ip": "IP"
+      },
+      "pagination": {
+        "page": "Стр. {page} из {total} ({totalItems} зап.)",
+        "prev": "Назад",
+        "next": "Вперед"
+      }
+    }
+  },
+  "avatar": {
+    "upload": "Загрузить аватар",
+    "remove": "Удалить аватар",
+    "fileTooLarge": "Файл до 2MB",
+    "onlyImage": "Только изображение",
+    "readError": "Не удалось прочитать файл",
+    "hint": "PNG, JPG, WEBP, GIF до 2MB"
+  },
+  "chats": {
+    "title": "Чаты",
+    "seoTitle": "Чаты | CRM Система",
+    "description": "Начните диалог с любым пользователем по email",
+    "searchPlaceholder": "Поиск по имени или email...",
+    "searching": "Поиск...",
+    "searchResults": "Найдено: {count}",
+    "noConversations": "Нет чатов",
+    "noConversationsHint": "Найдите пользователя через поиск выше и начните диалог",
+    "noMessages": "Выберите чат для общения",
+    "noMessagesHint": "Найдите пользователя по имени или email и начните общение",
+    "close": "Закрыть",
+    "inputPlaceholder": "Сообщение...",
+    "typing": "печатает...",
+    "you": "Вы",
+    "conversationsLoading": "Загрузка чатов..."
+  },
+  "comments": {
+    "placeholder": "Добавить комментарий",
+    "loading": "Загрузка комментариев...",
+    "delete": "Удалить"
+  },
+  "currency": "RUB",
+  "date": {
+    "notSpecified": "—"
+  },
+  "errors": {
+    "unknown": "Неизвестная ошибка"
+  },
+  "api": {
+    "profileUpdated": "Профиль обновлен",
+    "avatarUpdated": "Аватар обновлен",
+    "avatarRemoved": "Аватар удален",
+    "save": "Сохранение...",
+    "error": "Ошибка"
+  }
+}

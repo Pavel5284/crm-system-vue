@@ -1,9 +1,11 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import type { ICustomer } from "~/types/deals.types"
 import { getCustomersApi } from "~/utils/crm.api"
 
+const { t } = useI18n()
+
 useSeoMeta({
-  title: 'Customers | CRM System'
+  title: t('customers.seoTitle')
 })
 
 const store = useCustomerSlideStore()
@@ -22,15 +24,15 @@ const customers = computed(() => (data.value as ICustomer[]) ?? [])
 
 <template>
   <div>
-    <h1 class="font-bold text-2x1 mb-10">Наши клиенты</h1>
-    <div v-if="isLoading">Loading...</div>
+    <h1 class="font-bold text-2x1 mb-10">{{ t('customers.listTitle') }}</h1>
+    <div v-if="isLoading">{{ t('customers.loading') }}</div>
     <UiTable v-else>
       <UiTableHeader>
         <UiTableRow>
-          <UiTableHead class="w-[80px]">Изображение</UiTableHead>
-          <UiTableHead class="w-[200px]">Наименование</UiTableHead>
+          <UiTableHead class="w-[80px]">{{ t('customers.table.avatar') }}</UiTableHead>
+          <UiTableHead class="w-[200px]">{{ t('customers.table.name') }}</UiTableHead>
           <UiTableHead class="w-[200px]">Email</UiTableHead>
-          <UiTableHead>Откуда пришёл</UiTableHead>
+          <UiTableHead>{{ t('customers.table.source') }}</UiTableHead>
         </UiTableRow>
       </UiTableHeader>
       <UiTableBody>
@@ -67,3 +69,4 @@ const customers = computed(() => (data.value as ICustomer[]) ?? [])
     <CustomersSlideover :refetch="refetch"/>
   </div>
 </template>
+

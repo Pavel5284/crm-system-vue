@@ -1,9 +1,10 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import {useComments} from "./useComments";
 import {useCreateComment} from "./useCreateComment";
 import {useDeleteComment} from "./useDeleteComment";
 import { formatDate } from '~/utils/formatDate';
 
+const { t, locale } = useI18n()
 const {data, refetch, isLoading} = useComments()
 const {commentRef, writeComment} = useCreateComment({refetch})
 const {deleteComment} = useDeleteComment({refetch})
@@ -13,7 +14,7 @@ const {deleteComment} = useDeleteComment({refetch})
 <template>
   <div class="flex gap-2">
     <UiInput
-        placeholder="Оставить комментарий"
+        :placeholder="t('comments.placeholder')"
         v-model="commentRef"
         @keyup.enter="writeComment"
         class="flex-1"
@@ -34,7 +35,7 @@ const {deleteComment} = useDeleteComment({refetch})
         <div class="mb-2 text-sm flex items-center justify-between">
           <div>
             <span class="font-medium">{{ comment.userName || comment.userEmail }}</span>
-            <span class="text-xs text-gray-400 ml-2">{{ formatDate(comment.createdAt, 'datetime') }}</span>
+            <span class="text-xs text-gray-400 ml-2">{{ formatDate(comment.createdAt, 'datetime', locale) }}</span>
           </div>
           <Icon
               name="heroicons:x-mark"
@@ -50,3 +51,4 @@ const {deleteComment} = useDeleteComment({refetch})
 
   </div>
 </template>
+

@@ -1,6 +1,7 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
 import { logoutApi } from '~/utils/auth.api'
 
+const { t } = useI18n()
 const isLoadingStore = useIsLoadingStore()
 const authStore = useAuthStore()
 
@@ -13,7 +14,6 @@ const logout = async () => {
   } catch (e) {
   } finally {
     authStore.clear()
-    // флаг чтобы login.vue не делал лишний GET /me сразу после выхода
     if (typeof sessionStorage !== 'undefined') sessionStorage.setItem('justLoggedOut', '1')
     await router.push('/login')
     isLoadingStore.set(false)
@@ -22,18 +22,25 @@ const logout = async () => {
 </script>
 
 <template>
-  <aside class="px-5 py-8 bg-gray-800 h-full relative text-white">
+  <aside class="px-5 py-8 bg-gray-800 h-full relative text-white flex flex-col">
     <div class="mb-10 flex justify-center">
       <NuxtLink to="/" >
         <NuxtImg src="/logo.svg" alt="logo" width="140px" />
       </NuxtLink>
     </div>
 
-    <button class="absolute top-2 right-3 transition-colors hover:text-primary"
+    <button
+class="absolute top-2 right-3 transition-colors hover:text-primary"
     @click="logout"
+    :aria-label="t('sidebar.logout')"
+    :title="t('sidebar.logout')"
     >
       <Icon name="line-md:logout" size="22"/>
     </button>
-    <LayoutMenu/>
+    <LayoutMenu class="flex-1"/>
+    <div class="mt-6 flex justify-center">
+      <LayoutLangSwitcher />
+    </div>
   </aside>
 </template>
+

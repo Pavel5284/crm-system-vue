@@ -1,4 +1,4 @@
-export interface IMenuItem {
+﻿export interface IMenuItem {
     name: string
     url: string
     icon: string
@@ -7,47 +7,48 @@ export interface IMenuItem {
 export const MENU_DATA: IMenuItem[] = [
     {
         icon: 'radix-icons:dashboard',
-        name: 'Home',
-        url: "/"
+        name: 'menu.home',
+        url: '/'
     },
     {
         icon: 'ep:goods',
-        name: 'Products',
-        url: "/products"
+        name: 'menu.products',
+        url: '/products'
     },
     {
         icon: 'ph:contactless-payment',
-        name: 'Patments',
-        url: "/payments"
+        name: 'menu.payments',
+        url: '/payments'
     },
     {
         icon: 'fluent:receipt-28-regular',
-        name: 'Orders',
-        url: "/orders"
+        name: 'menu.orders',
+        url: '/orders'
     },
     {
         icon: 'mingcute:group-line',
-        name: 'Customers',
-        url: "/customers"
+        name: 'menu.customers',
+        url: '/customers'
     },
     {
         icon: 'lucide:messages-square',
-        name: 'Чаты',
-        url: "/chats"
+        name: 'menu.chats',
+        url: '/chats'
     },
     {
         icon: 'fluent:person-feedback-48-regular',
-        name: 'Feedback',
-        url: "/feedback"
+        name: 'menu.feedback',
+        url: '/feedback'
     },
     {
         icon: 'radix-icons:gear',
-        name: 'Settings',
-        url: "/settings"
+        name: 'menu.settings',
+        url: '/settings'
     },
     {
         icon: 'radix-icons:question-mark',
-        name: 'Help center',
-        url: "/help"
+        name: 'menu.help',
+        url: '/help'
     },
 ]
+

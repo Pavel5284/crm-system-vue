@@ -1,8 +1,9 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import type {IDeal, EnumStatus} from "~/types/deals.types";
 import {createDealApi} from "~/utils/crm.api"
 import {toRef} from "vue"
 
+const { t } = useI18n()
 const isOpenForm = ref<boolean>(false);
 
 const props = defineProps<{
@@ -73,14 +74,14 @@ const onSubmit = handleSubmit(values => {
   </div>
   <form v-if="isOpenForm" @submit="onSubmit" class="form">
     <UiInput
-      placeholder="Наименование"
+      :placeholder="t('kanban.createDeal.namePlaceholder')"
       v-model="name"
       v-bind="nameAttrs"
       type="text"
       class="input"
     />
     <UiInput
-      placeholder="Сумма"
+      :placeholder="t('kanban.createDeal.pricePlaceholder')"
       v-model="price"
       v-bind="priceAttrs"
       type="text"
@@ -94,14 +95,14 @@ const onSubmit = handleSubmit(values => {
       class="input"
     />
     <UiInput
-      placeholder="Компания"
+      :placeholder="t('kanban.createDeal.companyPlaceholder')"
       v-model="customerName"
       v-bind="customerNamelAttrs"
       type="text"
       class="input"
     />
     <button class="btn" :disabled="isPending">
-      {{isPending ? 'Загрузка...' : 'Добавить'}}
+      {{isPending ? t('kanban.createDeal.adding') : t('kanban.createDeal.addButton')}}
     </button>
   </form>
 </template>
@@ -154,3 +155,4 @@ const onSubmit = handleSubmit(values => {
   }
 }
 </style>
+

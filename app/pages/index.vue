@@ -1,4 +1,4 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import {useKanbanQuery} from '@/components/kanban/useKanbanQuery'
 import type {ICard, IColumn} from '~/components/kanban/kanban.types'
 import type {EnumStatus} from "~/types/deals.types"
@@ -6,8 +6,10 @@ import {updateDealStatusApi} from "~/utils/crm.api"
 import {generateColumnStyle} from "@/components/kanban/generate-gradient"
 import { formatDate } from '~/utils/formatDate'
 
+const { t, locale } = useI18n()
+
 useSeoMeta({
-  title: "Home | CRM System"
+  title: t('kanban.seoTitle')
 })
 
 const dragCardRef = ref<ICard | null>(null)
@@ -62,24 +64,27 @@ function onCardDragStart(event: DragEvent, card: ICard, column: IColumn) {
 
 <template>
   <div class="mb-5">
-    <h1 class="text-2xl font-bold">CRM System</h1>
+    <h1 class="text-2xl font-bold">{{ t('kanban.title') }}</h1>
   </div>
-  <div v-if="isLoading">Loading...</div>
+  <div v-if="isLoading">{{ t('kanban.loading') }}</div>
   <div v-else>
     <div class="grid grid-cols-5 gap-16">
-      <div v-for="(column, index) in data"
+      <div
+v-for="(column, index) in data"
            :key="column.id"
            @dragover="onDragOver"
            @drop="onDrop($event, column)"
            class="min-h-screen"
       >
-        <div class="rounded bg-slate-700 py-1 px-5 mb-2 text-center"
+        <div
+class="rounded bg-slate-700 py-1 px-5 mb-2 text-center"
              :style="generateColumnStyle(index, data?.length)"
         >
           {{ column.name }}
         </div>
         <KanbanCreateDeal :refetch="refetch" :status="column.id"/>
-        <UiCard v-for="card in column.items"
+        <UiCard
+v-for="card in column.items"
                 :key="card.id"
                 class="mb-3"
                 draggable="true"
@@ -90,14 +95,15 @@ function onCardDragStart(event: DragEvent, card: ICard, column: IColumn) {
               {{ card.name }}
             </UiCardTitle>
             <UiCardDescription class="mt-2 block">
-              {{ convertCurrency(card.price) }}
+              {{ convertCurrency(card.price, locale) }}
             </UiCardDescription>
           </UiCardHeader>
-          <UiCardContent class="text-xs">Компания: {{ card.companyName }}</UiCardContent>
-          <UiCardFooter>{{ formatDate(card.createdAt, 'long') }}</UiCardFooter>
+          <UiCardContent class="text-xs">{{ t('kanban.company') }}: {{ card.companyName }}</UiCardContent>
+          <UiCardFooter>{{ formatDate(card.createdAt, 'long', locale) }}</UiCardFooter>
         </UiCard>
       </div>
       <KanbanSlideover/>
     </div>
   </div>
 </template>
+

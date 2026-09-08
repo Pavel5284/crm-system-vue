@@ -1,4 +1,5 @@
-<script lang="ts" setup>
+﻿<script lang="ts" setup>
+const { t } = useI18n()
 const store = useDealSlideStore()
 
 const isLocalOpen = computed({
@@ -13,8 +14,8 @@ const isLocalOpen = computed({
   <USlideover
     v-model:open="isLocalOpen"
     side="right"
-    title="О сделке"
-    description="Информация о сделке"
+    :title="t('kanban.slideover.title')"
+    :description="t('kanban.slideover.description')"
   >
     <template #body>
       <KanbanSlideoverTop />
@@ -22,3 +23,4 @@ const isLocalOpen = computed({
     </template>
   </USlideover>
 </template>
+

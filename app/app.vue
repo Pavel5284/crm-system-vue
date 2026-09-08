@@ -1,7 +1,9 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
+const { locale } = useI18n()
 useHead({
   htmlAttrs: {
-    class: 'dark'
+    class: 'dark',
+    lang: locale
   }
 })
 </script>
@@ -13,3 +15,4 @@ useHead({
     </NuxtLayout>
   </UApp>
 </template>
+
