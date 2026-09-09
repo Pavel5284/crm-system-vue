@@ -62,8 +62,13 @@ const register = async () => {
 
   isLoadingStore.set(true)
   try {
-    const res = await registerApi(emailRef.value, passwordRef.value, nameRef.value)
-    successRef.value = res.message
+    const res = await registerApi(emailRef.value, passwordRef.value, nameRef.value) as { message?: string; accessToken?: string }
+    // если SKIP_EMAIL_VERIFICATION=true бэк отдает { accessToken } и ставит httpOnly куки - редиректим на login
+    if (res.accessToken) {
+      await router.push('/login')
+      return
+    }
+    successRef.value = res.message ?? ''
   } catch (e) {
     errorRef.value = getApiErrorMessage(e)
   } finally {

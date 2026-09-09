@@ -72,7 +72,6 @@ const login = () => authorize(async () => {
         <LayoutLangSwitcher />
       </div>
       <h1 class="text-2xl font-bold text-center mb-5">{{ t('login.title') }}</h1>
-      <p v-if="errorRef" class="text-red-500 text-sm text-center mb-3">{{ errorRef }}</p>
       <form @submit.prevent="login" autocomplete="on">
         <UiInput :placeholder="t('login.emailPlaceholder')" type="email" autocomplete="email" name="email" class="mb-3" v-model="emailRef"/>
         <UiInputPassword :placeholder="t('login.passwordPlaceholder')" class="mb-3" v-model="passwordRef" autocomplete="current-password" name="password"/>

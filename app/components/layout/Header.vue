@@ -1,6 +1,8 @@
 ﻿<script setup lang="ts">
 import { useNotifications } from '~/composables/useNotifications'
 
+defineEmits<{ (e: 'toggle-menu'): void }>()
+
 const { t } = useI18n()
 const authStore = useAuthStore()
 const { status, notifications, connect, disconnect, clear } = useNotifications()
@@ -57,9 +59,12 @@ watch(() => authStore.isAuth, (v) => {
 </script>
 
 <template>
-  <header class="h-14 px-6 flex items-center justify-between border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
+  <header class="h-14 px-4 sm:px-6 flex items-center justify-between border-b border-border bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-40">
     <div class="flex items-center gap-2 text-sm text-muted-foreground">
-      <span class="hidden sm:inline">CRM System</span>
+      <button class="lg:hidden -ml-2 h-9 w-9 grid place-items-center rounded-md hover:bg-accent border border-transparent hover:border-border" aria-label="Open menu" @click="$emit('toggle-menu')">
+        <Icon name="lucide:menu" size="20" />
+      </button>
+      <span class="hidden sm:inline">{{ t('header.crmSystem') }}</span>
     </div>
 
     <div class="flex items-center gap-3">

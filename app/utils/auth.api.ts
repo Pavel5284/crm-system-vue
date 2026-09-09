@@ -59,7 +59,7 @@ export const loginApi = async (email: string, password: string) => {
 }
 
 export const registerApi = async (email: string, password: string, name: string) => {
-    return apiFetch<{ message: string }>('/auth/register', {
+    return apiFetch<{ message: string } | { accessToken: string }>('/auth/register', {
         method: 'POST',
         body: { email, password, name },
         auth: false,

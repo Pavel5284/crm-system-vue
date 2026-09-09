@@ -1,4 +1,5 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
+const { t } = useI18n()
 const { status, socketId, notifications, error, connect, disconnect, clear } = useNotifications()
 
 const statusColor: Record<string, string> = {
@@ -12,23 +13,23 @@ const statusColor: Record<string, string> = {
 
 <template>
     <div class="p-6">
-        <h1 class="text-2xl font-bold mb-6">WS-тест уведомлений</h1>
+        <h1 class="text-2xl font-bold mb-6">{{ t('wsTest.title') }}</h1>
 
         <div class="flex items-center gap-4 mb-6">
-            <UiButton type="button" @click="connect">Подключиться</UiButton>
-            <UiButton type="button" variant="secondary" @click="disconnect">Отключиться</UiButton>
-            <UiButton type="button" variant="outline" @click="clear">Очистить</UiButton>
+            <UiButton type="button" @click="connect">{{ t('wsTest.connect') }}</UiButton>
+            <UiButton type="button" variant="secondary" @click="disconnect">{{ t('wsTest.disconnect') }}</UiButton>
+            <UiButton type="button" variant="outline" @click="clear">{{ t('wsTest.clear') }}</UiButton>
         </div>
 
         <div class="mb-6">
             <p class="mb-1">
-                Статус:
+                {{ t('wsTest.status') }}
                 <span :class="statusColor[status]" class="font-semibold">{{ status }}</span>
             </p>
-            <p v-if="socketId" class="mb-1">Socket id: <code>{{ socketId }}</code></p>
+            <p v-if="socketId" class="mb-1">{{ t('wsTest.socketId') }} <code>{{ socketId }}</code></p>
             <p v-if="error" class="text-red-500">{{ error }}</p>
             <p v-if="status === 'connected'" class="text-gray-500 text-sm">
-                Слушаю канал <code>notification</code>. Назначь задачу этому пользователю через /api/tasks — уведомление появится ниже.
+                {{ t('wsTest.connectedHint') }}
             </p>
         </div>
 
@@ -39,6 +40,7 @@ const statusColor: Record<string, string> = {
                 </UiCardContent>
             </UiCard>
         </div>
-        <p v-else class="text-gray-500">Пока нет уведомлений.</p>
+        <p v-else class="text-gray-500">{{ t('wsTest.noNotifications') }}</p>
     </div>
 </template>
+

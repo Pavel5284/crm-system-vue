@@ -16,7 +16,9 @@
     "searching": "Поиск...",
     "noData": "Нет данных",
     "error": "Ошибка",
-    "success": "Успешно"
+    "success": "Успешно",
+    "showPassword": "Показать пароль",
+    "hidePassword": "Скрыть пароль"
   },
   "menu": {
     "home": "Главная",
@@ -109,7 +111,15 @@
       "commentsPlaceholder": "Добавить комментарий",
       "comments": "Комментарии",
       "aboutDeal": "О сделке"
-    }
+    },
+    "status": {
+      "todo": "Входящие",
+      "to-be-agreed": "На согласовании",
+      "in-progress": "В производстве",
+      "produced": "Произведено",
+      "done": "К отгрузке"
+    },
+    "moveTo": "Переместить в"
   },
   "customers": {
     "title": "Клиенты",
@@ -226,5 +236,15 @@
     "avatarRemoved": "Аватар удален",
     "save": "Сохранение...",
     "error": "Ошибка"
+  },
+  "wsTest": {
+    "title": "WS-тест уведомлений",
+    "connect": "Подключиться",
+    "disconnect": "Отключиться",
+    "clear": "Очистить",
+    "status": "Статус:",
+    "socketId": "Socket id:",
+    "noNotifications": "Пока нет уведомлений.",
+    "connectedHint": "Отправь тестовое уведомление через API."
   }
 }

@@ -1,4 +1,4 @@
-import type { IDeal } from '~/types/deals.types'
+﻿import type { IDeal } from '~/types/deals.types'
 import type { IColumn } from './kanban.types'
 import { KANBAN_DATA } from './kanban.data'
 import { getDealsApi } from '~/utils/crm.api'
@@ -19,7 +19,7 @@ export function useKanbanQuery() {
                         name: deal.name,
                         price: deal.price,
                         companyName: deal.customerName,
-                        status: column.name,
+                        status: column.id,
                         createdAt: deal.createdAt,
                     })
                 }
@@ -30,3 +30,4 @@ export function useKanbanQuery() {
         staleTime: 0,
     })
 }
+

@@ -41,8 +41,15 @@ const getSuccessMessageForRequest = (path: string, method?: string): string | nu
     return null
 }
 
-const getI18nT = () => { try { const { t } = useI18n(); return t } catch { try { const nuxtApp = useNuxtApp(); return (nuxtApp.$i18n as any)?.t ?? ((k:string)=>k) } catch { return (k:string)=>k } } }
+import { getCurrentInstance } from 'vue'
+
+const getI18nT = () => {
+    // inject() только внутри setup, иначе Vue warn
+    if (!getCurrentInstance()) return (k: string) => k
+    try { const { t } = useI18n(); return t } catch { try { const nuxtApp = useNuxtApp(); return (nuxtApp.$i18n as any)?.t ?? ((k:string)=>k) } catch { return (k:string)=>k } }
+}
 const getToast = () => {
+    if (!getCurrentInstance()) return null
     try {
         return useToast()
     } catch {
@@ -51,8 +58,22 @@ const getToast = () => {
 }
 
 export const useApiBaseUrl = () => {
-    const config = useRuntimeConfig()
-    return config.public.apiBaseUrl
+    try {
+        const config = useRuntimeConfig() as { public: { apiBaseUrl: string; useRenderApi?: boolean; renderApiUrl?: string } }
+        // если NUXT_PUBLIC_USE_RENDER=true - форсим Render URL, иначе берем apiBaseUrl (/api для локального VPS)
+        if (config.public.useRenderApi && config.public.renderApiUrl) return config.public.renderApiUrl
+        return config.public.apiBaseUrl || '/api'
+    } catch {
+        // вне setup (Pinia) - пробуем NuxtApp
+        try {
+            const nuxtApp = useNuxtApp() as unknown as { $config: { public: { apiBaseUrl: string; useRenderApi?: boolean; renderApiUrl?: string } } }
+            const cfg = nuxtApp.$config.public
+            if (cfg.useRenderApi && cfg.renderApiUrl) return cfg.renderApiUrl
+            return cfg.apiBaseUrl || '/api'
+        } catch {
+            return '/api'
+        }
+    }
 }
 
 // --- deprecated stubs: оставлены для совместимости, httpOnly куки нельзя читать из JS ---

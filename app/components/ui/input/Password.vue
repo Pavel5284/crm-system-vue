@@ -1,7 +1,9 @@
-<script setup lang="ts">
+﻿<script setup lang="ts">
 import type { HTMLAttributes } from "vue"
 import { useVModel } from "@vueuse/core"
 import { cn } from "@/lib/utils"
+
+const { t } = useI18n()
 
 const props = defineProps<{
   defaultValue?: string | number
@@ -44,7 +46,7 @@ const show = ref(false)
     <button
       type="button"
       tabindex="-1"
-      :aria-label="show ? 'Скрыть пароль' : 'Показать пароль'"
+      :aria-label="show ? t('common.hidePassword') : t('common.showPassword')"
       class="absolute inset-y-0 right-0 flex w-9 items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
       @click="show = !show"
     >
@@ -54,7 +56,6 @@ const show = ref(false)
 </template>
 
 <style scoped>
-/* убираем нативный глаз Edge/IE и WebKit/Chromium */
 input::-ms-reveal,
 input::-ms-clear {
   display: none;
@@ -68,3 +69,4 @@ input::-webkit-contacts-auto-fill-button {
   right: 0;
 }
 </style>
+

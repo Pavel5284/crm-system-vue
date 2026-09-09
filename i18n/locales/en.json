@@ -16,7 +16,9 @@
     "searching": "Searching...",
     "noData": "No data",
     "error": "Error",
-    "success": "Success"
+    "success": "Success",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password"
   },
   "menu": {
     "home": "Home",
@@ -109,7 +111,15 @@
       "commentsPlaceholder": "Add a comment",
       "comments": "Comments",
       "aboutDeal": "About deal"
-    }
+    },
+    "status": {
+      "todo": "Incoming",
+      "to-be-agreed": "To be agreed",
+      "in-progress": "In progress",
+      "produced": "Produced",
+      "done": "Ready for shipment"
+    },
+    "moveTo": "Move to"
   },
   "customers": {
     "title": "Customers",
@@ -226,5 +236,15 @@
     "avatarRemoved": "Avatar removed",
     "save": "Saving...",
     "error": "Error"
+  },
+  "wsTest": {
+    "title": "WS test notifications",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "clear": "Clear",
+    "status": "Status:",
+    "socketId": "Socket id:",
+    "noNotifications": "No notifications yet.",
+    "connectedHint": "Send test notification via API."
   }
 }

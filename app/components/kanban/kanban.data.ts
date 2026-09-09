@@ -1,30 +1,31 @@
-import {EnumStatus} from '~/types/deals.types'
+﻿import {EnumStatus} from '~/types/deals.types'
 import type { IColumn } from "./kanban.types"
 
 export const KANBAN_DATA: IColumn[] = [
     {
         id:EnumStatus.todo,
-        name: "Входящие",
+        name: "kanban.status.todo",
         items: [],
     },
     {
         id:EnumStatus['to-be-agreed'],
-        name: "На согласовании",
+        name: "kanban.status.to-be-agreed",
         items: [],
     },
     {
         id:EnumStatus['in-progress'],
-        name: "В производстве",
+        name: "kanban.status.in-progress",
         items: [],
     },
     {
         id:EnumStatus.produced,
-        name: "Произведено",
+        name: "kanban.status.produced",
         items: [],
     },
     {
         id:EnumStatus.done,
-        name: "К отгрузке",
+        name: "kanban.status.done",
         items: [],
     },
 ]
+

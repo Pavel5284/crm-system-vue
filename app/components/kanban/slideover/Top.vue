@@ -22,7 +22,7 @@ const store = useDealSlideStore()
     </KanbanSlideoverLabel>
     <KanbanSlideoverLabel :label-text="t('kanban.slideover.status')">
       <UiBadge variant="outline">
-        {{ store.card?.status }}
+        {{ store.card?.status ? t('kanban.status.' + store.card.status) : '' }}
       </UiBadge>
     </KanbanSlideoverLabel>
     <KanbanSlideoverLabel :label-text="t('kanban.slideover.company')">

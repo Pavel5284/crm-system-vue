@@ -42,6 +42,8 @@ onNuxtReady(async () => {
 
 const isAuth = computed(() => authStore.isAuth)
 
+const showMobileMenu = ref(false)
+
 // чат глобально: только unread + сокет для тостов, полный список грузит только /chats
 const chatStore = useChatStore()
 useChatSocket() // коннектит namespace:'chat' когда isAuth, слушает chat:message
@@ -52,6 +54,12 @@ watch(isAuth, async (v) => {
   }
 })
 
+watch(showMobileMenu, (v) => {
+  if (typeof document !== 'undefined') {
+    document.body.style.overflow = v ? 'hidden' : ''
+  }
+})
+
 </script>
 
 
@@ -59,10 +67,20 @@ watch(isAuth, async (v) => {
   <div v-if="isLoadingStore.isLoading" class="fixed inset-0 grid place-items-center bg-background z-50">
     <LayoutLoader />
   </div>
-  <section :class="{grid: isAuth}" style="min-height: 100vh">
-    <LayoutSidebar v-if="isAuth"/>
-    <div :class="isAuth ? 'flex flex-col min-h-screen min-w-0' : ''">
-      <LayoutHeader v-if="isAuth" />
+  <section :class="isAuth ? 'grid' : ''" style="min-height: 100vh">
+    <LayoutSidebar v-if="isAuth" class="hidden lg:flex" />
+    <!-- mobile sidebar overlay -->
+    <div v-if="isAuth && showMobileMenu" class="fixed inset-0 z-50 lg:hidden">
+      <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showMobileMenu = false" />
+      <div class="relative w-[280px] max-w-[85vw] h-full overflow-auto bg-gray-800 shadow-xl">
+        <LayoutSidebar />
+        <button class="absolute top-3 right-3 h-8 w-8 grid place-items-center rounded-md text-white/70 hover:text-white hover:bg-white/10" aria-label="Close menu" @click="showMobileMenu = false">
+          <Icon name="lucide:x" size="20" />
+        </button>
+      </div>
+    </div>
+    <div :class="isAuth ? 'flex flex-col min-h-0 min-w-0' : ''">
+      <LayoutHeader v-if="isAuth" @toggle-menu="showMobileMenu = !showMobileMenu" />
       <div :style="isAuth ? 'padding:20px' : ''" class="flex-1 min-w-0">
         <slot />
       </div>
@@ -74,6 +92,10 @@ watch(isAuth, async (v) => {
 .grid{
   display: grid;
   grid-template-columns: 240px 1fr;
-
+}
+@media (max-width: 1024px){
+  .grid{
+    display: block;
+  }
 }
 </style>
