@@ -1,13 +1,7 @@
-<script setup lang="ts">
-import {defineProps} from 'vue'
-
-const props = defineProps({
-  labelText: {
-    type: String,
-    default: '',
-  }
-})
-
+﻿<script setup lang="ts">
+defineProps<{
+  labelText?: string
+}>()
 </script>
 
 <template>

@@ -18,7 +18,13 @@
     "error": "Ошибка",
     "success": "Успешно",
     "showPassword": "Показать пароль",
-    "hidePassword": "Скрыть пароль"
+    "hidePassword": "Скрыть пароль",
+    "soon": "Скоро",
+    "soonDescription": "Этот раздел скоро появится",
+    "backToHome": "На главную",
+    "pageNotFound": "Страница не найдена",
+    "internalError": "Внутренняя ошибка",
+    "tryAgain": "Попробовать снова"
   },
   "menu": {
     "home": "Главная",

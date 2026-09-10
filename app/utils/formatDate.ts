@@ -14,7 +14,7 @@ const FORMAT_MAP: Record<string, string> = {
 export const formatDate = (
   value: string | number | Date | null | undefined,
   format: DateFormat = 'full',
-  locale?: string | any,
+  locale?: string | { value?: string } | { toString(): string },
 ): string => {
   if (!value) return '-'
   const fmt = FORMAT_MAP[format] ?? format

@@ -1,21 +1,17 @@
-<script setup lang="ts">
-import { getMeApi, getProfileApi } from '~/utils/auth.api'
+﻿<script setup lang="ts">
+import { getMeApi, getProfileApi } from "~/utils/auth.api"
 
 const isLoadingStore = useIsLoadingStore()
 const authStore = useAuthStore()
 
-const router = useRouter()
-
-const checkAuth = async () => {
-  // уже залогинены из login.vue:50 — не дублируем GET /users/me
+const checkAuth = async (): Promise<void> => {
   if (authStore.isAuth) {
     isLoadingStore.set(false)
     return
   }
-  try{
-    // me — только проверка авторизации {authenticated}, данные — из /profile
+  try {
     const me = await getMeApi()
-    if (!me.authenticated) throw new Error('Not authenticated')
+    if (!me.authenticated) throw new Error("Not authenticated")
     const profile = await getProfileApi()
     authStore.set({
       id: profile.id,
@@ -28,9 +24,9 @@ const checkAuth = async () => {
       telegram: profile.telegram,
       isEmailVerified: profile.isEmailVerified,
     })
-  } catch (error) {
+  } catch {
     authStore.clear()
-    await router.push('/login')
+    await navigateTo("/login")
   } finally {
     isLoadingStore.set(false)
   }
@@ -41,27 +37,25 @@ onNuxtReady(async () => {
 })
 
 const isAuth = computed(() => authStore.isAuth)
-
 const showMobileMenu = ref(false)
 
-// чат глобально: только unread + сокет для тостов, полный список грузит только /chats
 const chatStore = useChatStore()
-useChatSocket() // коннектит namespace:'chat' когда isAuth, слушает chat:message
+useChatSocket()
 
 watch(isAuth, async (v) => {
-  if (v) {
-    await chatStore.fetchUnreadCount()
-  }
+  if (v) await chatStore.fetchUnreadCount()
 })
 
 watch(showMobileMenu, (v) => {
-  if (typeof document !== 'undefined') {
-    document.body.style.overflow = v ? 'hidden' : ''
+  if (import.meta.client) {
+    document.body.style.overflow = v ? "hidden" : ""
   }
 })
 
+onBeforeUnmount(() => {
+  if (import.meta.client) document.body.style.overflow = ""
+})
 </script>
-
 
 <template>
   <div v-if="isLoadingStore.isLoading" class="fixed inset-0 grid place-items-center bg-background z-50">
@@ -69,7 +63,6 @@ watch(showMobileMenu, (v) => {
   </div>
   <section :class="isAuth ? 'grid' : ''" style="min-height: 100vh">
     <LayoutSidebar v-if="isAuth" class="hidden lg:flex" />
-    <!-- mobile sidebar overlay -->
     <div v-if="isAuth && showMobileMenu" class="fixed inset-0 z-50 lg:hidden">
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showMobileMenu = false" />
       <div class="relative w-[280px] max-w-[85vw] h-full overflow-auto bg-gray-800 shadow-xl">
@@ -89,12 +82,12 @@ watch(showMobileMenu, (v) => {
 </template>
 
 <style scoped>
-.grid{
+.grid {
   display: grid;
   grid-template-columns: 240px 1fr;
 }
-@media (max-width: 1024px){
-  .grid{
+@media (max-width: 1024px) {
+  .grid {
     display: block;
   }
 }

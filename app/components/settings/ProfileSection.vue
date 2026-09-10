@@ -43,6 +43,7 @@ const onAvatarUpload = async (dataUrl: string) => {
       authStore.user.avatarUrl = dataUrl
     }
   } catch {
+    void 0
   }
 }
 
@@ -53,6 +54,7 @@ const onAvatarRemove = async () => {
       authStore.user.avatarUrl = null
     }
   } catch {
+    void 0
   }
 }
 
@@ -71,7 +73,7 @@ const profileForm = useForm({
     telegram: '',
   } satisfies ProfileFormValues,
   validators: {
-    onChange: computed(() => profileSchema.value) as any,
+    onChange: computed(() => profileSchema.value) as unknown,
   },
   onSubmit: async ({ value }) => {
     const payload = {
@@ -129,6 +131,7 @@ const loadMe = async () => {
     initialProfile.value = { ...init }
     profileForm.reset(init)
   } catch {
+    void 0
   }
 }
 

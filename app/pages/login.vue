@@ -37,7 +37,8 @@ onMounted(async () => {
       authStore.set({ id: profile.id, email: profile.email, name: profile.name, status: true, avatarUrl: profile.avatarUrl, position: profile.position, phone: profile.phone, telegram: profile.telegram, isEmailVerified: profile.isEmailVerified })
       await router.push('/')
     }
-  } catch (e) {
+  } catch (_e) {
+    void _e
   }
 })
 
@@ -49,7 +50,7 @@ const authorize = async (action: () => Promise<void>) => {
     emailRef.value = ''
     passwordRef.value = ''
     await router.push('/')
-  } catch (e) {
+  } catch (_e) {
     errorRef.value = getApiErrorMessage(e)
   } finally {
     isLoadingStore.set(false)

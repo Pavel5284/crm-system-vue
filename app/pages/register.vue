@@ -43,7 +43,8 @@ onMounted(async () => {
       authStore.set({ id: profile.id, email: profile.email, name: profile.name, status: true, avatarUrl: profile.avatarUrl, position: profile.position, phone: profile.phone, telegram: profile.telegram, isEmailVerified: profile.isEmailVerified })
       await router.push('/')
     }
-  } catch (e) {
+  } catch (_e) {
+    void _e
   }
 })
 
@@ -69,7 +70,7 @@ const register = async () => {
       return
     }
     successRef.value = res.message ?? ''
-  } catch (e) {
+  } catch (_e) {
     errorRef.value = getApiErrorMessage(e)
   } finally {
     isLoadingStore.set(false)
@@ -86,7 +87,7 @@ const resend = async () => {
   try {
     const res = await resendVerificationApi(emailRef.value)
     successRef.value = res.message
-  } catch (e) {
+  } catch (_e) {
     errorRef.value = getApiErrorMessage(e)
   }
 }

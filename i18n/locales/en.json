@@ -18,7 +18,13 @@
     "error": "Error",
     "success": "Success",
     "showPassword": "Show password",
-    "hidePassword": "Hide password"
+    "hidePassword": "Hide password",
+    "soon": "Soon",
+    "soonDescription": "This section is coming soon",
+    "backToHome": "Back to home",
+    "pageNotFound": "Page not found",
+    "internalError": "Internal error",
+    "tryAgain": "Try again"
   },
   "menu": {
     "home": "Home",

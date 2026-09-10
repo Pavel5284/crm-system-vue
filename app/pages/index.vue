@@ -124,7 +124,7 @@ function onTabClick(colId: string) {
 }
 
 
-function onDragAdd(evt: any, targetColumn: IColumn) {
+function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: IColumn) {
   let card: ICard | null = (evt?.data as ICard) ?? null
   if (!card && typeof evt?.newIndex === 'number') {
     card = targetColumn.items[evt.newIndex] as ICard | null
