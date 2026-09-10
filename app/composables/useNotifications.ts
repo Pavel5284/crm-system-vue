@@ -15,8 +15,8 @@ export const useNotifications = () => {
 
         // httpOnly cookie отправляется автоматически (withCredentials).
         // Бэкенд также поддерживает auth.token как fallback, но он больше не нужен.
-        const baseUrl = useRuntimeConfig().public.apiBaseUrl as string
-        // apiBaseUrl = '/api' (через devProxy) или 'http://localhost:3000/api'
+        const baseUrl = useApiBaseUrl()
+        // apiBaseUrl = '/api' (через devProxy) или 'http://localhost:3000/api' или Render
         // для сокета нужен origin без /api
         const socketOrigin = baseUrl.replace(/\/api\/?$/, '') || 'http://localhost:3000'
 

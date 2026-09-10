@@ -14,7 +14,7 @@ export const useChatSocket = () => {
     if (socket?.connected) return
     if (!authStore.isAuth) return
 
-    const baseUrl = useRuntimeConfig().public.apiBaseUrl as string
+    const baseUrl = useApiBaseUrl()
     const origin = baseUrl.replace(/\/api\/?$/, '') || 'http://localhost:3000'
 
     socket = io(`${origin}/chat`, {
