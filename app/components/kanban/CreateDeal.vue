@@ -1,5 +1,5 @@
 ﻿<script setup lang="ts">
-import type {IDeal, EnumStatus} from "~/types/deals.types";
+import type { DealDto, DealStatus } from "~/types/backend.contracts";
 import {createDealApi} from "~/utils/crm.api"
 import {toRef} from "vue"
 
@@ -11,7 +11,7 @@ const props = defineProps<{
   refetch: () => void
 }>()
 
-interface IDealFormState extends Pick<IDeal, 'name' | "price"> {
+interface IDealFormState extends Pick<DealDto, 'name' | "price"> {
   customer: {
     email: string;
     name: string;
@@ -38,7 +38,7 @@ const {mutate, isPending} = useMutation({
       price: Number(data.price),
       customerEmail: data.customer.email,
       customerName: data.customer.name,
-      status: data.status as EnumStatus,
+      status: data.status as DealStatus,
     })
   },
   onSuccess() {

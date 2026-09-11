@@ -1,10 +1,30 @@
 ﻿import { io, type Socket } from "socket.io-client"
+import type { ChatMessage } from "~/types/backend.contracts"
+import { isRecord } from "~/types/api.types"
 
 const isConnected = ref(false)
 const typingPartnerId = ref<string | null>(null)
 let socket: Socket | null = null
 let typingTimeout: ReturnType<typeof setTimeout> | null = null
 let isInitialized = false
+
+interface ChatTypingPayload {
+  senderId: string
+  isTyping: boolean
+}
+
+const isChatMessage = (value: unknown): value is ChatMessage => {
+  if (!isRecord(value)) return false
+  return typeof value.id === "string"
+    && typeof value.text === "string"
+    && typeof value.senderId === "string"
+    && typeof value.receiverId === "string"
+}
+
+const isTypingPayload = (value: unknown): value is ChatTypingPayload => {
+  if (!isRecord(value)) return false
+  return typeof value.senderId === "string" && typeof value.isTyping === "boolean"
+}
 
 export const useChatSocket = () => {
   const chatStore = useChatStore()
@@ -25,15 +45,15 @@ export const useChatSocket = () => {
     socket.on("disconnect", () => { isConnected.value = false })
     socket.on("connect_error", () => { isConnected.value = false })
     socket.on("chat:message", (msg: unknown) => {
-      const m = msg as { senderId: string; receiverId: string; text: string; id: string; createdAt: string; read: boolean }
-      if (m && m.id && m.text) chatStore.receiveMessage(m as never)
+      if (isChatMessage(msg)) chatStore.receiveMessage(msg)
     })
-    socket.on("chat:typing", (data: { senderId: string; isTyping: boolean }) => {
-      if (data?.isTyping) {
+    socket.on("chat:typing", (data: unknown) => {
+      if (!isTypingPayload(data)) return
+      if (data.isTyping) {
         typingPartnerId.value = data.senderId
         if (typingTimeout) clearTimeout(typingTimeout)
         typingTimeout = setTimeout(() => (typingPartnerId.value = null), 3000)
-      } else if (typingPartnerId.value === data?.senderId) {
+      } else if (typingPartnerId.value === data.senderId) {
         typingPartnerId.value = null
       }
     })

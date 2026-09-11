@@ -1,13 +1,23 @@
 ﻿import { io, type Socket } from "socket.io-client"
+import type { NotificationEvent } from "~/types/backend.contracts"
+import { isRecord } from "~/types/api.types"
 
 type ConnectionStatus = "connecting" | "connected" | "disconnected" | "unauthorized" | "error"
 
 const status = ref<ConnectionStatus>("connecting")
 const socketId = ref<string>("")
-const notifications = ref<unknown[]>([])
+const notifications = ref<NotificationEvent[]>([])
 const error = ref<string>("")
 let socket: Socket | null = null
 let isNotifInit = false
+
+const isNotificationEvent = (value: unknown): value is NotificationEvent => {
+  if (!isRecord(value)) return false
+  return typeof value.id === "string"
+    && typeof value.userId === "string"
+    && typeof value.type === "string"
+    && typeof value.createdAt === "string"
+}
 
 export const useNotifications = () => {
   const connect = (): void => {
@@ -27,6 +37,7 @@ export const useNotifications = () => {
       error.value = ""
     })
     socket.on("notification", (notification: unknown) => {
+      if (!isNotificationEvent(notification)) return
       notifications.value.unshift(notification)
       if (notifications.value.length > 100) notifications.value.length = 100
     })

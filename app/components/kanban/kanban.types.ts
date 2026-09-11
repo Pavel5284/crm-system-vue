@@ -1,4 +1,4 @@
-import type {EnumStatus} from '~/types/deals.types'
+import type { DealStatus } from '~/types/backend.contracts'
 
 export interface ICard {
     id: string
@@ -10,7 +10,7 @@ export interface ICard {
 }
 
 export interface IColumn {
-    id: EnumStatus
+    id: DealStatus
     name: string
     items: ICard[]
 }

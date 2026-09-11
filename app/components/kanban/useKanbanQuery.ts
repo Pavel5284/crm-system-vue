@@ -1,11 +1,11 @@
-﻿import type { IDeal } from '~/types/deals.types'
+﻿import type { DealDto } from '~/types/backend.contracts'
 import type { IColumn } from './kanban.types'
 import { KANBAN_DATA } from './kanban.data'
 import { getDealsApi } from '~/utils/crm.api'
 
 export function useKanbanQuery() {
     const authStore = useAuthStore()
-    return useQuery<IDeal[], Error, IColumn[]>({
+    return useQuery<DealDto[], Error, IColumn[]>({
         queryKey: ['deals'],
         queryFn: () => getDealsApi(),
         select(data) {

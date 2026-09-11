@@ -51,7 +51,7 @@ export default defineNuxtConfig({
   devtools: { enabled:false },
   typescript: { strict:true, typeCheck:false },
   experimental: { typedPages:true, payloadExtraction:true },
-  veeValidate: { autoImports:true },
+  veeValidate: { autoImports:true, typedSchemaPackage:'none' },
   pinia: { storesDirs:['./stores'] },
   vite: { optimizeDeps:{ exclude:['json-bigint'] } },
   nuxtQuery: {

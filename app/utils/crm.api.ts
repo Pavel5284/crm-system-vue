@@ -1,49 +1,63 @@
 import { apiFetch } from '~/utils/api'
 import type {
-    EnumStatus,
-    IComment,
-    ICustomer,
-    IDeal,
-} from '~/types/deals.types'
+  CommentDto,
+  CreateCommentError,
+  CreateCommentPayload,
+  CreateDealError,
+  CreateDealPayload,
+  CustomerAvatarError,
+  CustomerDto,
+  DealDto,
+  DealStatus,
+  DeleteCommentError,
+  GetCommentsError,
+  GetCustomerError,
+  GetCustomersError,
+  GetDealsError,
+  NoContent,
+  SuccessResponse,
+  UpdateCustomerError,
+  UpdateCustomerPayload,
+  UpdateDealError,
+} from '~/types/backend.contracts'
 
-export interface CreateDealPayload {
-    name: string
-    price: number
-    customerEmail: string
-    customerName: string
-    status: EnumStatus
+export type {
+  CommentDto,
+  CreateCommentPayload,
+  CreateDealPayload,
+  CustomerDto,
+  DealDto,
+  DealStatus,
+  UpdateCustomerPayload,
 }
 
-export const getDealsApi = () => apiFetch<IDeal[]>('/deals')
+export const getDealsApi = () => apiFetch<DealDto[], GetDealsError>('/deals')
 
 export const createDealApi = (payload: CreateDealPayload) =>
-    apiFetch<IDeal>('/deals', { method: 'POST', body: payload })
+  apiFetch<DealDto, CreateDealError>('/deals', { method: 'POST', body: payload })
 
-export const updateDealStatusApi = (dealId: string, status: EnumStatus) =>
-    apiFetch<IDeal>(`/deals/${dealId}`, { method: 'PATCH', body: { status } })
+export const updateDealStatusApi = (dealId: string, status: DealStatus) =>
+  apiFetch<DealDto, UpdateDealError>(`/deals/${dealId}`, { method: 'PATCH', body: { status } })
 
-export const getCustomersApi = () => apiFetch<ICustomer[]>('/customers')
+export const getCustomersApi = () => apiFetch<CustomerDto[], GetCustomersError>('/customers')
 
-export const updateCustomerApi = (
-    customerId: string,
-    payload: {
-        name?: string
-        email?: string
-        fromSource?: string | null
-    },
-) => apiFetch<ICustomer>(`/customers/${customerId}`, { method: 'PATCH', body: payload })
+export const getCustomerApi = (customerId: string) =>
+  apiFetch<CustomerDto, GetCustomerError>(`/customers/${customerId}`)
+
+export const updateCustomerApi = (customerId: string, payload: UpdateCustomerPayload) =>
+  apiFetch<CustomerDto, UpdateCustomerError>(`/customers/${customerId}`, { method: 'PATCH', body: payload })
 
 export const updateCustomerAvatarApi = (customerId: string, avatarUrl: string) =>
-    apiFetch<{ success: boolean }>(`/customers/${customerId}/avatar`, { method: 'POST', body: { avatarUrl } })
+  apiFetch<SuccessResponse, CustomerAvatarError>(`/customers/${customerId}/avatar`, { method: 'POST', body: { avatarUrl } })
 
 export const deleteCustomerAvatarApi = (customerId: string) =>
-    apiFetch<{ success: boolean }>(`/customers/${customerId}/avatar`, { method: 'DELETE' })
+  apiFetch<SuccessResponse, CustomerAvatarError>(`/customers/${customerId}/avatar`, { method: 'DELETE' })
 
 export const getCommentsApi = (dealId: string) =>
-    apiFetch<IComment[]>('/comments', { query: { dealId } })
+  apiFetch<CommentDto[], GetCommentsError>('/comments', { query: { dealId } })
 
-export const createCommentApi = (payload: { dealId: string; text: string }) =>
-    apiFetch<IComment>('/comments', { method: 'POST', body: payload })
+export const createCommentApi = (payload: CreateCommentPayload) =>
+  apiFetch<CommentDto, CreateCommentError>('/comments', { method: 'POST', body: payload })
 
-export const deleteCommentApi = (commentId: string) =>
-    apiFetch<null>(`/comments/${commentId}`, { method: 'DELETE' })
+export const deleteCommentApi = (commentId: string): Promise<void> =>
+  apiFetch<NoContent, DeleteCommentError>(`/comments/${commentId}`, { method: 'DELETE' })

@@ -50,7 +50,7 @@ const authorize = async (action: () => Promise<void>) => {
     emailRef.value = ''
     passwordRef.value = ''
     await router.push('/')
-  } catch (_e) {
+  } catch (e) {
     errorRef.value = getApiErrorMessage(e)
   } finally {
     isLoadingStore.set(false)

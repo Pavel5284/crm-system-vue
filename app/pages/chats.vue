@@ -1,6 +1,7 @@
 ﻿<script setup lang="ts">
 import { formatDate } from '~/utils/formatDate'
 import { useDebounceFn } from '@vueuse/core'
+import type { ChatUser } from '~/types/backend.contracts'
 
 const { t, locale } = useI18n()
 useSeoMeta({ title: t('chats.seoTitle') })
@@ -33,8 +34,8 @@ watch(() => authStore.isAuth, async (v) => {
   if (v) await chatStore.loadConversations()
 })
 
-const selectPartner = async (user: { id: string; name: string; email: string; avatarUrl: string | null }) => {
-  await chatStore.selectPartner(user as never)
+const selectPartner = async (user: ChatUser) => {
+  await chatStore.selectPartner(user)
   searchQuery.value = ''
   chatStore.searchResults = []
   nextTick(scrollToBottom)
@@ -153,7 +154,7 @@ const showSearchResults = computed(() => !!searchQuery.value.trim() && chatStore
                 :key="c.partner.id"
                 class="w-full flex items-center gap-3 p-2 rounded-md hover:bg-accent text-left transition-colors"
                 :class="chatStore.selectedPartner?.id === c.partner.id && 'bg-accent'"
-                @click="selectPartner(c.partner as never)"
+                @click="selectPartner(c.partner)"
               >
                 <img v-if="c.partner.avatarUrl" :src="c.partner.avatarUrl" class="w-9 h-9 rounded-full object-cover border border-border" />
                 <div v-else class="w-9 h-9 rounded-full bg-primary text-primary-foreground grid place-items-center text-xs font-bold border border-border">

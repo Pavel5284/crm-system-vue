@@ -1,6 +1,7 @@
 ﻿<script setup lang="ts">
 import { getApiErrorMessage } from '~/utils/api'
 import { getMeApi, getProfileApi, registerApi, resendVerificationApi } from '~/utils/auth.api'
+import { isRegisterAutoLogin } from '~/types/backend.contracts'
 
 const { t } = useI18n()
 
@@ -63,14 +64,14 @@ const register = async () => {
 
   isLoadingStore.set(true)
   try {
-    const res = await registerApi(emailRef.value, passwordRef.value, nameRef.value) as { message?: string; accessToken?: string }
+    const res = await registerApi(emailRef.value, passwordRef.value, nameRef.value)
     // если SKIP_EMAIL_VERIFICATION=true бэк отдает { accessToken } и ставит httpOnly куки - редиректим на login
-    if (res.accessToken) {
+    if (isRegisterAutoLogin(res)) {
       await router.push('/login')
       return
     }
     successRef.value = res.message ?? ''
-  } catch (_e) {
+  } catch (e) {
     errorRef.value = getApiErrorMessage(e)
   } finally {
     isLoadingStore.set(false)
@@ -87,7 +88,7 @@ const resend = async () => {
   try {
     const res = await resendVerificationApi(emailRef.value)
     successRef.value = res.message
-  } catch (_e) {
+  } catch (e) {
     errorRef.value = getApiErrorMessage(e)
   }
 }

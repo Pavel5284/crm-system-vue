@@ -1,86 +1,95 @@
 import { apiFetch } from '~/utils/api'
+import type {
+  AuthTokens,
+  AuthUser,
+  AvatarError,
+  LoginError,
+  LoginResponse,
+  LogoutError,
+  MeError,
+  MeResponse,
+  NoContent,
+  ProfileData,
+  ProfileError,
+  RefreshError,
+  RefreshResponse,
+  RegisterError,
+  RegisterResponse,
+  ResendVerificationError,
+  ResendVerificationResponse,
+  SuccessResponse,
+  UpdateProfileError,
+  UpdateProfilePayload,
+  VerifyEmailError,
+  VerifyEmailResponse,
+  Visit,
+  VisitsError,
+  VisitsPaginated,
+  VisitsQuery,
+} from '~/types/backend.contracts'
 
-export interface AuthTokens {
-    accessToken: string
+export type {
+  AuthTokens,
+  AuthUser,
+  ProfileData,
+  Visit,
+  VisitsPaginated,
+  UpdateProfilePayload,
+  MeResponse,
+  RegisterResponse,
+  VerifyEmailResponse,
+  ResendVerificationResponse,
 }
 
-export interface AuthUser {
-    id: string
-    email: string
-    name: string
-    role: string
-    avatarUrl: string | null
-    isEmailVerified: boolean
-    createdAt: string
-}
-
-export interface ProfileData extends AuthUser {
-    position: string | null
-    phone: string | null
-    telegram: string | null
-    updatedAt: string
-}
-
-export interface Visit {
-    id: string
-    ip: string
-    userAgent: string
-    device: string | null
-    browser: string | null
-    os: string | null
-    createdAt: string
-}
-
-export const updateProfileApi = (payload: Partial<{ name: string; position: string | null; phone: string | null; telegram: string | null }>) =>
-    apiFetch<ProfileData>('/users/updateUserData', { method: 'PATCH', body: payload })
+export const updateProfileApi = (payload: UpdateProfilePayload) =>
+  apiFetch<ProfileData, UpdateProfileError>('/users/updateUserData', { method: 'PATCH', body: payload })
 
 export const updateAvatarApi = (avatarUrl: string) =>
-    apiFetch<{ success: boolean }>('/users/profile/avatar', { method: 'POST', body: { avatarUrl } })
+  apiFetch<SuccessResponse, AvatarError>('/users/profile/avatar', { method: 'POST', body: { avatarUrl } })
 
 export const removeAvatarApi = () =>
-    apiFetch<{ success: boolean }>('/users/profile/avatar', { method: 'DELETE' })
+  apiFetch<SuccessResponse, AvatarError>('/users/profile/avatar', { method: 'DELETE' })
 
-export const getProfileApi = () => apiFetch<ProfileData>('/users/profile')
+export const getProfileApi = () => apiFetch<ProfileData, ProfileError>('/users/profile')
 
-export interface VisitsPaginated {
-  data: Visit[]
-  total: number
-  page: number
-  limit: number
-  totalPages: number
+export const getVisitsApi = (params?: VisitsQuery) => {
+  const query: Record<string, string | number | boolean | undefined> = {}
+  if (params?.page !== undefined) query.page = params.page
+  if (params?.limit !== undefined) query.limit = params.limit
+  return apiFetch<VisitsPaginated, VisitsError>('/users/me/visits', { query })
 }
 
-export const getVisitsApi = (params?: { page?: number; limit?: 10 | 25 | 50 }) =>
-  apiFetch<VisitsPaginated>('/users/me/visits', { query: params as Record<string, string | number> })
-
 export const loginApi = async (email: string, password: string) => {
-    // бэкенд ставит accessToken+refreshToken в httpOnly cookie, тело ответа — { accessToken } для совместимости
-    return apiFetch<AuthTokens>('/auth/login', { method: 'POST', body: { email, password }, auth: false })
+  // бэкенд ставит accessToken+refreshToken в httpOnly cookie, тело ответа — { accessToken } для совместимости
+  return apiFetch<LoginResponse, LoginError>('/auth/login', { method: 'POST', body: { email, password }, auth: false })
 }
 
 export const registerApi = async (email: string, password: string, name: string) => {
-    return apiFetch<{ message: string } | { accessToken: string }>('/auth/register', {
-        method: 'POST',
-        body: { email, password, name },
-        auth: false,
-    })
+  return apiFetch<RegisterResponse, RegisterError>('/auth/register', {
+    method: 'POST',
+    body: { email, password, name },
+    auth: false,
+  })
 }
 
 export const verifyEmailApi = async (token: string) => {
-    return apiFetch<{ message: string }>(`/auth/verify-email?token=${encodeURIComponent(token)}`, { auth: false })
+  return apiFetch<VerifyEmailResponse, VerifyEmailError>(`/auth/verify-email?token=${encodeURIComponent(token)}`, { auth: false })
 }
 
 export const resendVerificationApi = async (email: string) => {
-    return apiFetch<{ message: string }>('/auth/resend-verification', {
-        method: 'POST',
-        body: { email },
-        auth: false,
-    })
+  return apiFetch<ResendVerificationResponse, ResendVerificationError>('/auth/resend-verification', {
+    method: 'POST',
+    body: { email },
+    auth: false,
+  })
 }
 
 export const getMeApi = (opts?: { retry?: boolean }) =>
-    apiFetch<{ authenticated: boolean }>('/users/me', { retry: opts?.retry ?? true })
+  apiFetch<MeResponse, MeError>('/users/me', { retry: opts?.retry ?? true })
 
-export const logoutApi = async () => {
-    await apiFetch<null>('/auth/logout', { method: 'POST', retry: false })
+export const refreshApi = () =>
+  apiFetch<RefreshResponse, RefreshError>('/auth/refresh', { method: 'POST', auth: false, retry: false })
+
+export const logoutApi = async (): Promise<void> => {
+  await apiFetch<NoContent, LogoutError>('/auth/logout', { method: 'POST', retry: false })
 }

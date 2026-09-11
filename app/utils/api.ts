@@ -1,9 +1,15 @@
 ﻿import { getCurrentInstance } from "vue"
+import {
+  ApiError,
+  getStatusCode,
+  isBackendErrorResponse,
+  isRecord,
+  isSuccessResponse,
+  type ApiSuccessResponse,
+  type BackendErrorResponse,
+} from "~/types/api.types"
 
-interface ApiResponse<T> {
-  success: boolean
-  data: T
-}
+export { ApiError }
 
 export type ToastOptions = false | {
   success?: string | false
@@ -16,7 +22,7 @@ type ApiFetchOptions = {
   body?: unknown
   auth?: boolean
   retry?: boolean
-  query?: Record<string, string | number>
+  query?: Record<string, string | number | boolean | undefined>
   signal?: AbortSignal
   toast?: ToastOptions
   [key: string]: unknown
@@ -95,7 +101,7 @@ const refreshAccessToken = async (): Promise<boolean | null> => {
   if (refreshPromise) return refreshPromise
   refreshPromise = (async () => {
     try {
-      await $fetch<ApiResponse<{ accessToken: string }>>("/auth/refresh", {
+      await $fetch<ApiSuccessResponse<{ accessToken: string }>>("/auth/refresh", {
         method: "POST",
         baseURL: useApiBaseUrl(),
         credentials: "include" as RequestCredentials,
@@ -110,7 +116,7 @@ const refreshAccessToken = async (): Promise<boolean | null> => {
   return refreshPromise
 }
 
-export const apiFetch = async <T>(path: string, options: ApiFetchOptions = {}): Promise<T> => {
+export const apiFetch = async <T, TError extends string = string>(path: string, options: ApiFetchOptions = {}): Promise<T> => {
   const { auth = true, retry = true, toast: toastOpt, ...fetchOptions } = options
 
   const request = async (): Promise<T> => {
@@ -123,7 +129,7 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions = {}): 
         if (h.cookie) serverHeaders.cookie = h.cookie
       } catch { void 0 }
     }
-    const res = await $fetch<ApiResponse<T> | T>(path, {
+    const res: unknown = await $fetch(path, {
       ...(fetchOptions as Record<string, unknown>),
       baseURL,
       body: fetchOptions.body as BodyInit | Record<string, unknown> | null | undefined,
@@ -133,7 +139,19 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions = {}): 
         ...fetchOptions.headers,
       },
     } as Parameters<typeof $fetch>[1])
-    return res && typeof res === "object" && "success" in res ? (res as ApiResponse<T>).data : (res as T)
+    // 204 No Content (logout, delete comment/task): тела нет — резолвим в undefined
+    if (res === null || res === undefined || res === "") return undefined as T
+    if (isSuccessResponse<T>(res)) return res.data
+    if (isRecord(res) && "success" in res) return undefined as T
+    return res as T
+  }
+
+  const toApiError = (error: unknown): ApiError<TError> => {
+    const envelope = extractErrorEnvelope<TError>(error)
+    return new ApiError<TError>(getApiErrorMessage(error), {
+      statusCode: getStatusCode(error),
+      envelope,
+    })
   }
 
   const showSuccessToast = (method?: string): void => {
@@ -187,14 +205,31 @@ export const apiFetch = async <T>(path: string, options: ApiFetchOptions = {}): 
           showSuccessToast(fetchOptions.method as string)
           return data
         } catch (retryError) {
-          showErrorToast(retryError)
-          throw retryError
+          const apiError = toApiError(retryError)
+          showErrorToast(apiError)
+          throw apiError
         }
       }
     }
-    showErrorToast(error)
-    throw error
+    const apiError = toApiError(error)
+    showErrorToast(apiError)
+    throw apiError
   }
+}
+
+const extractErrorEnvelope = <TMessage extends string = string>(error: unknown): BackendErrorResponse<TMessage> | null => {
+  const e = error as Record<string, unknown>
+  const candidates: unknown[] = [
+    (e as { data?: unknown })?.data,
+    (e as { _data?: unknown })?._data,
+    (e as { response?: { _data?: unknown } })?.response?._data,
+    (e as { cause?: unknown })?.cause,
+    e,
+  ]
+  for (const c of candidates) {
+    if (isBackendErrorResponse<TMessage>(c)) return c
+  }
+  return null
 }
 
 export const getApiErrorMessage = (error: unknown): string => {

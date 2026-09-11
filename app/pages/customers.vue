@@ -1,5 +1,4 @@
 ﻿<script lang="ts" setup>
-import type { ICustomer } from "~/types/deals.types"
 import { getCustomersApi } from "~/utils/crm.api"
 
 const { t } = useI18n()
@@ -18,7 +17,7 @@ const {data, isLoading, refetch} = useQuery({
   enabled: computed(() => authStore.isAuth),
 })
 
-const customers = computed(() => (data.value as ICustomer[]) ?? [])
+const customers = computed(() => data.value ?? [])
 </script>
 
 

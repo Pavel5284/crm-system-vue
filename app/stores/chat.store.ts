@@ -127,7 +127,7 @@ export const useChatStore = defineStore("chat", {
         else partner = this.searchResults.find((u) => u.id === partnerId)
         if (!partner) partner = this.conversations.find((c) => c.partner.id === partnerId)?.partner
         if (!partner) {
-          partner = { id: partnerId, name: partnerId, email: partnerId, avatarUrl: null } as ChatUser
+          partner = { id: partnerId, name: partnerId, email: partnerId, avatarUrl: null }
           this.searchUsers(partnerId).then(() => {
             const found = this.searchResults.find((u) => u.id === partnerId)
             if (found) {

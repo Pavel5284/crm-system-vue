@@ -1,7 +1,7 @@
-import type { ICustomer } from "~/types/deals.types";
+import type { CustomerDto } from "~/types/backend.contracts";
 
 export const useCustomerSlideStore = defineStore('customer-store', {
-    state: (): { customer: ICustomer | null; isOpen: boolean } => ({
+    state: (): { customer: CustomerDto | null; isOpen: boolean } => ({
         customer: null,
         isOpen: false,
     }),
@@ -10,7 +10,7 @@ export const useCustomerSlideStore = defineStore('customer-store', {
             this.customer = null
             this.isOpen = false
         },
-        set(customer: ICustomer) {
+        set(customer: CustomerDto) {
             this.customer = customer
             this.isOpen = true
         },

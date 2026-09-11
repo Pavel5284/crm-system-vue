@@ -1,7 +1,7 @@
 ﻿<script setup lang="ts">
 import {useKanbanQuery} from '@/components/kanban/useKanbanQuery'
 import type {ICard, IColumn} from '~/components/kanban/kanban.types'
-import type {EnumStatus} from "~/types/deals.types"
+import type { DealStatus } from "~/types/backend.contracts"
 import {updateDealStatusApi} from "~/utils/crm.api"
 import {generateColumnStyle} from "@/components/kanban/generate-gradient"
 import { formatDate } from '~/utils/formatDate'
@@ -18,12 +18,12 @@ const store = useDealSlideStore()
 
 type TypeMutationVariables = {
   docId: string
-  status?: EnumStatus
+  status?: DealStatus
 }
 const {mutate} = useMutation({
   mutationKey: ['move card'],
   mutationFn: ({docId, status}: TypeMutationVariables) =>
-      updateDealStatusApi(docId, status as EnumStatus),
+      updateDealStatusApi(docId, status as DealStatus),
   onSuccess: () => {
     refetch()
   },
@@ -33,7 +33,7 @@ const {mutate} = useMutation({
 })
 
 // мобилка: вкладки - показываем только 1 колонку, перемещение через меню
-const activeTab = ref<EnumStatus | string | null>(null)
+const activeTab = ref<DealStatus | string | null>(null)
 
 // локальная копия доски для drag (query data readonly, v-model мутировать нельзя)
 const board = ref<IColumn[]>([])
@@ -45,7 +45,7 @@ watch(() => data.value, (cols) => {
 
 watch(() => data.value, (cols) => {
   if (cols?.length && !activeTab.value) {
-    activeTab.value = cols[0].id as EnumStatus
+    activeTab.value = cols[0].id as DealStatus
   }
 }, { immediate: true })
 
@@ -60,7 +60,7 @@ const activeColumnIndex = computed(() => {
 
 function onMoveCard(cardId: string, newStatus: string) {
   if (!newStatus || newStatus === activeTab.value) return
-  mutate({ docId: cardId, status: newStatus as EnumStatus })
+  mutate({ docId: cardId, status: newStatus as DealStatus })
 }
 
 // прокрутка табов мышкой: drag + колесо
@@ -120,7 +120,7 @@ function onTabClick(colId: string) {
     tabsMoved = false
     return
   }
-  activeTab.value = colId as EnumStatus
+  activeTab.value = colId as DealStatus
 }
 
 
@@ -130,7 +130,7 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
     card = targetColumn.items[evt.newIndex] as ICard | null
   }
   if (!card) return
-  mutate({ docId: card.id, status: targetColumn.id as EnumStatus })
+  mutate({ docId: card.id, status: targetColumn.id as DealStatus })
 }
 
 </script>
