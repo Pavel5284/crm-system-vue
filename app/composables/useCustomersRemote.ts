@@ -31,7 +31,10 @@ async function getInstance(entry: string): Promise<FederationInstance> {
       ])
       return createInstance({
         name: 'host',
-        remotes: [{ name: CUSTOMERS_REMOTE_NAME, entry }],
+        // type: 'module' обязателен: Vite собирает remoteEntry.js как ES-модуль
+        // (export get/init). Без него рантайм вставляет его классическим
+        // <script> и падает с "Cannot use import statement outside a module".
+        remotes: [{ name: CUSTOMERS_REMOTE_NAME, entry, type: 'module' }],
         shared: {
           // Правило №1: отдаём ремоуту инстанс Vue хоста (singleton),
           // иначе получим две копии Vue и баги реактивности на границе.

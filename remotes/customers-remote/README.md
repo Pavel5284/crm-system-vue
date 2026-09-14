@@ -24,6 +24,24 @@ Dev хоста ожидает remote на `http://localhost:4174/remoteEntry.js`
 (`useI18n`, `useQuery`, Pinia-сторы, `@nuxt/ui`): всё нужное приходит
 пропсами. Изменение API — сначала в `packages/mfe-contracts`, потом здесь.
 
+## Стили: как слайдовер home page
+
+Remote НЕ везёт свой Tailwind-бандл: он рендерится внутри страницы хоста
+и пользуется его собранным CSS. Поэтому разметка слайдовера и все классы —
+1-в-1 host `USlideover` (тема `.nuxt/ui/slideover.ts`, инпуты/кнопки/аватар
+из `ui/*`), токены — из `@crm/ui-theme`. Дубликаты утилит в remote-бандле
+запрещены: они могли бы перебить стили хоста глобально.
+
+Проверка покрытия (все 149 классов remote обязаны быть в CSS хоста):
+
+```bash
+node "C:\Users\user\AppData\Local\Temp\opencode\check-remote-classes.cjs"
+```
+
+Оговорка: в standalone-playground (`pnpm dev` без хоста) хром слайдовера
+(`bg-elevated`, `text-highlighted` из `@nuxt/ui`) не styled — это нормально,
+эталон смотрим только внутри хоста.
+
 ## Версионирование (правило №3)
 
 Никогда не указывайте «плавающий» URL ремоута в хосте.

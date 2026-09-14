@@ -1,0 +1,10 @@
+{
+  "name": "@crm/ui-theme",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Единая тема оформления (Tailwind v4): дизайн-токены и dark-вариант. Единственный источник правды для host и всех remotes — правило №5 (дизайн-система — общий пакет, не федерируется).",
+  "exports": {
+    "./theme.css": "./theme.css"
+  }
+}

@@ -1,3 +1,4 @@
+import tailwindcss from '@tailwindcss/vite'
 import vue from '@vitejs/plugin-vue'
 import { federation } from '@module-federation/vite'
 import { defineConfig } from 'vite'
@@ -27,6 +28,8 @@ export default defineConfig({
   },
   plugins: [
     vue(),
+    // Та же тема, что в host (@crm/ui-theme): иначе классы разъедутся.
+    tailwindcss(),
     federation({
       name: 'customers',
       filename: 'remoteEntry.js',

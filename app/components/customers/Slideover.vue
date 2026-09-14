@@ -84,13 +84,14 @@ async function onSave() {
   errorRef.value = ''
   isSaving.value = true
   try {
-    await updateCustomerApi(store.customer.id, {
+    const updated = await updateCustomerApi(store.customer.id, {
       name: nameRef.value,
       email: emailRef.value,
       fromSource: fromSourceRef.value || null,
     })
     await props.refetch()
-    store.clear()
+    // слайдовер НЕ закрываем: обновляем стор ответом, чтобы сбросить isDirty
+    store.customer = updated
   } catch (e) {
     errorRef.value = getApiErrorMessage(e)
   } finally {
