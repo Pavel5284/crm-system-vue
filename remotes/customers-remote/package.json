@@ -1,0 +1,23 @@
+{
+  "name": "@crm/customers-remote",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Пилотный микрофронтенд: раздел customers (таблица + слайдовер). Чистый Vite+Vue, живёт только на клиенте, деплоится независимо как статика.",
+  "scripts": {
+    "dev": "vite --port 4174 --strictPort",
+    "build": "vite build",
+    "preview": "vite preview --port 4174 --strictPort"
+  },
+  "dependencies": {
+    "@crm/mfe-contracts": "workspace:*",
+    "vue": "^3.5.40"
+  },
+  "devDependencies": {
+    "@module-federation/vite": "^1.16.3",
+    "@vitejs/plugin-vue": "^5.2.4",
+    "typescript": "^5.6.3",
+    "vite": "^7.2.4",
+    "vue-tsc": "2.2.12"
+  }
+}

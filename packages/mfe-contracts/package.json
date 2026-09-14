@@ -1,0 +1,14 @@
+{
+  "name": "@crm/mfe-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Типизированные контракты микрофронтендов (пропсы/эмиты федеративных модулей). Правило №4: рассинхрон API remote↔host должен ловиться на этапе типов, а не в браузере.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./customers": "./src/customers.ts"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  }
+}

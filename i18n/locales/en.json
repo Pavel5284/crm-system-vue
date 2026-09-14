@@ -252,5 +252,10 @@
     "socketId": "Socket id:",
     "noNotifications": "No notifications yet.",
     "connectedHint": "Send test notification via API."
+  },
+  "mfe": {
+    "unavailableTitle": "Section temporarily unavailable",
+    "unavailableDescription": "Could not load the Customers module. The rest of the CRM keeps working — please try again.",
+    "retry": "Retry"
   }
 }

@@ -252,5 +252,10 @@
     "socketId": "Socket id:",
     "noNotifications": "Пока нет уведомлений.",
     "connectedHint": "Отправь тестовое уведомление через API."
+  },
+  "mfe": {
+    "unavailableTitle": "Раздел временно недоступен",
+    "unavailableDescription": "Не удалось загрузить модуль «Клиенты». Остальной CRM работает — попробуйте ещё раз.",
+    "retry": "Повторить"
   }
 }

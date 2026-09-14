@@ -2,6 +2,7 @@
   "name": "crm-system-vue",
   "type": "module",
   "private": true,
+  "packageManager": "pnpm@11.22.0",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
@@ -12,6 +13,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@module-federation/runtime": "^2.9.0",
     "@nuxt/icon": "^2.4.1",
     "@nuxt/image": "^2.1.0",
     "@nuxt/ui": "^4.10.0",

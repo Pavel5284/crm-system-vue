@@ -6,6 +6,14 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
+      // Микрофронтенды (вариант B). URL версионированного remoteEntry.js,
+      // НЕ latest: обновление ремоута — отдельным изменением env (правило №3).
+      mfeCustomersRemoteUrl:
+        process.env.NUXT_PUBLIC_MFE_CUSTOMERS_REMOTE_URL || 'http://localhost:4174/remoteEntry.js',
+      // local — текущее поведение (SSR, без федерации);
+      // remote — только федеративный модуль + экран ошибки при падении;
+      // auto (default) — remote, при его падении тихий фолбэк на локальный.
+      mfeCustomersMode: process.env.NUXT_PUBLIC_MFE_CUSTOMERS || 'auto',
     },
   },
   app: {

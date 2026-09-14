@@ -1,71 +1,66 @@
 ﻿<script lang="ts" setup>
-import { getCustomersApi } from "~/utils/crm.api"
+import type { Component } from 'vue'
+import MfeCustomersLocal from '~/components/mfe/CustomersLocal.vue'
+import MfeCustomersSkeleton from '~/components/mfe/CustomersSkeleton.vue'
+import MfeRemoteUnavailable from '~/components/mfe/RemoteUnavailable.vue'
+import { loadCustomersRemote } from '~/composables/useCustomersRemote'
 
-const { t } = useI18n()
+// Shell страницы: роутингом владеет host (правило №2), remote отдаёт
+// только компонент. Федеративный кусок рендерится строго на клиенте.
+const { t, locale } = useI18n()
+const config = useRuntimeConfig()
 
 useSeoMeta({
   title: t('customers.seoTitle')
 })
 
-const store = useCustomerSlideStore()
-const authStore = useAuthStore()
+type MfeMode = 'local' | 'remote' | 'auto'
+const mode = ((config.public.mfeCustomersMode as string | undefined) || 'auto') as MfeMode
+const remoteUrl = config.public.mfeCustomersRemoteUrl as string
+const apiBaseUrl = config.public.apiBaseUrl as string
 
-const {data, isLoading, refetch} = useQuery({
-  queryKey: ['customers'],
-  queryFn: () => getCustomersApi(),
-  refetchInterval: false,
-  enabled: computed(() => authStore.isAuth),
-})
+const remoteComponent = shallowRef<Component | null>(null)
+const failed = ref(false)
 
-const customers = computed(() => data.value ?? [])
+async function load(): Promise<void> {
+  failed.value = false
+  remoteComponent.value = null
+  try {
+    remoteComponent.value = await loadCustomersRemote(remoteUrl)
+  } catch (e) {
+    console.error('[mfe] customers remote failed, fallback engaged:', e)
+    failed.value = true
+  }
+}
+
+function retry(): void {
+  void load()
+}
+
+// local: прежнее поведение с SSR. remote/auto: только клиент (SEO не нужен за логином).
+if (mode !== 'local') {
+  onMounted(() => { void load() })
+}
 </script>
 
-
 <template>
-  <div>
-    <h1 class="font-bold text-2x1 mb-10">{{ t('customers.listTitle') }}</h1>
-    <div v-if="isLoading">{{ t('customers.loading') }}</div>
-    <UiTable v-else>
-      <UiTableHeader>
-        <UiTableRow>
-          <UiTableHead class="w-[80px]">{{ t('customers.table.avatar') }}</UiTableHead>
-          <UiTableHead class="w-[200px]">{{ t('customers.table.name') }}</UiTableHead>
-          <UiTableHead class="w-[200px]">Email</UiTableHead>
-          <UiTableHead>{{ t('customers.table.source') }}</UiTableHead>
-        </UiTableRow>
-      </UiTableHeader>
-      <UiTableBody>
-        <UiTableRow
-        v-for="customer in customers"
-        :key="customer.id"
-        class="cursor-pointer hover:bg-white/5 transition-colors"
-        @click="store.set(customer)"
-        >
-          <UiTableCell>
-            <img
-                v-if="customer.avatarUrl"
-                :src="customer.avatarUrl"
-                :alt="customer.name"
-                width="50"
-                height="50"
-                class="w-[50px] h-[50px] rounded-full object-cover shrink-0"
-            />
-            <div
-                v-else
-                class="w-[50px] h-[50px] rounded-full bg-[#1a2332] border border-[#161c26] flex items-center justify-center shrink-0"
-            >
-              <Icon name="lucide:user" size="22" class="text-slate-500" />
-            </div>
-          </UiTableCell>
-          <UiTableCell class="font-medium">{{customer.name}}</UiTableCell>
-          <UiTableCell class="font-medium">{{customer.email}}</UiTableCell>
-          <UiTableCell class="font-medium">{{customer.fromSource}}</UiTableCell>
+  <!-- Без федерации: 1-в-1 как было, SSR сохранён -->
+  <MfeCustomersLocal v-if="mode === 'local'" />
 
-        </UiTableRow>
-      </UiTableBody>
-    </UiTable>
-
-    <CustomersSlideover :refetch="refetch"/>
-  </div>
+  <ClientOnly v-else>
+    <component
+      :is="remoteComponent"
+      v-if="remoteComponent && !failed"
+      :api-base-url="apiBaseUrl"
+      :locale="locale"
+    />
+    <!-- auto: тихий фолбэк на локальную реализацию при падении remote -->
+    <MfeCustomersLocal v-else-if="mode === 'auto' && failed" />
+    <!-- remote: упавший раздел не роняет CRM — экран деградации с повтором -->
+    <MfeRemoteUnavailable v-else-if="failed" @retry="retry" />
+    <MfeCustomersSkeleton v-else />
+    <template #fallback>
+      <MfeCustomersSkeleton />
+    </template>
+  </ClientOnly>
 </template>
-
