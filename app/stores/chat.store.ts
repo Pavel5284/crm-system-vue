@@ -1,6 +1,6 @@
 ﻿import { defineStore } from "pinia"
 import type { ChatUser, ChatMessage, Conversation } from "~/utils/chat.api"
-import { getConversationsApi, getMessagesApi, getUnreadCountApi, sendMessageApi, searchUsersApi } from "~/utils/chat.api"
+import { getConversationsApi, getMessagesApi, getUnreadCountApi, markMessagesReadApi, sendMessageApi, searchUsersApi } from "~/utils/chat.api"
 
 export const useChatStore = defineStore("chat", {
   state: () => ({
@@ -152,7 +152,19 @@ export const useChatStore = defineStore("chat", {
         } catch { void 0 }
       } else {
         msg.read = true
+        // чат с автором открыт — сообщение уже прочитано: фиксируем на
+        // сервере, иначе unread-бейдж не гаснет (считается сервером).
+        // Своё эхо из другой вкладки помечать не нужно.
+        if (msg.senderId !== myId) {
+          void this.markOpenConversationRead(partnerId)
+        }
       }
+    },
+    async markOpenConversationRead(partnerId: string): Promise<void> {
+      try {
+        await markMessagesReadApi(partnerId)
+      } catch { void 0 }
+      await this.fetchUnreadCount()
     },
     clearSelected(): void {
       this.selectedPartner = null

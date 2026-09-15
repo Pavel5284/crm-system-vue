@@ -6,6 +6,8 @@ import type {
   Conversation,
   ConversationsError,
   GetMessagesError,
+  MarkMessagesReadError,
+  MarkMessagesReadResponse,
   SearchChatError,
   SendMessageError,
   SendMessagePayload,
@@ -47,3 +49,6 @@ export const sendMessageApi = (receiverId: string, text: string) =>
 
 export const getUnreadCountApi = () =>
   apiFetch<UnreadCount, UnreadCountError>('/chat/unread-count', { toast: false })
+
+export const markMessagesReadApi = (partnerId: string) =>
+  apiFetch<MarkMessagesReadResponse, MarkMessagesReadError>(`/chat/messages/${partnerId}/read`, { method: 'PATCH', toast: false })

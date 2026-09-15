@@ -385,6 +385,10 @@ export type DeleteCommentError = Extract<CommentErrorMessage, `Коммента�
 export type SearchChatError = NoDomainError
 export type ConversationsError = NoDomainError
 export type GetMessagesError = Extract<ChatErrorMessage, 'Нельзя писать самому себе' | 'Пользователь не найден'>
+export type MarkMessagesReadError = NoDomainError
+export interface MarkMessagesReadResponse {
+  read: number
+}
 export type SendMessageError = ChatErrorMessage
 export type UnreadCountError = NoDomainError
 
