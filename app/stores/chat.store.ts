@@ -2,6 +2,9 @@
 import type { ChatUser, ChatMessage, Conversation } from "~/utils/chat.api"
 import { getConversationsApi, getMessagesApi, getUnreadCountApi, markMessagesReadApi, sendMessageApi, searchUsersApi } from "~/utils/chat.api"
 
+// Страница истории: совпадает с дефолтом бэкенда (limit=50)
+const MESSAGES_PAGE_LIMIT = 50
+
 // Имя/почта вида UUID — не данные для показа, а заглушка
 const isUuidLike = (s: string | null | undefined): boolean =>
   !!s && /^[0-9a-f-]{36}$/i.test(s.trim())
@@ -10,10 +13,12 @@ export const useChatStore = defineStore("chat", {
   state: () => ({
     conversations: [] as Conversation[],
     messagesByPartner: {} as Record<string, ChatMessage[]>,
+    messagesHasMore: {} as Record<string, boolean>,
     selectedPartner: null as ChatUser | null,
     searchResults: [] as ChatUser[],
     isLoadingConversations: false,
     isLoadingMessages: false,
+    isLoadingOlder: false,
     isSending: false,
     isSearching: false,
     unreadCount: 0,
@@ -62,13 +67,34 @@ export const useChatStore = defineStore("chat", {
     async loadMessages(partnerId: string): Promise<void> {
       this.isLoadingMessages = true
       try {
-        const msgs = await getMessagesApi(partnerId)
+        const msgs = await getMessagesApi(partnerId, { limit: MESSAGES_PAGE_LIMIT })
         this.messagesByPartner[partnerId] = msgs
+        // полная страница — возможно, выше есть ещё история
+        this.messagesHasMore[partnerId] = msgs.length >= MESSAGES_PAGE_LIMIT
         await this.fetchUnreadCount()
       } catch {
         this.messagesByPartner[partnerId] = []
+        this.messagesHasMore[partnerId] = false
       } finally {
         this.isLoadingMessages = false
+      }
+    },
+    async loadOlderMessages(partnerId: string): Promise<void> {
+      if (this.isLoadingOlder || this.isLoadingMessages) return
+      if (this.messagesHasMore[partnerId] === false) return
+      const current = this.messagesByPartner[partnerId] ?? []
+      this.isLoadingOlder = true
+      try {
+        const older = await getMessagesApi(partnerId, {
+          limit: MESSAGES_PAGE_LIMIT,
+          offset: current.length,
+        })
+        const knownIds = new Set(current.map((m) => m.id))
+        const fresh = older.filter((m) => !knownIds.has(m.id))
+        this.messagesByPartner[partnerId] = [...fresh, ...current]
+        this.messagesHasMore[partnerId] = older.length >= MESSAGES_PAGE_LIMIT
+      } catch { void 0 } finally {
+        this.isLoadingOlder = false
       }
     },
     async selectPartner(user: ChatUser): Promise<void> {

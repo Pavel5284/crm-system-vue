@@ -60,7 +60,13 @@ const scrollToBottom = () => {
 }
 
 watch(() => chatStore.selectedMessages.length, () => {
-  nextTick(scrollToBottom)
+  // при подгрузке истории наверх не дёргаем скролл (позицию правит loadOlderOnScroll);
+  // новое сообщение скроллим вниз, только если юзер и так внизу
+  const el = messagesContainer.value
+  const nearBottom = !el || el.scrollHeight - el.scrollTop - el.clientHeight < 200
+  nextTick(() => {
+    if (nearBottom && !isLoadingOlder) scrollToBottom()
+  })
   nextTick(observeUnreadMessages)
 })
 watch(() => chatStore.selectedPartner?.id, () => {
@@ -71,6 +77,27 @@ watch(() => chatStore.selectedPartner?.id, () => {
 const isTyping = computed(() => typingPartnerId.value === chatStore.selectedPartner?.id)
 
 let typingTimer: ReturnType<typeof setTimeout> | null = null
+let isLoadingOlder = false
+
+// Подгрузка истории скроллом вверх с сохранением позиции
+const onMessagesScroll = async (): Promise<void> => {
+  const el = messagesContainer.value
+  const partnerId = chatStore.selectedPartner?.id
+  if (!el || !partnerId || isLoadingOlder) return
+  if (chatStore.isLoadingMessages || chatStore.isLoadingOlder) return
+  if (chatStore.messagesHasMore[partnerId] === false) return
+  if (el.scrollTop > 120) return
+  isLoadingOlder = true
+  const prevHeight = el.scrollHeight
+  const prevTop = el.scrollTop
+  try {
+    await chatStore.loadOlderMessages(partnerId)
+  } finally {
+    await nextTick()
+    el.scrollTop = el.scrollHeight - prevHeight + prevTop
+    isLoadingOlder = false
+  }
+}
 watch(messageText, (v) => {
   if (!chatStore.selectedPartner) return
   sendTyping(chatStore.selectedPartner.id, !!v)
@@ -279,9 +306,10 @@ function observeUnreadMessages(): void {
             <UiButton variant="ghost" size="sm" class="ml-auto" @click="chatStore.clearSelected()">{{ t('chats.close') }}</UiButton>
           </div>
 
-          <div ref="messagesContainer" class="flex-1 overflow-auto p-4 space-y-3">
+          <div ref="messagesContainer" class="flex-1 overflow-auto p-4 space-y-3" @scroll="onMessagesScroll">
             <div v-if="chatStore.isLoadingMessages" class="text-xs text-muted-foreground flex items-center gap-2"><Icon name="lucide:loader-2" size="14" class="animate-spin"/> {{ t('common.loading') }}</div>
-            <div v-else-if="!chatStore.selectedMessages.length" class="text-center py-12">
+            <div v-if="(isLoadingOlder || chatStore.isLoadingOlder) && !chatStore.isLoadingMessages && chatStore.selectedMessages.length" class="text-xs text-muted-foreground flex items-center justify-center gap-2 py-1"><Icon name="lucide:loader-2" size="14" class="animate-spin"/></div>
+            <div v-if="!chatStore.isLoadingMessages && !chatStore.selectedMessages.length" class="text-center py-12">
               <p class="text-sm text-muted-foreground">{{ t('chats.noMessagesHint') }}</p>
             </div>
             <div v-else v-for="m in chatStore.selectedMessages" :key="m.id" class="flex" :class="m.senderId === authStore.user.id ? 'justify-end' : 'justify-start'" :data-message-id="m.id" :data-incoming="m.senderId !== authStore.user.id ? 'true' : 'false'">
