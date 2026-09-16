@@ -6,14 +6,14 @@ const authStore = useAuthStore()
 const { t } = useI18n()
 
 watch(() => authStore.isAuth, (v) => {
-  if (v) void chatStore.fetchUnreadCount()
+  if (v) void chatStore.fetchUnreadDialogsCount()
 })
 
 let poll: ReturnType<typeof setInterval> | null = null
 onMounted(() => {
-  if (authStore.isAuth) void chatStore.fetchUnreadCount()
+  if (authStore.isAuth) void chatStore.fetchUnreadDialogsCount()
   poll = setInterval(() => {
-    if (authStore.isAuth) void chatStore.fetchUnreadCount()
+    if (authStore.isAuth) void chatStore.fetchUnreadDialogsCount()
   }, 15000)
 })
 onUnmounted(() => {
@@ -42,10 +42,10 @@ onUnmounted(() => {
         <Icon :name="item.icon" class="mr-3" />
         <span class="flex-1">{{ t(item.name) }}</span>
         <span
-          v-if="item.url === '/chats' && chatStore.unreadCount > 0"
+          v-if="item.url === '/chats' && chatStore.unreadDialogsCount > 0"
           class="ml-auto bg-red-500 text-white text-[10px] font-bold min-w-[20px] h-5 grid place-items-center rounded-full px-1.5"
         >
-          {{ chatStore.unreadCount > 99 ? "99+" : chatStore.unreadCount }}
+          {{ chatStore.unreadDialogsCount > 99 ? "99+" : chatStore.unreadDialogsCount }}
         </span>
       </NuxtLink>
     </template>

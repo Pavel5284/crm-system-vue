@@ -300,8 +300,16 @@ function observeUnreadMessages(): void {
                   <p class="text-sm font-medium truncate">{{ displayName(c.partner) }}</p>
                   <p class="text-xs text-muted-foreground truncate">{{ c.lastMessage.text }}</p>
                 </div>
-                <div class="text-[10px] text-muted-foreground shrink-0">
-                  {{ formatDate(c.lastMessage.createdAt, 'full', locale) }}
+                <div class="flex flex-col items-end gap-1 shrink-0">
+                  <div class="text-[10px] text-muted-foreground">
+                    {{ formatDate(c.lastMessage.createdAt, 'full', locale) }}
+                  </div>
+                  <div
+                    v-if="(c.unreadCount ?? 0) > 0"
+                    class="min-w-[20px] h-5 grid place-items-center rounded-full bg-red-500 text-white text-[10px] font-bold px-1.5"
+                  >
+                    {{ c.unreadCount > 99 ? '99+' : c.unreadCount }}
+                  </div>
                 </div>
               </button>
             </div>

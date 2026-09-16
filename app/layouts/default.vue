@@ -43,7 +43,7 @@ const chatStore = useChatStore()
 useChatSocket()
 
 watch(isAuth, async (v) => {
-  if (v) await chatStore.fetchUnreadCount()
+  if (v) await chatStore.fetchUnreadDialogsCount()
 })
 
 watch(showMobileMenu, (v) => {

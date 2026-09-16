@@ -14,6 +14,8 @@ import type {
   SendMessagePayload,
   UnreadCount,
   UnreadCountError,
+  UnreadDialogs,
+  UnreadDialogsError,
 } from '~/types/backend.contracts'
 
 export type {
@@ -50,6 +52,9 @@ export const sendMessageApi = (receiverId: string, text: string) =>
 
 export const getUnreadCountApi = () =>
   apiFetch<UnreadCount, UnreadCountError>('/chat/unread-count', { toast: false })
+
+export const getUnreadDialogsApi = () =>
+  apiFetch<UnreadDialogs, UnreadDialogsError>('/chat/unread-dialogs', { toast: false })
 
 export const markMessagesReadApi = (upToMessageId: string) =>
   apiFetch<MarkMessagesReadResponse, MarkMessagesReadError>('/chat/messages/read', {

@@ -1,6 +1,6 @@
 ﻿import { defineStore } from "pinia"
 import type { ChatUser, ChatMessage, Conversation } from "~/utils/chat.api"
-import { getConversationsApi, getMessagesApi, getUnreadCountApi, markMessagesReadApi, sendMessageApi, searchUsersApi } from "~/utils/chat.api"
+import { getConversationsApi, getMessagesApi, getUnreadCountApi, getUnreadDialogsApi, markMessagesReadApi, sendMessageApi, searchUsersApi } from "~/utils/chat.api"
 
 // Страница истории: совпадает с дефолтом бэкенда (limit=50)
 const MESSAGES_PAGE_LIMIT = 50
@@ -24,6 +24,8 @@ export const useChatStore = defineStore("chat", {
     isSending: false,
     isSearching: false,
     unreadCount: 0,
+    // Диалогов с непрочитанными — именно это показывает бейдж Chats в меню
+    unreadDialogsCount: 0,
   }),
   getters: {
     selectedMessages(state): ChatMessage[] {
@@ -38,6 +40,14 @@ export const useChatStore = defineStore("chat", {
         this.unreadCount = count
       } catch {
         this.unreadCount = 0
+      }
+    },
+    async fetchUnreadDialogsCount(): Promise<void> {
+      try {
+        const { count } = await getUnreadDialogsApi()
+        this.unreadDialogsCount = count
+      } catch {
+        this.unreadDialogsCount = 0
       }
     },
     async searchUsers(q: string): Promise<void> {
@@ -58,10 +68,11 @@ export const useChatStore = defineStore("chat", {
       this.isLoadingConversations = true
       try {
         this.conversations = await getConversationsApi()
-        await this.fetchUnreadCount()
+        // диалоги уже несут unreadCount — бейдж меню считаем локально, без запросов
+        this.unreadDialogsCount = this.conversations.filter((c) => (c.unreadCount ?? 0) > 0).length
       } catch {
         this.conversations = []
-        this.unreadCount = 0
+        this.unreadDialogsCount = 0
       } finally {
         this.isLoadingConversations = false
       }
@@ -73,7 +84,6 @@ export const useChatStore = defineStore("chat", {
         this.messagesByPartner[partnerId] = msgs
         // полная страница — возможно, выше есть ещё история
         this.messagesHasMore[partnerId] = msgs.length >= MESSAGES_PAGE_LIMIT
-        await this.fetchUnreadCount()
       } catch {
         this.messagesByPartner[partnerId] = []
         this.messagesHasMore[partnerId] = false
@@ -132,7 +142,7 @@ export const useChatStore = defineStore("chat", {
           const conv = this.conversations.splice(idx, 1)[0]!
           this.conversations.unshift(conv)
         } else {
-          this.conversations.unshift({ partner: this.selectedPartner, lastMessage: msg })
+          this.conversations.unshift({ partner: this.selectedPartner, lastMessage: msg, unreadCount: 0 })
         }
       } finally {
         this.isSending = false
@@ -156,7 +166,7 @@ export const useChatStore = defineStore("chat", {
       } else {
         const partner = this.lookupPartner(partnerId)
           ?? { id: partnerId, name: partnerId, email: partnerId, avatarUrl: null }
-        this.conversations.unshift({ partner, lastMessage: msg })
+        this.conversations.unshift({ partner, lastMessage: msg, unreadCount: 0 })
       }
       // Диалог считается открытым, только если пользователь реально смотрит
       // /chats с этим собеседником: selectedPartner переживает уход со
@@ -164,7 +174,14 @@ export const useChatStore = defineStore("chat", {
       // пришедшее после ухода, тихо помечалось прочитанным и бейдж не рос.
       const isViewing = this.selectedPartner?.id === partnerId
         && useRoute().path === '/chats'
-      if (!isViewing) {
+      const incoming = msg.senderId !== myId
+      if (!isViewing && incoming) {
+        const entry = this.conversations.find((c) => c.partner.id === partnerId)
+        if (entry) {
+          const was = entry.unreadCount ?? 0
+          entry.unreadCount = was + 1
+          if (was === 0) this.unreadDialogsCount++
+        }
         void this.handleUnreadMessage(msg, partnerId)
       }
       // Диалог открыт: «прочитано» ставит только observer видимости
@@ -179,10 +196,10 @@ export const useChatStore = defineStore("chat", {
       let partner = this.lookupPartner(partnerId)
       if (!partner || isUuidLike(partner.name)) {
         // Имени нет — сервер источник правды (там имя/email отправителя).
-        // loadConversations заодно подтягивает точный unreadCount,
-        // поэтому ++ здесь не делаем.
+        // loadConversations заодно подтягивает точные счётчики.
         try {
           await this.loadConversations()
+          await this.fetchUnreadCount()
         } catch { /* ignore */ }
         const fresh = this.lookupPartner(partnerId)
         if (fresh && !isUuidLike(fresh.name)) {
@@ -221,8 +238,10 @@ export const useChatStore = defineStore("chat", {
       const msgs = this.messagesByPartner[partnerId] ?? []
       const target = msgs.find((m) => m.id === upToMessageId)
       if (!target) return
+      let marked: number
       try {
-        await markMessagesReadApi(upToMessageId)
+        const res = await markMessagesReadApi(upToMessageId)
+        marked = res.read
       } catch (e) {
         // Не глотаем молча: иначе рассинхрон фронта и сервера (например,
         // эндпоинта нет на серверном бэкенде) выглядит как «observer не работает»
@@ -235,7 +254,10 @@ export const useChatStore = defineStore("chat", {
       for (const m of msgs) {
         if (!m.read && m.senderId !== myId && m.createdAt <= upTo) m.read = true
       }
-      await this.fetchUnreadCount()
+      // гасим бейдж диалога на помеченное сервером количество
+      const entry = this.conversations.find((c) => c.partner.id === partnerId)
+      if (entry) entry.unreadCount = Math.max(0, (entry.unreadCount ?? 0) - marked)
+      await this.fetchUnreadDialogsCount()
     },
     // Получатель прочитал: прилетело chat:read — переворачиваем галочки
     // у своих сообщений вплоть до увиденного. Счётчик не трогаем:

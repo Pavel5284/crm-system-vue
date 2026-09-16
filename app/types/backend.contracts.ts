@@ -204,9 +204,14 @@ export type ConversationLastMessage = Pick<
 export interface Conversation {
   partner: ConversationPartner
   lastMessage: ConversationLastMessage
+  unreadCount: number
 }
 
 export interface UnreadCount {
+  count: number
+}
+
+export interface UnreadDialogs {
   count: number
 }
 
@@ -399,6 +404,7 @@ export interface MarkMessagesReadResponse {
 }
 export type SendMessageError = ChatErrorMessage
 export type UnreadCountError = NoDomainError
+export type UnreadDialogsError = NoDomainError
 
 // --- tasks / notifications ---------------------------------------------------
 export type GetTasksError = TaskErrorMessage
