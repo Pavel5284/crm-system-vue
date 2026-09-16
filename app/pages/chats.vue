@@ -28,6 +28,18 @@ watch(searchQuery, (v) => {
 
 onMounted(async () => {
   if (authStore.isAuth) await chatStore.loadConversations()
+  nextTick(observeUnreadMessages)
+})
+
+onUnmounted(() => {
+  // увиденное на экране — фиксируем, даже если уходим (fire-and-forget)
+  if (readFlushTimer) {
+    clearTimeout(readFlushTimer)
+    readFlushTimer = null
+  }
+  void flushVisibleReads()
+  readObserver?.disconnect()
+  readObserver = null
 })
 
 watch(() => authStore.isAuth, async (v) => {
@@ -47,8 +59,14 @@ const scrollToBottom = () => {
   }
 }
 
-watch(() => chatStore.selectedMessages.length, () => nextTick(scrollToBottom))
-watch(() => chatStore.selectedPartner?.id, () => nextTick(scrollToBottom))
+watch(() => chatStore.selectedMessages.length, () => {
+  nextTick(scrollToBottom)
+  nextTick(observeUnreadMessages)
+})
+watch(() => chatStore.selectedPartner?.id, () => {
+  nextTick(scrollToBottom)
+  nextTick(observeUnreadMessages)
+})
 
 const isTyping = computed(() => typingPartnerId.value === chatStore.selectedPartner?.id)
 
@@ -96,6 +114,72 @@ const getInitials = (name: string, email: string) => {
 const filteredConversations = computed(() => chatStore.conversations)
 
 const showSearchResults = computed(() => !!searchQuery.value.trim() && chatStore.searchResults.length > 0)
+
+// --- «Прочитано» по факту просмотра: сообщение помечается, только когда
+// пользователь пролистал до него и увидел на экране (IntersectionObserver).
+// threshold 0.5 для очень высоких пузырей недостижим — берём 0.3.
+let readObserver: IntersectionObserver | null = null
+const pendingVisibleIds = new Set<string>()
+let readFlushTimer: ReturnType<typeof setTimeout> | null = null
+
+const isIncomingUnread = (m: { id: string; senderId: string; read: boolean }): boolean =>
+  m.senderId !== authStore.user.id && !m.read
+
+function scheduleReadFlush(): void {
+  if (readFlushTimer) return
+  readFlushTimer = setTimeout(() => {
+    readFlushTimer = null
+    void flushVisibleReads()
+  }, 400)
+}
+
+async function flushVisibleReads(): Promise<void> {
+  if (pendingVisibleIds.size === 0 || document.hidden) {
+    pendingVisibleIds.clear()
+    return
+  }
+  const partnerId = chatStore.selectedPartner?.id
+  if (!partnerId) {
+    pendingVisibleIds.clear()
+    return
+  }
+  const msgs = chatStore.selectedMessages
+  const visibleIdx = msgs
+    .map((m, i) => (pendingVisibleIds.has(m.id) && isIncomingUnread(m) ? i : -1))
+    .filter((i) => i >= 0)
+  pendingVisibleIds.clear()
+  if (visibleIdx.length === 0) return
+  // «вплоть до самого нижнего увиденного» — всё выше тоже увидено
+  const upTo = msgs[Math.max(...visibleIdx)]!
+  await chatStore.markVisibleMessagesRead(partnerId, upTo.id)
+}
+
+function observeUnreadMessages(): void {
+  readObserver?.disconnect()
+  readObserver = null
+  pendingVisibleIds.clear()
+  if (readFlushTimer) {
+    clearTimeout(readFlushTimer)
+    readFlushTimer = null
+  }
+  const root = messagesContainer.value
+  if (!root || !chatStore.selectedPartner || typeof IntersectionObserver === 'undefined') return
+  readObserver = new IntersectionObserver((entries) => {
+    if (document.hidden) return
+    let hit = false
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        const id = (entry.target as HTMLElement).dataset.messageId
+        if (id) {
+          pendingVisibleIds.add(id)
+          hit = true
+        }
+      }
+    }
+    if (hit) scheduleReadFlush()
+  }, { root, threshold: 0.3 })
+  root.querySelectorAll('[data-incoming="true"]').forEach((el) => readObserver!.observe(el))
+}
 </script>
 
 <template>
@@ -200,7 +284,7 @@ const showSearchResults = computed(() => !!searchQuery.value.trim() && chatStore
             <div v-else-if="!chatStore.selectedMessages.length" class="text-center py-12">
               <p class="text-sm text-muted-foreground">{{ t('chats.noMessagesHint') }}</p>
             </div>
-            <div v-else v-for="m in chatStore.selectedMessages" :key="m.id" class="flex" :class="m.senderId === authStore.user.id ? 'justify-end' : 'justify-start'">
+            <div v-else v-for="m in chatStore.selectedMessages" :key="m.id" class="flex" :class="m.senderId === authStore.user.id ? 'justify-end' : 'justify-start'" :data-message-id="m.id" :data-incoming="m.senderId !== authStore.user.id ? 'true' : 'false'">
               <div class="max-w-[70%] rounded-2xl px-3 py-2 text-sm" :class="m.senderId === authStore.user.id ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-card border border-border rounded-bl-sm'">
                 <p class="whitespace-pre-wrap break-words">{{ m.text }}</p>
                 <p class="text-[10px] mt-1 opacity-70">{{ formatDate(m.createdAt, 'full', locale) }}</p>

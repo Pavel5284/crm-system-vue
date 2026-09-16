@@ -386,6 +386,9 @@ export type SearchChatError = NoDomainError
 export type ConversationsError = NoDomainError
 export type GetMessagesError = Extract<ChatErrorMessage, 'Нельзя писать самому себе' | 'Пользователь не найден'>
 export type MarkMessagesReadError = NoDomainError
+export interface MarkMessagesReadPayload {
+  upToMessageId: string
+}
 export interface MarkMessagesReadResponse {
   read: number
 }

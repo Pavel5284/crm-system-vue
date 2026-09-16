@@ -222,7 +222,9 @@
     "inputPlaceholder": "Сообщение...",
     "typing": "печатает...",
     "you": "Вы",
-    "conversationsLoading": "Загрузка чатов..."
+    "conversationsLoading": "Загрузка чатов...",
+    "newMessage": "Новое сообщение",
+    "newMessageFrom": "Новое сообщение от {name}"
   },
   "comments": {
     "placeholder": "Добавить комментарий",

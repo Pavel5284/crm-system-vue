@@ -2,6 +2,10 @@
 import type { ChatUser, ChatMessage, Conversation } from "~/utils/chat.api"
 import { getConversationsApi, getMessagesApi, getUnreadCountApi, markMessagesReadApi, sendMessageApi, searchUsersApi } from "~/utils/chat.api"
 
+// Имя/почта вида UUID — не данные для показа, а заглушка
+const isUuidLike = (s: string | null | undefined): boolean =>
+  !!s && /^[0-9a-f-]{36}$/i.test(s.trim())
+
 export const useChatStore = defineStore("chat", {
   state: () => ({
     conversations: [] as Conversation[],
@@ -117,53 +121,92 @@ export const useChatStore = defineStore("chat", {
       if (idx >= 0) {
         this.conversations[idx]!.lastMessage = msg
         const conv = this.conversations.splice(idx, 1)[0]!
-        if (/^[0-9a-f-]{36}$/i.test(conv.partner.name) && this.selectedPartner?.id === partnerId) {
+        if (isUuidLike(conv.partner.name) && this.selectedPartner?.id === partnerId) {
           conv.partner = { ...this.selectedPartner }
         }
         this.conversations.unshift(conv)
       } else {
-        let partner: ChatUser | undefined
-        if (this.selectedPartner?.id === partnerId) partner = { ...this.selectedPartner }
-        else partner = this.searchResults.find((u) => u.id === partnerId)
-        if (!partner) partner = this.conversations.find((c) => c.partner.id === partnerId)?.partner
-        if (!partner) {
-          partner = { id: partnerId, name: partnerId, email: partnerId, avatarUrl: null }
-          this.searchUsers(partnerId).then(() => {
-            const found = this.searchResults.find((u) => u.id === partnerId)
-            if (found) {
-              const cIdx = this.conversations.findIndex((c) => c.partner.id === partnerId)
-              if (cIdx >= 0) this.conversations[cIdx]!.partner = found
-              if (this.selectedPartner?.id === partnerId) this.selectedPartner = found
-            }
-          })
-        }
+        const partner = this.lookupPartner(partnerId)
+          ?? { id: partnerId, name: partnerId, email: partnerId, avatarUrl: null }
         this.conversations.unshift({ partner, lastMessage: msg })
       }
-      if (this.selectedPartner?.id !== partnerId) {
-        this.unreadCount++
-        try {
-          const toast = useToast()
-          const partner = this.searchResults.find((u) => u.id === partnerId) ?? this.conversations.find((c) => c.partner.id === partnerId)?.partner
-          const name = partner ? (/^[0-9a-f-]{36}$/i.test(partner.name) ? partner.email : partner.name || partner.email) : ""
-          const t = useI18n().t as (k: string, p?: Record<string, unknown>) => string
-          const title = name ? t("chats.newMessageFrom", { name }) : t("chats.newMessage")
-          const description = msg.text.length > 80 ? msg.text.slice(0, 80) + "..." : msg.text
-          toast.add({ title, description, color: "info" })
-        } catch { void 0 }
-      } else {
-        msg.read = true
-        // чат с автором открыт — сообщение уже прочитано: фиксируем на
-        // сервере, иначе unread-бейдж не гаснет (считается сервером).
-        // Своё эхо из другой вкладки помечать не нужно.
-        if (msg.senderId !== myId) {
-          void this.markOpenConversationRead(partnerId)
-        }
+      // Диалог считается открытым, только если пользователь реально смотрит
+      // /chats с этим собеседником: selectedPartner переживает уход со
+      // страницы, поэтому одной сверки id недостаточно — иначе сообщение,
+      // пришедшее после ухода, тихо помечалось прочитанным и бейдж не рос.
+      const isViewing = this.selectedPartner?.id === partnerId
+        && useRoute().path === '/chats'
+      if (!isViewing) {
+        void this.handleUnreadMessage(msg, partnerId)
       }
+      // Диалог открыт: «прочитано» ставит только observer видимости
+      // (chats.vue) — здесь сообщение остаётся непрочитанным до просмотра.
     },
-    async markOpenConversationRead(partnerId: string): Promise<void> {
+    lookupPartner(partnerId: string): ChatUser | undefined {
+      if (this.selectedPartner?.id === partnerId) return this.selectedPartner
+      return this.searchResults.find((u) => u.id === partnerId)
+        ?? this.conversations.find((c) => c.partner.id === partnerId)?.partner
+    },
+    async handleUnreadMessage(msg: ChatMessage, partnerId: string): Promise<void> {
+      let partner = this.lookupPartner(partnerId)
+      if (!partner || isUuidLike(partner.name)) {
+        // Имени нет — сервер источник правды (там имя/email отправителя).
+        // loadConversations заодно подтягивает точный unreadCount,
+        // поэтому ++ здесь не делаем.
+        try {
+          await this.loadConversations()
+        } catch { /* ignore */ }
+        const fresh = this.lookupPartner(partnerId)
+        if (fresh && !isUuidLike(fresh.name)) {
+          partner = fresh
+          // подменяем UUID-плейсхолдер реальными данными
+          const cIdx = this.conversations.findIndex((c) => c.partner.id === partnerId)
+          if (cIdx >= 0 && isUuidLike(this.conversations[cIdx]!.partner.name)) {
+            this.conversations[cIdx]!.partner = { ...fresh }
+          }
+          if (this.selectedPartner?.id === partnerId && isUuidLike(this.selectedPartner.name)) {
+            this.selectedPartner = { ...fresh }
+          }
+        }
+      } else {
+        this.unreadCount++
+      }
+      this.showNewMessageToast(msg, partner)
+    },
+    showNewMessageToast(msg: ChatMessage, partner: ChatUser | undefined): void {
       try {
-        await markMessagesReadApi(partnerId)
+        const toast = useToast()
+        // UUID вместо имени/почты не показываем — лучше заголовок без имени
+        const display = partner && !isUuidLike(partner.name)
+          ? partner.name
+          : partner && partner.email.includes('@') ? partner.email : ''
+        // useI18n() вне setup-компонента бросает — берём t из инстанса,
+        // иначе (как было) падал весь блок и тост не всплывал вообще.
+        const nuxtApp = useNuxtApp() as unknown as { $i18n?: { t: (k: string, p?: Record<string, unknown>) => string } }
+        const t = nuxtApp.$i18n?.t ?? ((k: string) => k)
+        const title = display ? t('chats.newMessageFrom', { name: display }) : t('chats.newMessage')
+        const description = msg.text.length > 80 ? msg.text.slice(0, 80) + '...' : msg.text
+        toast.add({ title, description, color: 'info' })
       } catch { void 0 }
+    },
+    async markVisibleMessagesRead(partnerId: string, upToMessageId: string): Promise<void> {
+      const msgs = this.messagesByPartner[partnerId] ?? []
+      const target = msgs.find((m) => m.id === upToMessageId)
+      if (!target) return
+      try {
+        await markMessagesReadApi(upToMessageId)
+      } catch (e) {
+        // Не глотаем молча: иначе рассинхрон фронта и сервера (например,
+        // эндпоинта нет на серверном бэкенде) выглядит как «observer не работает»
+        console.error('[chat] markVisibleMessagesRead failed:', e)
+        return
+      }
+      // createdAt — ISO-строки одного формата, сравнение лексикографическое
+      const upTo = target.createdAt
+      const myId = useAuthStore().user.id
+      for (const m of msgs) {
+        if (!m.read && m.senderId !== myId && m.createdAt <= upTo) m.read = true
+      }
       await this.fetchUnreadCount()
     },
     clearSelected(): void {
