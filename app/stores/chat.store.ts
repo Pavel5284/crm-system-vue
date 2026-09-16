@@ -14,6 +14,8 @@ export const useChatStore = defineStore("chat", {
     conversations: [] as Conversation[],
     messagesByPartner: {} as Record<string, ChatMessage[]>,
     messagesHasMore: {} as Record<string, boolean>,
+    // Позиции скролла по диалогам — восстановить при возврате на /chats
+    messageScrollTops: {} as Record<string, number>,
     selectedPartner: null as ChatUser | null,
     searchResults: [] as ChatUser[],
     isLoadingConversations: false,
@@ -234,6 +236,21 @@ export const useChatStore = defineStore("chat", {
         if (!m.read && m.senderId !== myId && m.createdAt <= upTo) m.read = true
       }
       await this.fetchUnreadCount()
+    },
+    // Получатель прочитал: прилетело chat:read — переворачиваем галочки
+    // у своих сообщений вплоть до увиденного. Счётчик не трогаем:
+    // unread считает только входящие.
+    markAsReadByRecipient(readerId: string, upToCreatedAt: string): void {
+      const myId = useAuthStore().user.id
+      const msgs = this.messagesByPartner[readerId] ?? []
+      for (const m of msgs) {
+        if (!m.read && m.senderId === myId && m.createdAt <= upToCreatedAt) m.read = true
+      }
+      const conv = this.conversations.find((c) => c.partner.id === readerId)
+      const last = conv?.lastMessage
+      if (last && !last.read && last.senderId === myId && last.createdAt <= upToCreatedAt) {
+        last.read = true
+      }
     },
     clearSelected(): void {
       this.selectedPartner = null

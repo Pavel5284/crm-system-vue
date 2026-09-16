@@ -26,9 +26,20 @@ watch(searchQuery, (v) => {
   debouncedSearch(v)
 })
 
-onMounted(async () => {
-  if (authStore.isAuth) await chatStore.loadConversations()
-  nextTick(observeUnreadMessages)
+onMounted(() => {
+  // Скролл — синхронно в следующем тике, ДО сети: иначе сначала виден
+  // верх списка, потом прыжок. Список диалогов догрузится фоном.
+  nextTick(() => {
+    restoreScrollPosition()
+    observeUnreadMessages()
+  })
+  if (authStore.isAuth) void chatStore.loadConversations()
+})
+
+onBeforeUnmount(() => {
+  const el = messagesContainer.value
+  const pid = chatStore.selectedPartner?.id
+  if (el && pid) chatStore.messageScrollTops[pid] = el.scrollTop
 })
 
 onUnmounted(() => {
@@ -50,7 +61,13 @@ const selectPartner = async (user: ChatUser) => {
   await chatStore.selectPartner(user)
   searchQuery.value = ''
   chatStore.searchResults = []
-  nextTick(scrollToBottom)
+  // список уже подгружен — мотаем туда, где были, либо вниз при первом открытии
+  nextTick(() => {
+    const el = messagesContainer.value
+    const saved = chatStore.messageScrollTops[user.id]
+    if (el && saved !== undefined) el.scrollTop = saved
+    else scrollToBottom()
+  })
 }
 
 const scrollToBottom = () => {
@@ -70,7 +87,6 @@ watch(() => chatStore.selectedMessages.length, () => {
   nextTick(observeUnreadMessages)
 })
 watch(() => chatStore.selectedPartner?.id, () => {
-  nextTick(scrollToBottom)
   nextTick(observeUnreadMessages)
 })
 
@@ -78,6 +94,15 @@ const isTyping = computed(() => typingPartnerId.value === chatStore.selectedPart
 
 let typingTimer: ReturnType<typeof setTimeout> | null = null
 let isLoadingOlder = false
+
+function restoreScrollPosition(): void {
+  const el = messagesContainer.value
+  const pid = chatStore.selectedPartner?.id
+  if (!el || !pid) return
+  // стор переживает размонтирование — позиция, где были при уходе
+  const saved = chatStore.messageScrollTops[pid]
+  if (saved !== undefined) el.scrollTop = saved
+}
 
 // Подгрузка истории скроллом вверх с сохранением позиции
 const onMessagesScroll = async (): Promise<void> => {
@@ -315,7 +340,11 @@ function observeUnreadMessages(): void {
             <div v-else v-for="m in chatStore.selectedMessages" :key="m.id" class="flex" :class="m.senderId === authStore.user.id ? 'justify-end' : 'justify-start'" :data-message-id="m.id" :data-incoming="m.senderId !== authStore.user.id ? 'true' : 'false'">
               <div class="max-w-[70%] rounded-2xl px-3 py-2 text-sm" :class="m.senderId === authStore.user.id ? 'bg-primary text-primary-foreground rounded-br-sm' : 'bg-card border border-border rounded-bl-sm'">
                 <p class="whitespace-pre-wrap break-words">{{ m.text }}</p>
-                <p class="text-[10px] mt-1 opacity-70">{{ formatDate(m.createdAt, 'full', locale) }}</p>
+                <p class="text-[10px] mt-1 opacity-70 flex items-center gap-1" :class="m.senderId === authStore.user.id ? 'justify-end' : 'justify-start'">
+                  {{ formatDate(m.createdAt, 'full', locale) }}
+                  <Icon v-if="m.senderId === authStore.user.id && m.read" name="lucide:check-check" size="14" />
+                  <Icon v-else-if="m.senderId === authStore.user.id" name="lucide:check" size="14" />
+                </p>
               </div>
             </div>
             <p v-if="isTyping" class="text-xs text-muted-foreground italic">{{ t('chats.typing') }}</p>

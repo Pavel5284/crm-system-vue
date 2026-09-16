@@ -1,5 +1,5 @@
 ﻿import { io, type Socket } from "socket.io-client"
-import type { ChatMessage } from "~/types/backend.contracts"
+import type { ChatMessage, ChatReadEvent } from "~/types/backend.contracts"
 import { isRecord } from "~/types/api.types"
 
 const isConnected = ref(false)
@@ -19,6 +19,11 @@ const isChatMessage = (value: unknown): value is ChatMessage => {
     && typeof value.text === "string"
     && typeof value.senderId === "string"
     && typeof value.receiverId === "string"
+}
+
+const isChatReadEvent = (value: unknown): value is ChatReadEvent => {
+  if (!isRecord(value)) return false
+  return typeof value.readerId === "string" && typeof value.upToCreatedAt === "string"
 }
 
 const isTypingPayload = (value: unknown): value is ChatTypingPayload => {
@@ -46,6 +51,9 @@ export const useChatSocket = () => {
     socket.on("connect_error", () => { isConnected.value = false })
     socket.on("chat:message", (msg: unknown) => {
       if (isChatMessage(msg)) chatStore.receiveMessage(msg)
+    })
+    socket.on("chat:read", (data: unknown) => {
+      if (isChatReadEvent(data)) chatStore.markAsReadByRecipient(data.readerId, data.upToCreatedAt)
     })
     socket.on("chat:typing", (data: unknown) => {
       if (!isTypingPayload(data)) return

@@ -220,6 +220,11 @@ export interface SendMessagePayload {
   text: string
 }
 
+export interface ChatReadEvent {
+  readerId: string
+  upToCreatedAt: string
+}
+
 // ---------------------------------------------------------------------------
 // Tasks
 // ---------------------------------------------------------------------------
