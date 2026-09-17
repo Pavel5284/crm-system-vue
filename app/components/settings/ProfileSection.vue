@@ -2,6 +2,7 @@
 import { useForm } from '@tanstack/vue-form'
 import { z } from 'zod'
 import { getProfileApi, removeAvatarApi, updateAvatarApi, updateProfileApi } from '~/utils/auth.api.ts'
+import { handlePhoneInput, handlePhoneKeydown, isPhoneDisplayValid, normalizePhone, phoneToPayload } from '~/utils/phone.ts'
 
 const { t } = useI18n()
 
@@ -58,12 +59,12 @@ const onAvatarRemove = async () => {
   }
 }
 
-const profileSchema = computed(() => z.object({
+const profileSchema = z.object({
   name: z.string().trim().min(2, t('settings.profile.validation.nameMin')).max(100, t('settings.profile.validation.nameMax')),
   position: z.string().trim().max(100, t('settings.profile.validation.positionMax')),
-  phone: z.string().trim().refine(v => !v || /^\+?[0-9\s\-()]{7,20}$/.test(v), t('settings.profile.validation.phoneInvalid')),
+  phone: z.string().trim().refine(v => isPhoneDisplayValid(v), t('settings.profile.validation.phoneInvalid')),
   telegram: z.string().trim().refine(v => !v || /^@?[a-zA-Z0-9_]{3,32}$/.test(v), t('settings.profile.validation.telegramInvalid')),
-}))
+})
 
 const profileForm = useForm({
   defaultValues: {
@@ -73,13 +74,13 @@ const profileForm = useForm({
     telegram: '',
   } satisfies ProfileFormValues,
   validators: {
-    onChange: computed(() => profileSchema.value) as unknown,
+    onChange: profileSchema,
   },
   onSubmit: async ({ value }) => {
     const payload = {
       name: value.name.trim(),
       position: value.position.trim() || null,
-      phone: value.phone.trim() || null,
+      phone: phoneToPayload(value.phone),
       telegram: value.telegram.trim() || null,
     }
     const updated = await updateProfileApi(payload)
@@ -125,7 +126,7 @@ const loadMe = async () => {
     const init: ProfileFormValues = {
       name: me.name,
       position: me.position ?? '',
-      phone: me.phone ?? '',
+      phone: normalizePhone(me.phone ?? ''),
       telegram: me.telegram ?? '',
     }
     initialProfile.value = { ...init }
@@ -181,7 +182,7 @@ onMounted(loadMe)
             <ProfileFormField name="phone" v-slot="{ field }">
               <div>
                 <label class="text-xs font-medium">{{ t('settings.profile.phoneLabel') }}</label>
-                <UiInput :modelValue="field.state.value" @update:modelValue="(val: string | number) => field.handleChange(val as string)" @blur="field.handleBlur" :placeholder="t('settings.profile.phonePlaceholder')" autocomplete="tel" class="mt-1" />
+                <UiInput :modelValue="field.state.value" @update:modelValue="(val: string | number) => handlePhoneInput(val, field)" @blur="field.handleBlur" @keydown="handlePhoneKeydown" :placeholder="t('settings.profile.phonePlaceholder')" autocomplete="tel" type="tel" inputmode="tel" maxlength="25" class="mt-1" />
                 <p v-if="field.state.meta.errors.length" class="text-red-500 text-[11px] mt-1">{{ formatFieldErrors(field.state.meta.errors) }}</p>
                 <p v-else class="text-[11px] text-muted-foreground mt-1">{{ t('settings.profile.phoneHint') }}</p>
               </div>

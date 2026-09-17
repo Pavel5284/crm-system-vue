@@ -160,7 +160,7 @@
       "positionPlaceholder": "Product Manager",
       "phoneLabel": "Телефон",
       "phonePlaceholder": "+79991234567",
-      "phoneHint": "Формат: +7 и 7-20 цифр",
+      "phoneHint": "Формат: 7-20 цифр",
       "telegramLabel": "Telegram",
       "telegramPlaceholder": "{'@'}username",
       "telegramHint": "3-32 символа, a-z 0-9 _",

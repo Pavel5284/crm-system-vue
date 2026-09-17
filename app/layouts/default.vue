@@ -58,9 +58,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div v-if="isLoadingStore.isLoading" class="fixed inset-0 grid place-items-center bg-background z-50">
-    <LayoutLoader />
-  </div>
+  <LayoutLoader v-if="isLoadingStore.isLoading" />
   <section :class="isAuth ? 'grid' : ''" style="min-height: 100vh">
     <LayoutSidebar v-if="isAuth" class="hidden lg:flex" />
     <div v-if="isAuth && showMobileMenu" class="fixed inset-0 z-50 lg:hidden">
