@@ -84,7 +84,7 @@ const profileForm = useForm({
       telegram: value.telegram.trim() || null,
     }
     const updated = await updateProfileApi(payload)
-    authStore.set({ id: updated.id, email: updated.email, name: updated.name, status: true, avatarUrl: updated.avatarUrl, position: updated.position, phone: updated.phone, telegram: updated.telegram, isEmailVerified: updated.isEmailVerified })
+    authStore.set({ id: updated.id, email: updated.email, name: updated.name, role: updated.role, status: true, avatarUrl: updated.avatarUrl, position: updated.position, phone: updated.phone, telegram: updated.telegram, isEmailVerified: updated.isEmailVerified })
     const init: ProfileFormValues = {
       name: value.name,
       position: value.position,
@@ -122,7 +122,7 @@ const formatFieldErrors = (errors: unknown[]): string => errors.map(formatFieldE
 const loadMe = async () => {
   try {
     const me = await getProfileApi()
-    authStore.set({ id: me.id, email: me.email, name: me.name, status: true, avatarUrl: me.avatarUrl, position: me.position, phone: me.phone, telegram: me.telegram, isEmailVerified: me.isEmailVerified })
+    authStore.set({ id: me.id, email: me.email, name: me.name, role: me.role, status: true, avatarUrl: me.avatarUrl, position: me.position, phone: me.phone, telegram: me.telegram, isEmailVerified: me.isEmailVerified })
     const init: ProfileFormValues = {
       name: me.name,
       position: me.position ?? '',

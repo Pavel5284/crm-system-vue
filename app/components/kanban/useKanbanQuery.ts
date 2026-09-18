@@ -18,7 +18,10 @@ export function useKanbanQuery() {
                         id: deal.id,
                         name: deal.name,
                         price: deal.price,
+                        company: deal.company,
                         companyName: deal.customerName,
+                        responsibleName: deal.responsibleName,
+                        deadline: deal.deadline,
                         status: column.id,
                         createdAt: deal.createdAt,
                     })

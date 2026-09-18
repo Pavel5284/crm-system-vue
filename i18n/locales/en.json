@@ -103,6 +103,7 @@
       "pricePlaceholder": "Price",
       "emailPlaceholder": "Email",
       "companyPlaceholder": "Company",
+      "descriptionPlaceholder": "Description",
       "addButton": "Add",
       "adding": "Adding..."
     },
@@ -116,7 +117,19 @@
       "createdAt": "Created at",
       "commentsPlaceholder": "Add a comment",
       "comments": "Comments",
-      "aboutDeal": "About deal"
+      "aboutDeal": "About deal",
+      "deleteButton": "Delete deal",
+      "deleteConfirm": "Confirm delete",
+      "responsible": "Responsible",
+      "deadline": "Deadline",
+      "notAssigned": "Unassigned",
+      "noDeadline": "Not set",
+      "history": "Stage history",
+      "historyEmpty": "No transitions yet",
+      "transitions": "Move to stage",
+      "currentStage": "Current stage",
+      "commentPlaceholder": "Transition comment (required)",
+      "confirmMove": "Confirm move"
     },
     "status": {
       "todo": "Incoming",
@@ -125,7 +138,19 @@
       "produced": "Produced",
       "done": "Ready for shipment"
     },
-    "moveTo": "Move to"
+    "moveTo": "Move to",
+    "responsible": "Responsible",
+    "deadline": "Deadline",
+    "filters": {
+      "company": "Company",
+      "responsible": "Responsible",
+      "allResponsibles": "All responsibles",
+      "deadlineFrom": "Deadline from",
+      "deadlineTo": "Deadline to",
+      "amountMin": "Amount from",
+      "amountMax": "Amount to",
+      "reset": "Reset"
+    }
   },
   "customers": {
     "title": "Customers",

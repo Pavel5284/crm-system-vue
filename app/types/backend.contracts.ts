@@ -35,7 +35,7 @@ export interface AuthTokens {
 // Auth / Users
 // ---------------------------------------------------------------------------
 
-export type UserRole = 'USER' | 'ADMIN'
+export type UserRole = 'USER' | 'ADMIN' | 'MANAGER' | 'TECHNOLOGIST' | 'LOGIST'
 
 export interface AuthUser {
   id: string
@@ -141,21 +141,89 @@ export type DealStatus = 'todo' | 'to-be-agreed' | 'in-progress' | 'produced' | 
 export interface DealDto {
   id: string
   name: string
+  company: string
+  description: string
   price: number
   status: DealStatus
   customerId: string
   customerName: string
   customerEmail: string
+  responsibleUserId: string | null
+  contactName: string | null
+  contactPhone: string | null
+  deadline: string | null
+  priority: string
+  source: string | null
+  isImported: boolean
+  importedBy: string | null
+  responsibleName: string | null
   createdAt: string
   updatedAt: string
 }
 
 export interface CreateDealPayload {
   name: string
+  company: string
+  description: string
   price: number
   customerEmail: string
   customerName: string
+  responsibleUserId: string
+  contactName?: string
+  contactPhone?: string
+  deadline?: string
+  priority?: string
+  source?: string
+}
+
+export interface ImportDealPayload extends CreateDealPayload {
   status: DealStatus
+  isImported: true
+  importedBy: string
+}
+
+export interface DealUserRef {
+  id: string
+  name: string
+  email: string
+}
+
+export interface DealItemDto {
+  id: string
+  dealId: string
+  name: string
+  quantity: number
+  unit: string | null
+  spec: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface DealStageHistoryDto {
+  id: string
+  dealId: string
+  fromStage: string | null
+  toStage: string
+  changedByUserId: string | null
+  changedBy: DealUserRef | null
+  comment: string | null
+  createdAt: string
+}
+
+export interface DealAttachmentDto {
+  id: string
+  dealId: string
+  fileUrl: string
+  uploadedBy: string | null
+  uploader: DealUserRef | null
+  createdAt: string
+}
+
+export interface DealDetailsDto extends DealDto {
+  responsible: DealUserRef | null
+  items: DealItemDto[]
+  stageHistory: DealStageHistoryDto[]
+  attachments: DealAttachmentDto[]
 }
 
 export interface CommentDto {
@@ -386,6 +454,12 @@ export type CustomerAvatarError = CustomerErrorMessage
 export type GetDealsError = NoDomainError
 export type CreateDealError = NoDomainError
 export type UpdateDealError = DealErrorMessage
+export type DeleteDealError = DealErrorMessage
+
+export interface AllowedTransition {
+  fromStage: string
+  toStage: string
+}
 
 export type GetCommentsError = NoDomainError
 export type CreateCommentError = Extract<CommentErrorMessage, `Сделка ${string} не найдена`>

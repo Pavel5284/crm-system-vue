@@ -1,31 +1,27 @@
 ﻿<script setup lang="ts">
-import type { DealDto, DealStatus } from "~/types/backend.contracts";
+import type { DealDto } from "~/types/backend.contracts";
 import {createDealApi} from "~/utils/crm.api"
-import {toRef} from "vue"
 
 const { t } = useI18n()
 const isOpenForm = ref<boolean>(false);
+const authStore = useAuthStore()
 
 const props = defineProps<{
-  status: string
   refetch: () => void
 }>()
 
-interface IDealFormState extends Pick<DealDto, 'name' | "price"> {
+interface IDealFormState extends Pick<DealDto, 'name' | "price" | "company" | "description"> {
   customer: {
     email: string;
     name: string;
   }
-  status: string;
 }
 
-const {handleSubmit, defineField, handleReset} = useForm<IDealFormState>({
-  initialValues: {
-    status: toRef(props, 'status').value,
-  }
-})
+const {handleSubmit, defineField, handleReset} = useForm<IDealFormState>()
 
 const [name, nameAttrs] = defineField('name')
+const [company, companyAttrs] = defineField('company')
+const [description, descriptionAttrs] = defineField('description')
 const [price, priceAttrs] = defineField('price')
 const [customerEmail, customerEmailAttrs] = defineField('customer.email')
 const [customerName, customerNamelAttrs] = defineField('customer.name')
@@ -35,10 +31,13 @@ const {mutate, isPending} = useMutation({
   mutationFn: async (data: IDealFormState) => {
     return createDealApi({
       name: data.name,
+      company: data.company,
+      description: data.description,
       price: Number(data.price),
       customerEmail: data.customer.email,
       customerName: data.customer.name,
-      status: data.status as DealStatus,
+      // Этап 5: ответственный обязателен — по умолчанию создатель сделки.
+      responsibleUserId: authStore.user.id,
     })
   },
   onSuccess() {
@@ -78,6 +77,26 @@ const onSubmit = handleSubmit(values => {
       v-model="name"
       v-bind="nameAttrs"
       type="text"
+      required
+      minlength="2"
+      class="input"
+    />
+    <UiInput
+      :placeholder="t('kanban.createDeal.companyPlaceholder')"
+      v-model="company"
+      v-bind="companyAttrs"
+      type="text"
+      required
+      minlength="2"
+      class="input"
+    />
+    <UiInput
+      :placeholder="t('kanban.createDeal.descriptionPlaceholder')"
+      v-model="description"
+      v-bind="descriptionAttrs"
+      type="text"
+      required
+      minlength="10"
       class="input"
     />
     <UiInput
@@ -85,6 +104,7 @@ const onSubmit = handleSubmit(values => {
       v-model="price"
       v-bind="priceAttrs"
       type="text"
+      required
       class="input"
     />
     <UiInput
@@ -92,6 +112,7 @@ const onSubmit = handleSubmit(values => {
       v-model="customerEmail"
       v-bind="customerEmailAttrs"
       type="text"
+      required
       class="input"
     />
     <UiInput
@@ -99,6 +120,7 @@ const onSubmit = handleSubmit(values => {
       v-model="customerName"
       v-bind="customerNamelAttrs"
       type="text"
+      required
       class="input"
     />
     <button class="btn" :disabled="isPending">

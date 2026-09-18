@@ -1,8 +1,9 @@
 ﻿<script setup lang="ts">
 import {useKanbanQuery} from '@/components/kanban/useKanbanQuery'
+import {isTransitionAllowed, useAllowedTransitionsQuery} from '@/components/kanban/useAllowedTransitionsQuery'
 import type {ICard, IColumn} from '~/components/kanban/kanban.types'
 import type { DealStatus } from "~/types/backend.contracts"
-import {updateDealStatusApi} from "~/utils/crm.api"
+import {canCreateDeal} from "~/utils/deal-permissions"
 import {generateColumnStyle} from "@/components/kanban/generate-gradient"
 import { formatDate } from '~/utils/formatDate'
 import { VueDraggable } from 'vue-draggable-plus'
@@ -15,33 +16,93 @@ useSeoMeta({
 
 const {data, isLoading, refetch} = useKanbanQuery()
 const store = useDealSlideStore()
+const authStore = useAuthStore()
+const {data: allowedTransitions} = useAllowedTransitionsQuery()
 
-type TypeMutationVariables = {
-  docId: string
-  status?: DealStatus
+// Единая точка входа (Этап 2): новые сделки создаются только в «Входящих».
+const ENTRY_STAGE_ID = 'todo'
+
+// RBAC (Этап 4): создание скрываем по роли; проверка — на бэкенде.
+const canCreate = computed(() => canCreateDeal(authStore.user.role))
+
+// Цели, разрешённые ТЕКУЩЕМУ пользователю по роли (без проверки полей —
+// её бэкенд всё равно выполнит при попытке перехода).
+const allowedTargets = (fromStage: string): string[] => {
+  const list = allowedTransitions.value ?? []
+  return [...new Set(list.filter((t) => t.fromStage === fromStage).map((t) => t.toStage))]
 }
-const {mutate} = useMutation({
-  mutationKey: ['move card'],
-  mutationFn: ({docId, status}: TypeMutationVariables) =>
-      updateDealStatusApi(docId, status as DealStatus),
-  onSuccess: () => {
-    refetch()
-  },
-  onError: () => {
-    refetch()
-  }
+
+// Колонки для меню перемещения: текущая + разрешённые по роли.
+// Остальные скрываем (UX); проверка обязана быть на бэкенде.
+const movableColumns = (columnId: string): IColumn[] =>
+    board.value.filter((c) => c.id === columnId || isTransitionAllowed(allowedTransitions.value, columnId, c.id))
+
+// Этап 7: сумма сделок в колонке.
+function columnSum(column: IColumn): number {
+  return column.items.reduce((sum, card) => sum + (Number(card.price) || 0), 0)
+}
+
+// Этап 7: просрочка — дедлайн прошёл, а сделка не на финальном этапе.
+function isOverdue(card: ICard): boolean {
+  if (!card.deadline || card.status === 'done') return false
+  return new Date(card.deadline).getTime() < Date.now()
+}
+
+// Этап 7: варианты фильтра по ответственному — из загруженных сделок.
+const responsibleOptions = computed(() => {
+  const names = (data.value ?? [])
+    .map((d) => d.responsibleName)
+    .filter((n): n is string => !!n)
+  return [...new Set(names)].sort((a, b) => a.localeCompare(b))
 })
+
+// Этап 6: комментарий обязателен при смене stage, поэтому любое перемещение
+// (меню/drag) лишь открывает карточку с предвыбранной целью — подтверждение
+// с комментарием происходит в слайдовере.
+function findCard(cardId: string): ICard | null {
+  for (const col of board.value) {
+    const found = col.items.find((c) => c.id === cardId)
+    if (found) return found
+  }
+  return null
+}
+
+function onMoveCard(cardId: string, target: string) {
+  const card = findCard(cardId)
+  if (!card || !target || card.status === target) return
+  store.moveRequest(card, target)
+}
 
 // мобилка: вкладки - показываем только 1 колонку, перемещение через меню
 const activeTab = ref<DealStatus | string | null>(null)
 
 // локальная копия доски для drag (query data readonly, v-model мутировать нельзя)
+// Этап 7: здесь же применяются фильтры (без новых запросов).
 const board = ref<IColumn[]>([])
-watch(() => data.value, (cols) => {
-  if (cols) {
-    board.value = JSON.parse(JSON.stringify(cols))
-  }
-}, { immediate: true, deep: false })
+const filtersStore = useDealFiltersStore()
+watch(
+  [
+    () => data.value,
+    () => filtersStore.company,
+    () => filtersStore.responsible,
+    () => filtersStore.deadlineFrom,
+    () => filtersStore.deadlineTo,
+    () => filtersStore.amountMin,
+    () => filtersStore.amountMax,
+  ],
+  ([cols]) => {
+    if (!cols) {
+      board.value = []
+      return
+    }
+    const cloned: IColumn[] = JSON.parse(JSON.stringify(cols))
+    board.value = cloned.map((col) => ({
+      ...col,
+      items: col.items.filter((item) => filtersStore.matches(item)),
+    }))
+  },
+  { immediate: true },
+)
 
 watch(() => data.value, (cols) => {
   if (cols?.length && !activeTab.value) {
@@ -57,11 +118,6 @@ const activeColumnIndex = computed(() => {
   if (!board.value.length || !activeTab.value) return 0
   return board.value.findIndex(c => c.id === activeTab.value)
 })
-
-function onMoveCard(cardId: string, newStatus: string) {
-  if (!newStatus || newStatus === activeTab.value) return
-  mutate({ docId: cardId, status: newStatus as DealStatus })
-}
 
 // прокрутка табов мышкой: drag + колесо
 const tabsRef = ref<HTMLDivElement | null>(null)
@@ -130,7 +186,10 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
     card = targetColumn.items[evt.newIndex] as ICard | null
   }
   if (!card) return
-  mutate({ docId: card.id, status: targetColumn.id as DealStatus })
+  if (card.status === targetColumn.id) return
+  // vuedraggable уже переместил карточку локально — откатываем до подтверждения.
+  refetch()
+  store.moveRequest(card, targetColumn.id)
 }
 
 </script>
@@ -138,6 +197,50 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
 <template>
   <div class="mb-5">
     <h1 class="text-2xl font-bold">{{ t('kanban.title') }}</h1>
+  </div>
+  <!-- Этап 7: фильтры доски (локальные, без новых запросов) -->
+  <div class="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-7">
+    <UiInput
+      v-model="filtersStore.company"
+      :placeholder="t('kanban.filters.company')"
+      type="text"
+    />
+    <select
+      v-model="filtersStore.responsible"
+      class="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+      :title="t('kanban.filters.responsible')"
+    >
+      <option value="">{{ t('kanban.filters.allResponsibles') }}</option>
+      <option v-for="r in responsibleOptions" :key="r" :value="r">{{ r }}</option>
+    </select>
+    <UiInput
+      v-model="filtersStore.deadlineFrom"
+      :title="t('kanban.filters.deadlineFrom')"
+      type="date"
+    />
+    <UiInput
+      v-model="filtersStore.deadlineTo"
+      :title="t('kanban.filters.deadlineTo')"
+      type="date"
+    />
+    <UiInput
+      v-model="filtersStore.amountMin"
+      :placeholder="t('kanban.filters.amountMin')"
+      type="number"
+      min="0"
+    />
+    <UiInput
+      v-model="filtersStore.amountMax"
+      :placeholder="t('kanban.filters.amountMax')"
+      type="number"
+      min="0"
+    />
+    <button
+      class="h-9 rounded-md border border-input px-3 text-sm text-muted-foreground hover:bg-accent"
+      @click="filtersStore.clear()"
+    >
+      {{ t('kanban.filters.reset') }}
+    </button>
   </div>
   <div v-if="isLoading">{{ t('kanban.loading') }}</div>
   <div v-else>
@@ -167,17 +270,21 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
 
       <div v-if="activeColumn" class="mt-4">
         <div
-          class="rounded bg-slate-700 py-2 px-3 mb-3 text-center min-h-[48px] flex items-center justify-center text-sm leading-tight font-medium break-words"
+          class="rounded bg-slate-700 py-2 px-3 mb-3 text-center min-h-[48px] flex flex-col items-center justify-center text-sm leading-tight font-medium break-words"
           :style="generateColumnStyle(activeColumnIndex, board.length)"
         >
-          {{ t(activeColumn.name) }}
+          <span>{{ t(activeColumn.name) }}</span>
+          <span class="text-xs opacity-80 font-normal">
+            {{ activeColumn.items.length }} · {{ convertCurrency(columnSum(activeColumn), locale) }}
+          </span>
         </div>
-        <KanbanCreateDeal :refetch="refetch" :status="activeColumn.id as string" />
+        <KanbanCreateDeal v-if="activeColumn.id === ENTRY_STAGE_ID && canCreate" :refetch="refetch" />
         <div v-if="activeColumn.items.length" class="space-y-3 mt-3">
           <UiCard
             v-for="card in activeColumn.items"
             :key="card.id"
             class="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+            :class="{ 'border-red-500/60': isOverdue(card) }"
             role="button"
             @click="store.set(card)"
           >
@@ -186,8 +293,12 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
               <UiCardDescription class="mt-2 block">{{ convertCurrency(card.price, locale) }}</UiCardDescription>
             </UiCardHeader>
             <UiCardContent class="text-xs">{{ t('kanban.company') }}: {{ card.companyName }}</UiCardContent>
+            <UiCardContent class="text-xs">{{ t('kanban.responsible') }}: {{ card.responsibleName ?? '—' }}</UiCardContent>
+            <UiCardContent class="text-xs" :class="{ 'text-red-400 font-medium': isOverdue(card) }">
+              {{ t('kanban.deadline') }}: {{ card.deadline ? formatDate(card.deadline, 'short', locale) : '—' }}
+            </UiCardContent>
             <UiCardFooter>{{ formatDate(card.createdAt, 'long', locale) }}</UiCardFooter>
-            <div class="px-4 pb-3 pt-1 border-t border-border/50 mt-1" @click.stop>
+            <div v-if="allowedTargets(activeColumn.id).length > 0" class="px-4 pb-3 pt-1 border-t border-border/50 mt-1" @click.stop>
               <label class="text-[11px] uppercase tracking-wide text-muted-foreground">{{ t('kanban.moveTo') }}</label>
               <select
                 :value="activeColumn!.id"
@@ -195,7 +306,7 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
                 @change="onMoveCard(card.id, ($event.target as HTMLSelectElement).value)"
                 class="mt-1 w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
               >
-                <option v-for="c in board" :key="c.id" :value="c.id" class="bg-background text-foreground">
+                <option v-for="c in movableColumns(activeColumn.id)" :key="c.id" :value="c.id" class="bg-background text-foreground">
                   {{ t(c.name) }}{{ c.id === activeColumn!.id ? ' ✓' : '' }}
                 </option>
               </select>
@@ -214,12 +325,15 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
             class="flex flex-col min-w-0"
       >
         <div
-          class="rounded bg-slate-700 py-2 px-3 mb-3 text-center min-h-[60px] flex items-center justify-center text-sm leading-tight font-medium break-words hyphens-auto"
+          class="rounded bg-slate-700 py-2 px-3 mb-3 text-center min-h-[60px] flex flex-col items-center justify-center text-sm leading-tight font-medium break-words hyphens-auto"
              :style="generateColumnStyle(index, board.length)"
         >
-          {{ t(column.name) }}
+          <span>{{ t(column.name) }}</span>
+          <span class="text-xs opacity-80 font-normal">
+            {{ column.items.length }} · {{ convertCurrency(columnSum(column), locale) }}
+          </span>
         </div>
-        <KanbanCreateDeal :refetch="refetch" :status="column.id"/>
+        <KanbanCreateDeal v-if="column.id === ENTRY_STAGE_ID && canCreate" :refetch="refetch" />
         <VueDraggable
           v-model="column.items"
           group="kanban"
@@ -233,6 +347,7 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
           >
             <UiCard
               class="cursor-move hover:shadow-md transition-shadow"
+              :class="{ 'border-red-500/60': isOverdue(card) }"
               role="button"
               @click="store.set(card)"
             >
@@ -241,6 +356,10 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
                 <UiCardDescription class="mt-2 block">{{ convertCurrency(card.price, locale) }}</UiCardDescription>
               </UiCardHeader>
               <UiCardContent class="text-xs">{{ t('kanban.company') }}: {{ card.companyName }}</UiCardContent>
+              <UiCardContent class="text-xs">{{ t('kanban.responsible') }}: {{ card.responsibleName ?? '—' }}</UiCardContent>
+              <UiCardContent class="text-xs" :class="{ 'text-red-400 font-medium': isOverdue(card) }">
+                {{ t('kanban.deadline') }}: {{ card.deadline ? formatDate(card.deadline, 'short', locale) : '—' }}
+              </UiCardContent>
               <UiCardFooter>{{ formatDate(card.createdAt, 'long', locale) }}</UiCardFooter>
             </UiCard>
           </div>

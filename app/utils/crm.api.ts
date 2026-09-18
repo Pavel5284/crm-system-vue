@@ -1,5 +1,6 @@
 import { apiFetch } from '~/utils/api'
 import type {
+  AllowedTransition,
   CommentDto,
   CreateCommentError,
   CreateCommentPayload,
@@ -7,13 +8,16 @@ import type {
   CreateDealPayload,
   CustomerAvatarError,
   CustomerDto,
+  DealDetailsDto,
   DealDto,
   DealStatus,
   DeleteCommentError,
+  DeleteDealError,
   GetCommentsError,
   GetCustomerError,
   GetCustomersError,
   GetDealsError,
+  ImportDealPayload,
   NoContent,
   SuccessResponse,
   UpdateCustomerError,
@@ -22,22 +26,37 @@ import type {
 } from '~/types/backend.contracts'
 
 export type {
+  AllowedTransition,
   CommentDto,
   CreateCommentPayload,
   CreateDealPayload,
   CustomerDto,
+  DealDetailsDto,
   DealDto,
   DealStatus,
+  ImportDealPayload,
   UpdateCustomerPayload,
 }
 
 export const getDealsApi = () => apiFetch<DealDto[], GetDealsError>('/deals')
 
+export const getDealApi = (dealId: string) =>
+  apiFetch<DealDetailsDto, GetDealsError>(`/deals/${dealId}`)
+
+export const getAllowedTransitionsApi = () =>
+  apiFetch<AllowedTransition[]>('/deals/allowed-transitions')
+
 export const createDealApi = (payload: CreateDealPayload) =>
   apiFetch<DealDto, CreateDealError>('/deals', { method: 'POST', body: payload })
 
-export const updateDealStatusApi = (dealId: string, status: DealStatus) =>
-  apiFetch<DealDto, UpdateDealError>(`/deals/${dealId}`, { method: 'PATCH', body: { status } })
+export const deleteDealApi = (dealId: string) =>
+  apiFetch<NoContent, DeleteDealError>(`/deals/${dealId}`, { method: 'DELETE' })
+
+export const importDealApi = (payload: ImportDealPayload) =>
+  apiFetch<DealDto, CreateDealError>('/deals/import', { method: 'POST', body: payload })
+
+export const updateDealStatusApi = (dealId: string, status: DealStatus, comment: string) =>
+  apiFetch<DealDto, UpdateDealError>(`/deals/${dealId}/stage`, { method: 'PATCH', body: { targetStage: status, comment } })
 
 export const getCustomersApi = () => apiFetch<CustomerDto[], GetCustomersError>('/customers')
 

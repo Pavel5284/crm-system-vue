@@ -17,6 +17,7 @@ const checkAuth = async (): Promise<void> => {
       id: profile.id,
       email: profile.email,
       name: profile.name,
+      role: profile.role,
       status: true,
       avatarUrl: profile.avatarUrl,
       position: profile.position,

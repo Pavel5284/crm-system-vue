@@ -19,6 +19,8 @@ const isLocalOpen = computed({
   >
     <template #body>
       <KanbanSlideoverTop />
+      <KanbanSlideoverStageTransitions />
+      <KanbanSlideoverStageHistory />
       <KanbanSlideoverComments />
     </template>
   </USlideover>

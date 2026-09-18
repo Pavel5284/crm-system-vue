@@ -103,6 +103,7 @@
       "pricePlaceholder": "Цена",
       "emailPlaceholder": "Email",
       "companyPlaceholder": "Компания",
+      "descriptionPlaceholder": "Описание",
       "addButton": "Добавить",
       "adding": "Добавление..."
     },
@@ -116,7 +117,19 @@
       "createdAt": "Дата создания",
       "commentsPlaceholder": "Добавить комментарий",
       "comments": "Комментарии",
-      "aboutDeal": "О сделке"
+      "aboutDeal": "О сделке",
+      "deleteButton": "Удалить сделку",
+      "deleteConfirm": "Подтвердить удаление",
+      "responsible": "Ответственный",
+      "deadline": "Дедлайн",
+      "notAssigned": "Не назначен",
+      "noDeadline": "Не установлен",
+      "history": "История переходов",
+      "historyEmpty": "Переходов пока нет",
+      "transitions": "Переместить на этап",
+      "currentStage": "Текущий этап",
+      "commentPlaceholder": "Комментарий к переходу (обязательно)",
+      "confirmMove": "Подтвердить переход"
     },
     "status": {
       "todo": "Входящие",
@@ -125,7 +138,19 @@
       "produced": "Произведено",
       "done": "К отгрузке"
     },
-    "moveTo": "Переместить в"
+    "moveTo": "Переместить в",
+    "responsible": "Ответственный",
+    "deadline": "Дедлайн",
+    "filters": {
+      "company": "Компания",
+      "responsible": "Ответственный",
+      "allResponsibles": "Все ответственные",
+      "deadlineFrom": "Дедлайн от",
+      "deadlineTo": "Дедлайн до",
+      "amountMin": "Сумма от",
+      "amountMax": "Сумма до",
+      "reset": "Сбросить"
+    }
   },
   "customers": {
     "title": "Клиенты",
