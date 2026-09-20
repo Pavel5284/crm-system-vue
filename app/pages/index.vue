@@ -51,6 +51,7 @@ function isOverdue(card: ICard): boolean {
 // Этап 7: варианты фильтра по ответственному — из загруженных сделок.
 const responsibleOptions = computed(() => {
   const names = (data.value ?? [])
+    .flatMap((col) => col.items)
     .map((d) => d.responsibleName)
     .filter((n): n is string => !!n)
   return [...new Set(names)].sort((a, b) => a.localeCompare(b))
@@ -105,8 +106,9 @@ watch(
 )
 
 watch(() => data.value, (cols) => {
-  if (cols?.length && !activeTab.value) {
-    activeTab.value = cols[0].id as DealStatus
+  const first = cols?.[0]
+  if (first && !activeTab.value) {
+    activeTab.value = first.id as DealStatus
   }
 }, { immediate: true })
 
