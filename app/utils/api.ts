@@ -1,5 +1,4 @@
-﻿import { getCurrentInstance } from "vue"
-import {
+﻿import {
   ApiError,
   getStatusCode,
   isBackendErrorResponse,
@@ -8,6 +7,7 @@ import {
   type ApiSuccessResponse,
   type BackendErrorResponse,
 } from "~/types/api.types"
+import { humanizeDealError } from "~/utils/deal-move-error"
 
 export { ApiError }
 
@@ -45,22 +45,28 @@ const getSuccessMessageForRequest = (path: string, method?: string): string | nu
 }
 
 const getI18nT = (): ((key: string) => string) => {
-  if (!getCurrentInstance()) return (k: string) => k
+  // useI18n — только внутри setup; снаружи (обработчики событий, apiFetch)
+  // берём глобальный инстанс i18n (с bind — иначе t теряет контекст).
   try {
     const { t } = useI18n()
-    return t as (k: string) => string
+    return t as (key: string) => string
   } catch {
-    try {
-      const nuxtApp = useNuxtApp() as unknown as { $i18n?: { t: (k: string) => string } }
-      return nuxtApp.$i18n?.t ?? ((k: string) => k)
-    } catch {
-      return (k: string) => k
-    }
+    // ignore — пробуем глобальный инстанс ниже
   }
+  try {
+    const nuxtApp = useNuxtApp() as unknown as { $i18n?: { t: (k: string) => string } }
+    const t = nuxtApp.$i18n?.t
+    if (typeof t === 'function') return t.bind(nuxtApp.$i18n)
+  } catch {
+    // ignore
+  }
+  return (k: string) => k
 }
 
 const getToast = () => {
-  if (!getCurrentInstance()) return null
+  // Без гарда на getCurrentInstance: useToast() в Nuxt UI v4 построен
+  // на глобальном useState и работает и вне setup (обработчики событий,
+  // сокеты). С гардом тосты из apiFetch не всплывали вообще никогда.
   try {
     return useToast()
   } catch {
@@ -186,7 +192,7 @@ export const apiFetch = async <T, TError extends string = string>(path: string, 
       toast.add({ title: getI18nT()("api.error"), description: toastOpt.error, color: "error" })
       return
     }
-    const msg = getApiErrorMessage(error)
+    const msg = humanizeDealError(getApiErrorMessage(error), getI18nT())
     toast.add({ title: getI18nT()("api.error"), description: msg, color: "error" })
   }
 

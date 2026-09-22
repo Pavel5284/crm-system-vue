@@ -26,6 +26,13 @@
     "internalError": "Internal error",
     "tryAgain": "Try again"
   },
+  "roles": {
+    "admin": "Administrator",
+    "manager": "Manager",
+    "user": "User",
+    "technologist": "Technologist",
+    "logist": "Logistics Specialist"
+  },
   "menu": {
     "home": "Home",
     "products": "Products",
@@ -114,6 +121,11 @@
       "price": "Amount",
       "status": "Status",
       "company": "Company",
+      "descriptionLabel": "Description",
+      "descriptionHint": "Minimum 10 characters",
+      "contactName": "Contact",
+      "contactPhone": "Phone",
+      "edit": "Edit",
       "createdAt": "Created at",
       "commentsPlaceholder": "Add a comment",
       "comments": "Comments",
@@ -122,14 +134,22 @@
       "deleteConfirm": "Confirm delete",
       "responsible": "Responsible",
       "deadline": "Deadline",
+      "changeDeadline": "Change",
       "notAssigned": "Unassigned",
+      "primaryResponsible": "primary",
+      "changeResponsible": "Change",
+      "responsibleSearchPlaceholder": "Name or email...",
+      "noUsersFound": "No users found",
+      "assigning": "Assigning...",
       "noDeadline": "Not set",
       "history": "Stage history",
       "historyEmpty": "No transitions yet",
       "transitions": "Move to stage",
       "currentStage": "Current stage",
-      "commentPlaceholder": "Transition comment (required)",
-      "confirmMove": "Confirm move"
+      "mainComment": "Main comment",
+      "changeMainComment": "Change",
+      "mainCommentPlaceholder": "Manager comment...",
+      "noMainComment": "Not set"
     },
     "status": {
       "todo": "Incoming",
@@ -143,10 +163,14 @@
     "deadline": "Deadline",
     "filters": {
       "company": "Company",
+      "allCompanies": "All companies",
+      "search": "Deal name",
       "responsible": "Responsible",
       "allResponsibles": "All responsibles",
       "deadlineFrom": "Deadline from",
       "deadlineTo": "Deadline to",
+      "createdFrom": "Created from",
+      "createdTo": "Created to",
       "amountMin": "Amount from",
       "amountMax": "Amount to",
       "reset": "Reset"
@@ -182,6 +206,15 @@
       "nameLabel": "Name *",
       "namePlaceholder": "Enter your name",
       "positionLabel": "Position",
+      "positionOptions": {
+        "manager": "Manager",
+        "seniorManager": "Senior Manager",
+        "headOfDepartment": "Head of Department",
+        "director": "Director",
+        "administrator": "Administrator",
+        "technologist": "Technologist",
+        "logist": "Logistics Specialist"
+      },
       "positionPlaceholder": "Product Manager",
       "phoneLabel": "Phone",
       "phonePlaceholder": "+79991234567",

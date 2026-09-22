@@ -2,7 +2,6 @@
 import { useQueryClient } from '@tanstack/vue-query'
 import {useDealSlideStore} from '@/stores/deal-slide.store'
 import { formatDate } from '~/utils/formatDate'
-import { useDealDetailsQuery } from '@/components/kanban/useDealDetailsQuery'
 import { deleteDealApi } from '~/utils/crm.api'
 import { canDeleteDeal } from '~/utils/deal-permissions'
 
@@ -10,9 +9,6 @@ const { t, locale } = useI18n()
 const store = useDealSlideStore()
 const authStore = useAuthStore()
 const queryClient = useQueryClient()
-
-const dealId = computed(() => store.card?.id ?? null)
-const {data: details} = useDealDetailsQuery(dealId)
 
 const confirmDelete = ref(false)
 watch(() => store.card?.id, () => {
@@ -52,12 +48,8 @@ const onDeleteClick = () => {
     <KanbanSlideoverLabel :label-text="t('kanban.slideover.price')">
       {{ convertCurrency(store.card?.price || 0, locale) }}
     </KanbanSlideoverLabel>
-    <KanbanSlideoverLabel :label-text="t('kanban.slideover.responsible')">
-      {{ details?.responsible?.name ?? t('kanban.slideover.notAssigned') }}
-    </KanbanSlideoverLabel>
-    <KanbanSlideoverLabel :label-text="t('kanban.slideover.deadline')">
-      {{ details?.deadline ? formatDate(details.deadline, 'short', locale) : t('kanban.slideover.noDeadline') }}
-    </KanbanSlideoverLabel>
+    <KanbanSlideoverResponsible />
+    <KanbanSlideoverDeadline />
     <KanbanSlideoverLabel :label-text="t('kanban.slideover.company')">
       {{ store.card?.companyName }}
     </KanbanSlideoverLabel>

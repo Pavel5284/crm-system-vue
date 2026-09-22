@@ -143,6 +143,7 @@ export interface DealDto {
   name: string
   company: string
   description: string
+  mainComment: string | null
   price: number
   status: DealStatus
   customerId: string
@@ -221,6 +222,7 @@ export interface DealAttachmentDto {
 
 export interface DealDetailsDto extends DealDto {
   responsible: DealUserRef | null
+  responsibles: DealUserRef[]
   items: DealItemDto[]
   stageHistory: DealStageHistoryDto[]
   attachments: DealAttachmentDto[]
@@ -454,6 +456,7 @@ export type CustomerAvatarError = CustomerErrorMessage
 export type GetDealsError = NoDomainError
 export type CreateDealError = NoDomainError
 export type UpdateDealError = DealErrorMessage
+export type UpdateResponsiblesError = DealErrorMessage | Extract<AuthErrorMessage, 'Пользователь не найден'>
 export type DeleteDealError = DealErrorMessage
 
 export interface AllowedTransition {

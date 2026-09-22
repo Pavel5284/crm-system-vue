@@ -11,7 +11,7 @@ const {data: details, isLoading} = useDealDetailsQuery(dealId)
 </script>
 
 <template>
-  <div class="border-border bg-black/20 rounded p-3 mt-3">
+  <div class="border-border bg-black/20 rounded p-3 mt-3 mb-3">
     <div class="uppercase bold text-xl mb-4">
       {{ t('kanban.slideover.history') }}
     </div>

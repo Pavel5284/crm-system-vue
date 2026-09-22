@@ -4,6 +4,9 @@ import {isTransitionAllowed, useAllowedTransitionsQuery} from '@/components/kanb
 import type {ICard, IColumn} from '~/components/kanban/kanban.types'
 import type { DealStatus } from "~/types/backend.contracts"
 import {canCreateDeal} from "~/utils/deal-permissions"
+import {updateDealStatusApi} from "~/utils/crm.api"
+import {getApiErrorMessage} from "~/utils/api"
+import {parseMissingDealFields} from "~/utils/deal-move-error"
 import {generateColumnStyle} from "@/components/kanban/generate-gradient"
 import { formatDate } from '~/utils/formatDate'
 import { VueDraggable } from 'vue-draggable-plus'
@@ -48,18 +51,9 @@ function isOverdue(card: ICard): boolean {
   return new Date(card.deadline).getTime() < Date.now()
 }
 
-// Этап 7: варианты фильтра по ответственному — из загруженных сделок.
-const responsibleOptions = computed(() => {
-  const names = (data.value ?? [])
-    .flatMap((col) => col.items)
-    .map((d) => d.responsibleName)
-    .filter((n): n is string => !!n)
-  return [...new Set(names)].sort((a, b) => a.localeCompare(b))
-})
-
-// Этап 6: комментарий обязателен при смене stage, поэтому любое перемещение
-// (меню/drag) лишь открывает карточку с предвыбранной целью — подтверждение
-// с комментарием происходит в слайдовере.
+// Перенос без комментария: drag и меню сразу сохраняют новый этап
+// через PATCH /deals/:id/stage. Проверки переходов и полей — на бэкенде:
+// при ошибке apiFetch покажет тост, а refetch откатит локальное перемещение.
 function findCard(cardId: string): ICard | null {
   for (const col of board.value) {
     const found = col.items.find((c) => c.id === cardId)
@@ -68,10 +62,48 @@ function findCard(cardId: string): ICard | null {
   return null
 }
 
+async function moveDeal(card: ICard, target: string) {
+  if (!target || card.status === target) return
+  try {
+    await updateDealStatusApi(card.id, target as DealStatus)
+    store.clearPending()
+    if (store.card && store.card.id === card.id) store.card.status = target
+  } catch (e) {
+    // Тост с текстом ошибки показывает apiFetch. Откатываем локальный drag
+    // синхронно (на refetch полагаться нельзя) и открываем карточку
+    // с подсветкой полей, которые бэкенд требует заполнить/исправить.
+    // Цель запоминается — перенос повторится сам, когда поля заполнят.
+    rebuildBoard(data.value)
+    store.failMove(card, parseMissingDealFields(getApiErrorMessage(e)), target)
+  } finally {
+    refetch()
+  }
+}
+
+// Автоповтор отложенного переноса: все подсвеченные поля заполнены.
+watch(
+  [() => store.pendingTargetStage, () => store.highlightFields.length],
+  ([target, count]) => {
+    if (target && count === 0 && store.card) {
+      const retryTarget = store.consumePending()
+      if (retryTarget) void moveDeal(store.card, retryTarget)
+    }
+  },
+)
+
+// Слайдовер закрыли, поля проигнорированы: незавершённый перенос
+// отменяется — карточка возвращается в исходную колонку.
+watch(() => store.isOpen, (open) => {
+  if (!open && store.pendingTargetStage) {
+    store.clearPending()
+    rebuildBoard(data.value)
+  }
+})
+
 function onMoveCard(cardId: string, target: string) {
   const card = findCard(cardId)
-  if (!card || !target || card.status === target) return
-  store.moveRequest(card, target)
+  if (!card) return
+  void moveDeal(card, target)
 }
 
 // мобилка: вкладки - показываем только 1 колонку, перемещение через меню
@@ -81,27 +113,43 @@ const activeTab = ref<DealStatus | string | null>(null)
 // Этап 7: здесь же применяются фильтры (без новых запросов).
 const board = ref<IColumn[]>([])
 const filtersStore = useDealFiltersStore()
+// Пересборка board из серверных данных (откатывает локальный drag,
+// т.к. vuedraggable мутирует board напрямую, а refetch() — асинхронный
+// и не гарантирует новой ссылки данных).
+function rebuildBoard(cols: IColumn[] | undefined | null) {
+  if (!cols) {
+    board.value = []
+    return
+  }
+  const cloned: IColumn[] = JSON.parse(JSON.stringify(cols))
+  board.value = cloned.map((col) => ({
+    ...col,
+    items: col.items.filter((item) => filtersStore.matches(item)),
+  }))
+  // Мобилка показывает только activeColumn: если фильтр опустошил текущую
+  // вкладку, а совпадения есть в других колонках — переключаемся на первую
+  // непустую, иначе пользователь видит "Нет данных", хотя айтем есть.
+  const current = board.value.find((c) => c.id === activeTab.value)
+  if (current && current.items.length === 0) {
+    const firstNonEmpty = board.value.find((c) => c.items.length > 0)
+    if (firstNonEmpty) activeTab.value = firstNonEmpty.id as DealStatus
+  }
+}
+
 watch(
   [
     () => data.value,
+    () => filtersStore.query,
     () => filtersStore.company,
     () => filtersStore.responsible,
     () => filtersStore.deadlineFrom,
     () => filtersStore.deadlineTo,
+    () => filtersStore.createdFrom,
+    () => filtersStore.createdTo,
     () => filtersStore.amountMin,
     () => filtersStore.amountMax,
   ],
-  ([cols]) => {
-    if (!cols) {
-      board.value = []
-      return
-    }
-    const cloned: IColumn[] = JSON.parse(JSON.stringify(cols))
-    board.value = cloned.map((col) => ({
-      ...col,
-      items: col.items.filter((item) => filtersStore.matches(item)),
-    }))
-  },
+  ([cols]) => rebuildBoard(cols),
   { immediate: true },
 )
 
@@ -188,10 +236,9 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
     card = targetColumn.items[evt.newIndex] as ICard | null
   }
   if (!card) return
-  if (card.status === targetColumn.id) return
-  // vuedraggable уже переместил карточку локально — откатываем до подтверждения.
-  refetch()
-  store.moveRequest(card, targetColumn.id)
+  // vuedraggable уже переместил карточку локально — сразу сохраняем;
+  // moveDeal при ошибке откатит через refetch.
+  void moveDeal(card, targetColumn.id)
 }
 
 </script>
@@ -201,49 +248,7 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
     <h1 class="text-2xl font-bold">{{ t('kanban.title') }}</h1>
   </div>
   <!-- Этап 7: фильтры доски (локальные, без новых запросов) -->
-  <div class="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-7">
-    <UiInput
-      v-model="filtersStore.company"
-      :placeholder="t('kanban.filters.company')"
-      type="text"
-    />
-    <select
-      v-model="filtersStore.responsible"
-      class="h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-      :title="t('kanban.filters.responsible')"
-    >
-      <option value="">{{ t('kanban.filters.allResponsibles') }}</option>
-      <option v-for="r in responsibleOptions" :key="r" :value="r">{{ r }}</option>
-    </select>
-    <UiInput
-      v-model="filtersStore.deadlineFrom"
-      :title="t('kanban.filters.deadlineFrom')"
-      type="date"
-    />
-    <UiInput
-      v-model="filtersStore.deadlineTo"
-      :title="t('kanban.filters.deadlineTo')"
-      type="date"
-    />
-    <UiInput
-      v-model="filtersStore.amountMin"
-      :placeholder="t('kanban.filters.amountMin')"
-      type="number"
-      min="0"
-    />
-    <UiInput
-      v-model="filtersStore.amountMax"
-      :placeholder="t('kanban.filters.amountMax')"
-      type="number"
-      min="0"
-    />
-    <button
-      class="h-9 rounded-md border border-input px-3 text-sm text-muted-foreground hover:bg-accent"
-      @click="filtersStore.clear()"
-    >
-      {{ t('kanban.filters.reset') }}
-    </button>
-  </div>
+  <KanbanFilters :columns="data" />
   <div v-if="isLoading">{{ t('kanban.loading') }}</div>
   <div v-else>
     <!-- Мобилка: вкладки + 1 колонка + меню перемещения (без drag и без скролла) -->

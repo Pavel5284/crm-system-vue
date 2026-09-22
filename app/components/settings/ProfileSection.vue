@@ -15,6 +15,19 @@ type ProfileFormValues = {
 
 const authStore = useAuthStore()
 
+// Должности для выпадающего списка. value — канонические значения,
+// сохраняемые в БД; labelKey — перевод для отображения.
+const POSITION_DEFAULT = 'Менеджер'
+const POSITION_OPTIONS = [
+  { value: 'Менеджер', labelKey: 'settings.profile.positionOptions.manager' },
+  { value: 'Старший менеджер', labelKey: 'settings.profile.positionOptions.seniorManager' },
+  { value: 'Руководитель отдела', labelKey: 'settings.profile.positionOptions.headOfDepartment' },
+  { value: 'Директор', labelKey: 'settings.profile.positionOptions.director' },
+  { value: 'Администратор', labelKey: 'settings.profile.positionOptions.administrator' },
+  { value: 'Технолог', labelKey: 'settings.profile.positionOptions.technologist' },
+  { value: 'Логист', labelKey: 'settings.profile.positionOptions.logist' },
+] as const
+
 const avatarInitials = computed(() => {
   const name = authStore.user.name
   if (name) {
@@ -104,6 +117,16 @@ const initialProfile = ref<ProfileFormValues>({ name: '', position: '', phone: '
 
 const formValues = profileForm.useStore((state) => state.values)
 
+// Старые произвольные значения должности, которых нет в списке,
+// показываем как есть — чтобы не терять данные при загрузке.
+const positionOptions = computed(() => {
+  const cur = formValues.value.position?.trim()
+  if (cur && !POSITION_OPTIONS.some((o) => o.value === cur)) {
+    return [...POSITION_OPTIONS, { value: cur, labelKey: '' }]
+  }
+  return [...POSITION_OPTIONS]
+})
+
 const isProfileDirty = computed(() => {
   const cur = formValues.value
   return cur.name !== initialProfile.value.name || cur.position !== initialProfile.value.position || cur.phone !== initialProfile.value.phone || cur.telegram !== initialProfile.value.telegram
@@ -125,7 +148,7 @@ const loadMe = async () => {
     authStore.set({ id: me.id, email: me.email, name: me.name, role: me.role, status: true, avatarUrl: me.avatarUrl, position: me.position, phone: me.phone, telegram: me.telegram, isEmailVerified: me.isEmailVerified })
     const init: ProfileFormValues = {
       name: me.name,
-      position: me.position ?? '',
+      position: me.position?.trim() ? me.position : POSITION_DEFAULT,
       phone: normalizePhone(me.phone ?? ''),
       telegram: me.telegram ?? '',
     }
@@ -172,7 +195,15 @@ onMounted(loadMe)
             <ProfileFormField name="position" v-slot="{ field }">
               <div>
                 <label class="text-xs font-medium">{{ t('settings.profile.positionLabel') }}</label>
-                <UiInput :modelValue="field.state.value" @update:modelValue="(val: string | number) => field.handleChange(val as string)" @blur="field.handleBlur" :placeholder="t('settings.profile.positionPlaceholder')" class="mt-1" />
+                <select
+                  :value="field.state.value"
+                  @change="(e: Event) => { field.handleChange((e.target as HTMLSelectElement).value); field.handleBlur() }"
+                  class="mt-1 h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  <option v-for="o in positionOptions" :key="o.value" :value="o.value">
+                    {{ o.labelKey ? t(o.labelKey) : o.value }}
+                  </option>
+                </select>
                 <p v-if="field.state.meta.errors.length" class="text-red-500 text-[11px] mt-1">{{ formatFieldErrors(field.state.meta.errors) }}</p>
               </div>
             </ProfileFormField>

@@ -53,7 +53,7 @@ const onSubmit = handleSubmit(values => {
 <template>
   <div class="text-center mb-2">
     <button
-        class="transition-all opacity-5 hover:opacity-100 hover:text-[#a252c8]"
+        class="transition-all text-[#a252c8] opacity-80 hover:opacity-100"
         @click="isOpenForm = !isOpenForm"
     >
       <Icon

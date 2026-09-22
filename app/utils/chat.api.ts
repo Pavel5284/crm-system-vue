@@ -27,8 +27,19 @@ export type {
   SendMessagePayload,
 }
 
-export const searchUsersApi = (q: string) =>
-  apiFetch<ChatUser[], SearchChatError>('/users/search', { query: { q }, toast: false })
+export const searchUsersApi = (
+  q: string,
+  opts?: { page?: number; limit?: number; includeSelf?: boolean },
+) =>
+  apiFetch<ChatUser[], SearchChatError>('/users/search', {
+    query: {
+      q,
+      page: opts?.page,
+      limit: opts?.limit,
+      includeSelf: opts?.includeSelf,
+    },
+    toast: false,
+  })
 
 // альтернативно через /chat/search (тот же результат)
 export const searchChatUsersApi = (q: string) =>

@@ -23,6 +23,7 @@ import type {
   UpdateCustomerError,
   UpdateCustomerPayload,
   UpdateDealError,
+  UpdateResponsiblesError,
 } from '~/types/backend.contracts'
 
 export type {
@@ -55,8 +56,29 @@ export const deleteDealApi = (dealId: string) =>
 export const importDealApi = (payload: ImportDealPayload) =>
   apiFetch<DealDto, CreateDealError>('/deals/import', { method: 'POST', body: payload })
 
-export const updateDealStatusApi = (dealId: string, status: DealStatus, comment: string) =>
-  apiFetch<DealDto, UpdateDealError>(`/deals/${dealId}/stage`, { method: 'PATCH', body: { targetStage: status, comment } })
+export const updateDealStatusApi = (dealId: string, status: DealStatus, comment?: string) =>
+  apiFetch<DealDto, UpdateDealError>(`/deals/${dealId}/stage`, {
+    method: 'PATCH',
+    body: comment ? { targetStage: status, comment } : { targetStage: status },
+  })
+
+export const updateMainCommentApi = (dealId: string, comment: string) =>
+  apiFetch<DealDto, UpdateDealError>(`/deals/${dealId}/main-comment`, { method: 'PATCH', body: { comment } })
+
+export const updateResponsiblesApi = (dealId: string, userIds: string[]) =>
+  apiFetch<DealDto, UpdateResponsiblesError>(`/deals/${dealId}/responsibles`, { method: 'PATCH', body: { userIds } })
+
+export interface UpdateDealFieldsPayload {
+  responsibleUserId?: string
+  deadline?: string
+  company?: string
+  description?: string
+  contactName?: string
+  contactPhone?: string
+}
+
+export const updateDealApi = (dealId: string, payload: UpdateDealFieldsPayload) =>
+  apiFetch<DealDto, UpdateDealError>(`/deals/${dealId}`, { method: 'PATCH', body: payload })
 
 export const getCustomersApi = () => apiFetch<CustomerDto[], GetCustomersError>('/customers')
 

@@ -26,6 +26,13 @@
     "internalError": "Внутренняя ошибка",
     "tryAgain": "Попробовать снова"
   },
+  "roles": {
+    "admin": "Администратор",
+    "manager": "Менеджер",
+    "user": "Пользователь",
+    "technologist": "Технолог",
+    "logist": "Логист"
+  },
   "menu": {
     "home": "Главная",
     "products": "Продукты",
@@ -114,6 +121,11 @@
       "price": "Сумма",
       "status": "Статус",
       "company": "Компания",
+      "descriptionLabel": "Описание",
+      "descriptionHint": "Минимум 10 символов",
+      "contactName": "Контакт",
+      "contactPhone": "Телефон",
+      "edit": "Изменить",
       "createdAt": "Дата создания",
       "commentsPlaceholder": "Добавить комментарий",
       "comments": "Комментарии",
@@ -122,14 +134,22 @@
       "deleteConfirm": "Подтвердить удаление",
       "responsible": "Ответственный",
       "deadline": "Дедлайн",
+      "changeDeadline": "Изменить",
       "notAssigned": "Не назначен",
+      "primaryResponsible": "главный",
+      "changeResponsible": "Сменить",
+      "responsibleSearchPlaceholder": "Имя или email...",
+      "noUsersFound": "Никого не найдено",
+      "assigning": "Назначение...",
       "noDeadline": "Не установлен",
       "history": "История переходов",
       "historyEmpty": "Переходов пока нет",
       "transitions": "Переместить на этап",
       "currentStage": "Текущий этап",
-      "commentPlaceholder": "Комментарий к переходу (обязательно)",
-      "confirmMove": "Подтвердить переход"
+      "mainComment": "Главный комментарий",
+      "changeMainComment": "Изменить",
+      "mainCommentPlaceholder": "Комментарий руководителя...",
+      "noMainComment": "Не задан"
     },
     "status": {
       "todo": "Входящие",
@@ -143,10 +163,14 @@
     "deadline": "Дедлайн",
     "filters": {
       "company": "Компания",
+      "allCompanies": "Все компании",
+      "search": "Название сделки",
       "responsible": "Ответственный",
       "allResponsibles": "Все ответственные",
       "deadlineFrom": "Дедлайн от",
       "deadlineTo": "Дедлайн до",
+      "createdFrom": "Создана от",
+      "createdTo": "Создана до",
       "amountMin": "Сумма от",
       "amountMax": "Сумма до",
       "reset": "Сбросить"
@@ -182,6 +206,15 @@
       "nameLabel": "Имя *",
       "namePlaceholder": "Введите ваше имя",
       "positionLabel": "Должность",
+      "positionOptions": {
+        "manager": "Менеджер",
+        "seniorManager": "Старший менеджер",
+        "headOfDepartment": "Руководитель отдела",
+        "director": "Директор",
+        "administrator": "Администратор",
+        "technologist": "Технолог",
+        "logist": "Логист"
+      },
       "positionPlaceholder": "Product Manager",
       "phoneLabel": "Телефон",
       "phonePlaceholder": "+79991234567",
