@@ -71,6 +71,10 @@
     "passwordPlaceholder": "Пароль",
     "loginButton": "Войти",
     "noAccount": "Нет аккаунта? Зарегистрироваться",
+    "invalidEmail": "Введите корректный email",
+    "emailTooLong": "Email не длиннее 254 символов",
+    "passwordRequired": "Введите пароль",
+    "passwordTooLong": "Пароль не длиннее 128 символов",
     "error": "Ошибка"
   },
   "register": {
@@ -83,10 +87,16 @@
     "registerButton": "Зарегистрироваться",
     "haveAccount": "Уже есть аккаунт? Войти",
     "passwordTooShort": "Пароль должен содержать минимум 8 символов",
+    "passwordTooLong": "Пароль не длиннее 128 символов",
     "passwordsMismatch": "Пароли не совпадают",
+    "nameRequired": "Введите имя",
+    "nameTooLong": "Имя не длиннее 100 символов",
+    "invalidEmail": "Введите корректный email",
+    "emailTooLong": "Email не длиннее 254 символов",
     "enterEmail": "Введите email",
     "success": "Успешно",
     "resendButton": "Отправить повторно",
+    "resendCooldown": "Отправить повторно через {s} с",
     "resendQuestion": "Не пришло письмо?",
     "goToLogin": "Перейти ко входу"
   },

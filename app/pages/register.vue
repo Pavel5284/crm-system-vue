@@ -1,6 +1,7 @@
 ﻿<script setup lang="ts">
 import { getApiErrorMessage } from '~/utils/api'
 import { getMeApi, getProfileApi, registerApi, resendVerificationApi } from '~/utils/auth.api'
+import { EMAIL_MAX_LENGTH, NAME_MAX_LENGTH, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH, isValidEmailFormat } from '~/utils/validation'
 import { isRegisterAutoLogin } from '~/types/backend.contracts'
 
 const { t } = useI18n()
@@ -19,6 +20,13 @@ const confirmPasswordRef = ref('')
 const nameRef = ref('')
 const errorRef = ref('')
 const successRef = ref('')
+const resendCooldownRef = ref(0)
+
+let resendTimer: ReturnType<typeof setInterval> | null = null
+
+onUnmounted(() => {
+  if (resendTimer) clearInterval(resendTimer)
+})
 
 const isLoadingStore = useIsLoadingStore()
 const authStore = useAuthStore()
@@ -53,8 +61,31 @@ const register = async () => {
   errorRef.value = ''
   successRef.value = ''
 
-  if (!passwordRef.value || passwordRef.value.length < 8) {
+  const name = nameRef.value.trim()
+  const email = emailRef.value.trim()
+
+  if (!name) {
+    errorRef.value = t('register.nameRequired')
+    return
+  }
+  if (name.length > NAME_MAX_LENGTH) {
+    errorRef.value = t('register.nameTooLong')
+    return
+  }
+  if (!isValidEmailFormat(email)) {
+    errorRef.value = t('register.invalidEmail')
+    return
+  }
+  if (email.length > EMAIL_MAX_LENGTH) {
+    errorRef.value = t('register.emailTooLong')
+    return
+  }
+  if (!passwordRef.value || passwordRef.value.length < PASSWORD_MIN_LENGTH) {
     errorRef.value = t('register.passwordTooShort')
+    return
+  }
+  if (passwordRef.value.length > PASSWORD_MAX_LENGTH) {
+    errorRef.value = t('register.passwordTooLong')
     return
   }
   if (passwordRef.value !== confirmPasswordRef.value) {
@@ -64,7 +95,7 @@ const register = async () => {
 
   isLoadingStore.set(true)
   try {
-    const res = await registerApi(emailRef.value, passwordRef.value, nameRef.value)
+    const res = await registerApi(email, passwordRef.value, name)
     // если SKIP_EMAIL_VERIFICATION=true бэк отдает { accessToken } и ставит httpOnly куки - редиректим на login
     if (isRegisterAutoLogin(res)) {
       await router.push('/login')
@@ -78,16 +109,32 @@ const register = async () => {
   }
 }
 
+const RESEND_COOLDOWN_SEC = 60
+
+const startResendCooldown = () => {
+  resendCooldownRef.value = RESEND_COOLDOWN_SEC
+  if (resendTimer) clearInterval(resendTimer)
+  resendTimer = setInterval(() => {
+    resendCooldownRef.value -= 1
+    if (resendCooldownRef.value <= 0 && resendTimer) {
+      clearInterval(resendTimer)
+      resendTimer = null
+    }
+  }, 1000)
+}
+
 const resend = async () => {
-  if (!emailRef.value) {
+  if (!emailRef.value.trim()) {
     errorRef.value = t('register.enterEmail')
     return
   }
+  if (resendCooldownRef.value > 0) return
   errorRef.value = ''
   successRef.value = ''
   try {
-    const res = await resendVerificationApi(emailRef.value)
+    const res = await resendVerificationApi(emailRef.value.trim())
     successRef.value = res.message
+    startResendCooldown()
   } catch (e) {
     errorRef.value = getApiErrorMessage(e)
   }
@@ -119,7 +166,9 @@ const resend = async () => {
       </form>
       <div v-else class="flex flex-col items-center gap-3">
         <p class="text-sm text-center text-muted-foreground">{{ t('register.resendQuestion') }}</p>
-        <UiButton type="button" variant="outline" @click="resend">{{ t('register.resendButton') }}</UiButton>
+        <UiButton type="button" variant="outline" :disabled="resendCooldownRef > 0" @click="resend">
+          {{ resendCooldownRef > 0 ? t('register.resendCooldown', { s: resendCooldownRef }) : t('register.resendButton') }}
+        </UiButton>
         <NuxtLink to="/login" class="text-sm text-muted-foreground hover:text-white">
           {{ t('register.goToLogin') }}
         </NuxtLink>

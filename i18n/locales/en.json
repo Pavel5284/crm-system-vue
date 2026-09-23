@@ -71,6 +71,10 @@
     "passwordPlaceholder": "Password",
     "loginButton": "Login",
     "noAccount": "Don't have an account? Register",
+    "invalidEmail": "Enter a valid email",
+    "emailTooLong": "Email must be at most 254 characters",
+    "passwordRequired": "Enter password",
+    "passwordTooLong": "Password must be at most 128 characters",
     "error": "Error"
   },
   "register": {
@@ -83,10 +87,16 @@
     "registerButton": "Register",
     "haveAccount": "Already have an account? Login",
     "passwordTooShort": "Password must be at least 8 characters",
+    "passwordTooLong": "Password must be at most 128 characters",
     "passwordsMismatch": "Passwords do not match",
+    "nameRequired": "Enter name",
+    "nameTooLong": "Name must be at most 100 characters",
+    "invalidEmail": "Enter a valid email",
+    "emailTooLong": "Email must be at most 254 characters",
     "enterEmail": "Enter email",
     "success": "Success",
     "resendButton": "Resend",
+    "resendCooldown": "Resend in {s}s",
     "resendQuestion": "Didn't receive email?",
     "goToLogin": "Go to login"
   },

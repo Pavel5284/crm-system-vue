@@ -1,6 +1,7 @@
 ﻿<script setup lang="ts">
 import { getApiErrorMessage } from '~/utils/api'
 import { getMeApi, getProfileApi, loginApi } from '~/utils/auth.api'
+import { EMAIL_MAX_LENGTH, PASSWORD_MAX_LENGTH, isValidEmailFormat } from '~/utils/validation'
 
 const { t } = useI18n()
 
@@ -58,7 +59,20 @@ const authorize = async (action: () => Promise<void>) => {
 }
 
 const login = () => authorize(async () => {
-  await loginApi(emailRef.value, passwordRef.value)
+  const email = emailRef.value.trim()
+  if (!isValidEmailFormat(email)) {
+    throw new Error(t('login.invalidEmail'))
+  }
+  if (email.length > EMAIL_MAX_LENGTH) {
+    throw new Error(t('login.emailTooLong'))
+  }
+  if (!passwordRef.value) {
+    throw new Error(t('login.passwordRequired'))
+  }
+  if (passwordRef.value.length > PASSWORD_MAX_LENGTH) {
+    throw new Error(t('login.passwordTooLong'))
+  }
+  await loginApi(email, passwordRef.value)
   await getMeApi()
   const profile = await getProfileApi()
   authStore.set({ id: profile.id, email: profile.email, name: profile.name, role: profile.role, status: true, avatarUrl: profile.avatarUrl, position: profile.position, phone: profile.phone, telegram: profile.telegram, isEmailVerified: profile.isEmailVerified })
@@ -73,6 +87,7 @@ const login = () => authorize(async () => {
         <LayoutLangSwitcher />
       </div>
       <h1 class="text-2xl font-bold text-center mb-5">{{ t('login.title') }}</h1>
+      <p v-if="errorRef" class="text-red-500 text-sm text-center mb-3">{{ errorRef }}</p>
       <form @submit.prevent="login" autocomplete="on">
         <UiInput :placeholder="t('login.emailPlaceholder')" type="email" autocomplete="email" name="email" class="mb-3" v-model="emailRef"/>
         <UiInputPassword :placeholder="t('login.passwordPlaceholder')" class="mb-3" v-model="passwordRef" autocomplete="current-password" name="password"/>
