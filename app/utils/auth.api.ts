@@ -59,9 +59,9 @@ export const getVisitsApi = (params?: VisitsQuery) => {
   return apiFetch<VisitsPaginated, VisitsError>('/users/me/visits', { query })
 }
 
-export const loginApi = async (email: string, password: string, captchaToken?: string) => {
+export const loginApi = async (email: string, password: string) => {
   // бэкенд ставит accessToken+refreshToken в httpOnly cookie, тело ответа — { accessToken } для совместимости
-  return apiFetch<LoginResponse, LoginError>('/auth/login', { method: 'POST', body: { email, password, captchaToken }, auth: false })
+  return apiFetch<LoginResponse, LoginError>('/auth/login', { method: 'POST', body: { email, password }, auth: false })
 }
 
 export const registerApi = async (email: string, password: string, name: string, captchaToken?: string) => {

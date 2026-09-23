@@ -17,27 +17,12 @@ const emailRef = ref('')
 const passwordRef = ref('')
 const errorRef = ref('')
 
-// CAPTCHA обязательна на каждую попытку: виджет всегда на форме,
-// кнопка входа заблокирована, пока юзер не пройдет проверку.
-const {
-  siteKey: turnstileSiteKey,
-  tokenRef: turnstileTokenRef,
-  containerRef: turnstileContainerRef,
-  render: renderTurnstile,
-  reset: resetTurnstile,
-} = useTurnstile()
-
-const canSubmit = computed(
-  () => turnstileSiteKey === '' || turnstileTokenRef.value !== '',
-)
-
 const isLoadingStore = useIsLoadingStore()
 const authStore = useAuthStore()
 
 const router = useRouter()
 
 onMounted(async () => {
-  if (turnstileSiteKey) renderTurnstile()
   if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('justLoggedOut')) {
     sessionStorage.removeItem('justLoggedOut')
     return
@@ -69,8 +54,6 @@ const authorize = async (action: () => Promise<void>) => {
   } catch (e) {
     errorRef.value = getApiErrorMessage(e)
   } finally {
-    // Токен Turnstile одноразовый — сбрасываем после каждой попытки.
-    resetTurnstile()
     isLoadingStore.set(false)
   }
 }
@@ -94,12 +77,8 @@ const login = () => {
     errorRef.value = t('login.passwordTooLong')
     return
   }
-  if (turnstileSiteKey && !turnstileTokenRef.value) {
-    errorRef.value = t('login.captchaRequired')
-    return
-  }
   authorize(async () => {
-    await loginApi(email, passwordRef.value, turnstileTokenRef.value || undefined)
+    await loginApi(email, passwordRef.value)
     await getMeApi()
     const profile = await getProfileApi()
     authStore.set({ id: profile.id, email: profile.email, name: profile.name, role: profile.role, status: true, avatarUrl: profile.avatarUrl, position: profile.position, phone: profile.phone, telegram: profile.telegram, isEmailVerified: profile.isEmailVerified })
@@ -118,9 +97,8 @@ const login = () => {
       <form @submit.prevent="login" autocomplete="on">
         <UiInput :placeholder="t('login.emailPlaceholder')" type="email" autocomplete="email" name="email" class="mb-3" v-model="emailRef"/>
         <UiInputPassword :placeholder="t('login.passwordPlaceholder')" class="mb-3" v-model="passwordRef" autocomplete="current-password" name="password"/>
-        <div v-if="turnstileSiteKey" ref="turnstileContainerRef" class="mb-3 flex justify-center" />
         <div class="flex flex-col items-center gap-3">
-          <UiButton type="submit" :disabled="!canSubmit">{{ t('login.loginButton') }}</UiButton>
+          <UiButton type="submit">{{ t('login.loginButton') }}</UiButton>
           <NuxtLink to="/register" class="text-sm text-muted-foreground hover:text-white">
             {{ t('login.noAccount') }}
           </NuxtLink>
