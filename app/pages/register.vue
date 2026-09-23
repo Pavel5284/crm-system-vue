@@ -21,11 +21,61 @@ const nameRef = ref('')
 const errorRef = ref('')
 const successRef = ref('')
 const resendCooldownRef = ref(0)
+const turnstileTokenRef = ref('')
+const turnstileContainerRef = ref<HTMLDivElement | null>(null)
+
+interface TurnstileWidgetApi {
+  render: (
+    container: HTMLElement,
+    params: {
+      sitekey: string
+      callback?: (token: string) => void
+      'expired-callback'?: () => void
+      'error-callback'?: () => void
+    },
+  ) => string
+  reset: (widgetId?: string) => void
+  remove: (widgetId?: string) => void
+}
+
+declare global {
+  interface Window {
+    turnstile?: TurnstileWidgetApi
+  }
+}
+
+const turnstileSiteKey = (useRuntimeConfig().public.turnstileSiteKey || '') as string
+
+useHead({
+  script: turnstileSiteKey
+    ? [
+        {
+          src: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
+          async: true,
+          defer: true,
+        },
+      ]
+    : [],
+})
 
 let resendTimer: ReturnType<typeof setInterval> | null = null
+let turnstilePoll: ReturnType<typeof setInterval> | null = null
+let turnstileWidgetId: string | null = null
+
+const resetTurnstile = () => {
+  turnstileTokenRef.value = ''
+  if (turnstileWidgetId && window.turnstile) {
+    window.turnstile.reset(turnstileWidgetId)
+  }
+}
 
 onUnmounted(() => {
   if (resendTimer) clearInterval(resendTimer)
+  if (turnstilePoll) clearInterval(turnstilePoll)
+  if (turnstileWidgetId && window.turnstile) {
+    window.turnstile.remove(turnstileWidgetId)
+    turnstileWidgetId = null
+  }
 })
 
 const isLoadingStore = useIsLoadingStore()
@@ -37,6 +87,7 @@ const passwordsMismatch = computed(() => {
 })
 
 onMounted(async () => {
+  if (turnstileSiteKey) renderTurnstileWidget()
   if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('justLoggedOut')) {
     sessionStorage.removeItem('justLoggedOut')
     return
@@ -56,6 +107,40 @@ onMounted(async () => {
     void _e
   }
 })
+
+// Виджет грузится асинхронно с CDN — ждем window.turnstile поллингом.
+const renderTurnstileWidget = () => {
+  let attempts = 0
+  const tryRender = () => {
+    const api = window.turnstile
+    const el = turnstileContainerRef.value
+    if (api && el && !turnstileWidgetId) {
+      turnstileWidgetId = api.render(el, {
+        sitekey: turnstileSiteKey,
+        callback: (token: string) => {
+          turnstileTokenRef.value = token
+        },
+        'expired-callback': () => {
+          turnstileTokenRef.value = ''
+        },
+        'error-callback': () => {
+          turnstileTokenRef.value = ''
+        },
+      })
+      return true
+    }
+    return false
+  }
+  if (!tryRender()) {
+    turnstilePoll = setInterval(() => {
+      attempts += 1
+      if (tryRender() || attempts > 50) {
+        if (turnstilePoll) clearInterval(turnstilePoll)
+        turnstilePoll = null
+      }
+    }, 200)
+  }
+}
 
 const register = async () => {
   errorRef.value = ''
@@ -92,10 +177,19 @@ const register = async () => {
     errorRef.value = t('register.passwordsMismatch')
     return
   }
+  if (turnstileSiteKey && !turnstileTokenRef.value) {
+    errorRef.value = t('register.captchaRequired')
+    return
+  }
 
   isLoadingStore.set(true)
   try {
-    const res = await registerApi(email, passwordRef.value, name)
+    const res = await registerApi(
+      email,
+      passwordRef.value,
+      name,
+      turnstileTokenRef.value || undefined,
+    )
     // если SKIP_EMAIL_VERIFICATION=true бэк отдает { accessToken } и ставит httpOnly куки - редиректим на login
     if (isRegisterAutoLogin(res)) {
       await router.push('/login')
@@ -105,6 +199,8 @@ const register = async () => {
   } catch (e) {
     errorRef.value = getApiErrorMessage(e)
   } finally {
+    // Токен одноразовый — сбрасываем виджет после каждой попытки.
+    resetTurnstile()
     isLoadingStore.set(false)
   }
 }
@@ -157,6 +253,7 @@ const resend = async () => {
         <UiInputPassword :placeholder="t('register.confirmPasswordPlaceholder')" class="mb-1" v-model="confirmPasswordRef" autocomplete="new-password" name="confirm-password" />
         <p v-if="passwordsMismatch" class="text-red-500 text-xs mb-3">{{ t('register.passwordsMismatch') }}</p>
         <div v-else class="mb-3" />
+        <div v-if="turnstileSiteKey" ref="turnstileContainerRef" class="mb-3 flex justify-center" />
         <div class="flex flex-col items-center gap-3">
           <UiButton type="submit" :disabled="passwordsMismatch">{{ t('register.registerButton') }}</UiButton>
           <NuxtLink to="/login" class="text-sm text-muted-foreground hover:text-white">

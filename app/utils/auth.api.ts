@@ -64,10 +64,10 @@ export const loginApi = async (email: string, password: string) => {
   return apiFetch<LoginResponse, LoginError>('/auth/login', { method: 'POST', body: { email, password }, auth: false })
 }
 
-export const registerApi = async (email: string, password: string, name: string) => {
+export const registerApi = async (email: string, password: string, name: string, captchaToken?: string) => {
   return apiFetch<RegisterResponse, RegisterError>('/auth/register', {
     method: 'POST',
-    body: { email, password, name },
+    body: { email, password, name, captchaToken },
     auth: false,
   })
 }

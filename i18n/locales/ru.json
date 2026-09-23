@@ -93,6 +93,7 @@
     "nameTooLong": "Имя не длиннее 100 символов",
     "invalidEmail": "Введите корректный email",
     "emailTooLong": "Email не длиннее 254 символов",
+    "captchaRequired": "Подтвердите, что вы не робот",
     "enterEmail": "Введите email",
     "success": "Успешно",
     "resendButton": "Отправить повторно",

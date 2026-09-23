@@ -388,6 +388,7 @@ export interface NotificationEvent {
 export type AuthErrorMessage =
   | 'Пользователь с таким email уже существует'
   | 'Неверный email или пароль'
+  | 'Не пройдена проверка CAPTCHA. Попробуйте снова'
   | 'Email не подтверждён. Проверьте почту'
   | 'Токен не указан'
   | 'Неверный токен'
@@ -434,7 +435,7 @@ export type NoDomainError = never
 
 // --- auth -------------------------------------------------------------------
 /** Ошибки конкретных эндпоинтов — используйте как 2-й дженерик `apiFetch<T, E>`. */
-export type RegisterError = Extract<AuthErrorMessage, 'Пользователь с таким email уже существует'>
+export type RegisterError = Extract<AuthErrorMessage, 'Пользователь с таким email уже существует' | 'Не пройдена проверка CAPTCHA. Попробуйте снова'>
 export type LoginError = Extract<AuthErrorMessage, 'Неверный email или пароль' | 'Email не подтверждён. Проверьте почту'>
 export type VerifyEmailError = Extract<AuthErrorMessage, 'Токен не указан' | 'Неверный токен' | 'Срок действия токена истёк'>
 export type ResendVerificationError = Extract<AuthErrorMessage, 'Пользователь не найден' | 'Email уже подтверждён' | 'Письмо уже отправлено недавно. Повторите через 5 минут'>

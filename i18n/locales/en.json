@@ -93,6 +93,7 @@
     "nameTooLong": "Name must be at most 100 characters",
     "invalidEmail": "Enter a valid email",
     "emailTooLong": "Email must be at most 254 characters",
+    "captchaRequired": "Please confirm you are not a robot",
     "enterEmail": "Enter email",
     "success": "Success",
     "resendButton": "Resend",

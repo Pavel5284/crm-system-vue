@@ -6,6 +6,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
+      // Cloudflare Turnstile (капча на регистрации). Без ключа виджет
+      // не рендерится, бэкенд без TURNSTILE_SECRET_KEY проверку пропускает.
+      turnstileSiteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY,
       // Микрофронтенды (вариант B). URL версионированного remoteEntry.js,
       // НЕ latest: обновление ремоута — отдельным изменением env (правило №3).
       mfeCustomersRemoteUrl:
