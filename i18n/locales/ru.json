@@ -75,6 +75,7 @@
     "emailTooLong": "Email не длиннее 254 символов",
     "passwordRequired": "Введите пароль",
     "passwordTooLong": "Пароль не длиннее 128 символов",
+    "captchaRequired": "Подтвердите, что вы не робот",
     "error": "Ошибка"
   },
   "register": {

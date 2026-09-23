@@ -75,6 +75,7 @@
     "emailTooLong": "Email must be at most 254 characters",
     "passwordRequired": "Enter password",
     "passwordTooLong": "Password must be at most 128 characters",
+    "captchaRequired": "Please confirm you are not a robot",
     "error": "Error"
   },
   "register": {

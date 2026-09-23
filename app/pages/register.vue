@@ -21,61 +21,19 @@ const nameRef = ref('')
 const errorRef = ref('')
 const successRef = ref('')
 const resendCooldownRef = ref(0)
-const turnstileTokenRef = ref('')
-const turnstileContainerRef = ref<HTMLDivElement | null>(null)
 
-interface TurnstileWidgetApi {
-  render: (
-    container: HTMLElement,
-    params: {
-      sitekey: string
-      callback?: (token: string) => void
-      'expired-callback'?: () => void
-      'error-callback'?: () => void
-    },
-  ) => string
-  reset: (widgetId?: string) => void
-  remove: (widgetId?: string) => void
-}
-
-declare global {
-  interface Window {
-    turnstile?: TurnstileWidgetApi
-  }
-}
-
-const turnstileSiteKey = (useRuntimeConfig().public.turnstileSiteKey || '') as string
-
-useHead({
-  script: turnstileSiteKey
-    ? [
-        {
-          src: 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
-          async: true,
-          defer: true,
-        },
-      ]
-    : [],
-})
+const {
+  siteKey: turnstileSiteKey,
+  tokenRef: turnstileTokenRef,
+  containerRef: turnstileContainerRef,
+  render: renderTurnstile,
+  reset: resetTurnstile,
+} = useTurnstile()
 
 let resendTimer: ReturnType<typeof setInterval> | null = null
-let turnstilePoll: ReturnType<typeof setInterval> | null = null
-let turnstileWidgetId: string | null = null
-
-const resetTurnstile = () => {
-  turnstileTokenRef.value = ''
-  if (turnstileWidgetId && window.turnstile) {
-    window.turnstile.reset(turnstileWidgetId)
-  }
-}
 
 onUnmounted(() => {
   if (resendTimer) clearInterval(resendTimer)
-  if (turnstilePoll) clearInterval(turnstilePoll)
-  if (turnstileWidgetId && window.turnstile) {
-    window.turnstile.remove(turnstileWidgetId)
-    turnstileWidgetId = null
-  }
 })
 
 const isLoadingStore = useIsLoadingStore()
@@ -87,7 +45,7 @@ const passwordsMismatch = computed(() => {
 })
 
 onMounted(async () => {
-  if (turnstileSiteKey) renderTurnstileWidget()
+  if (turnstileSiteKey) renderTurnstile()
   if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('justLoggedOut')) {
     sessionStorage.removeItem('justLoggedOut')
     return
@@ -107,40 +65,6 @@ onMounted(async () => {
     void _e
   }
 })
-
-// Виджет грузится асинхронно с CDN — ждем window.turnstile поллингом.
-const renderTurnstileWidget = () => {
-  let attempts = 0
-  const tryRender = () => {
-    const api = window.turnstile
-    const el = turnstileContainerRef.value
-    if (api && el && !turnstileWidgetId) {
-      turnstileWidgetId = api.render(el, {
-        sitekey: turnstileSiteKey,
-        callback: (token: string) => {
-          turnstileTokenRef.value = token
-        },
-        'expired-callback': () => {
-          turnstileTokenRef.value = ''
-        },
-        'error-callback': () => {
-          turnstileTokenRef.value = ''
-        },
-      })
-      return true
-    }
-    return false
-  }
-  if (!tryRender()) {
-    turnstilePoll = setInterval(() => {
-      attempts += 1
-      if (tryRender() || attempts > 50) {
-        if (turnstilePoll) clearInterval(turnstilePoll)
-        turnstilePoll = null
-      }
-    }, 200)
-  }
-}
 
 const register = async () => {
   errorRef.value = ''
