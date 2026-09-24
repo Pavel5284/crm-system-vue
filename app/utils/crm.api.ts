@@ -8,6 +8,7 @@ import type {
   CreateDealPayload,
   CustomerAvatarError,
   CustomerDto,
+  DealCustomerRef,
   DealDetailsDto,
   DealDto,
   DealStatus,
@@ -18,6 +19,7 @@ import type {
   GetCustomersError,
   GetDealsError,
   ImportDealPayload,
+  NewCustomerPayload,
   NoContent,
   SuccessResponse,
   UpdateCustomerError,
@@ -32,10 +34,12 @@ export type {
   CreateCommentPayload,
   CreateDealPayload,
   CustomerDto,
+  DealCustomerRef,
   DealDetailsDto,
   DealDto,
   DealStatus,
   ImportDealPayload,
+  NewCustomerPayload,
   UpdateCustomerPayload,
 }
 
@@ -71,10 +75,7 @@ export const updateResponsiblesApi = (dealId: string, userIds: string[]) =>
 export interface UpdateDealFieldsPayload {
   responsibleUserId?: string
   deadline?: string
-  company?: string
   description?: string
-  contactName?: string
-  contactPhone?: string
 }
 
 export const updateDealApi = (dealId: string, payload: UpdateDealFieldsPayload) =>

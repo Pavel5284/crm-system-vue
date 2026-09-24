@@ -12,15 +12,21 @@ export interface CustomerDto {
   id: string
   name: string
   email: string
+  phone: string | null
+  contactPerson: string | null
   avatarUrl: string
   fromSource: string | null
   createdAt: string
   updatedAt: string
+  /** Только в GET /customers: производное «Количество сделок» (count по customerId). */
+  dealsCount?: number
 }
 
 export interface UpdateCustomerPayload {
   name?: string
   email?: string
+  phone?: string | null
+  contactPerson?: string | null
   fromSource?: string | null
 }
 

@@ -51,7 +51,7 @@ const onDeleteClick = () => {
     <KanbanSlideoverResponsible />
     <KanbanSlideoverDeadline />
     <KanbanSlideoverLabel :label-text="t('kanban.slideover.company')">
-      {{ store.card?.companyName }}
+      {{ store.card?.customerName }}
     </KanbanSlideoverLabel>
     <KanbanSlideoverLabel :label-text="t('kanban.slideover.createdAt')">
       {{ formatDate(store.card?.createdAt, 'short', locale) }}

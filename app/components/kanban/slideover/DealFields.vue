@@ -2,24 +2,31 @@
 import { useQueryClient } from '@tanstack/vue-query'
 import { useDealSlideStore, type DealHighlightField } from '@/stores/deal-slide.store'
 import { useDealDetailsQuery } from '@/components/kanban/useDealDetailsQuery'
-import { updateDealApi } from '~/utils/crm.api'
-import { canUpdateDeal } from '~/utils/deal-permissions'
+import { updateCustomerApi, updateDealApi } from '~/utils/crm.api'
+import type { UpdateCustomerPayload, UpdateDealFieldsPayload } from '~/utils/crm.api'
 
-type FieldKey = 'company' | 'description' | 'contactName' | 'contactPhone'
+// Описание живёт на сделке; компания/контакт/телефон/источник —
+// на связанном клиенте (PATCH /customers/:id): правка применяется
+// ко всем сделкам клиента, а не только к этой.
+type FieldOwner = 'deal' | 'customer'
+type FieldKey = 'description' | 'name' | 'contactPerson' | 'phone' | 'fromSource'
 
 const FIELDS: Array<{
   key: FieldKey
+  owner: FieldOwner
   highlight: DealHighlightField
   labelKey: string
   placeholderKey: string
   hintKey?: string
   min?: number
+  nullable?: boolean
   textarea?: boolean
 }> = [
-  { key: 'company', highlight: 'company', labelKey: 'kanban.slideover.company', placeholderKey: 'kanban.createDeal.companyPlaceholder', min: 2 },
-  { key: 'description', highlight: 'description', labelKey: 'kanban.slideover.descriptionLabel', placeholderKey: 'kanban.createDeal.descriptionPlaceholder', hintKey: 'kanban.slideover.descriptionHint', min: 10, textarea: true },
-  { key: 'contactName', highlight: 'contact', labelKey: 'kanban.slideover.contactName', placeholderKey: 'kanban.slideover.contactName' },
-  { key: 'contactPhone', highlight: 'contact', labelKey: 'kanban.slideover.contactPhone', placeholderKey: 'kanban.slideover.contactPhone' },
+  { key: 'description', owner: 'deal', highlight: 'description', labelKey: 'kanban.slideover.descriptionLabel', placeholderKey: 'kanban.createDeal.descriptionPlaceholder', hintKey: 'kanban.slideover.descriptionHint', min: 10, textarea: true },
+  { key: 'name', owner: 'customer', highlight: 'company', labelKey: 'kanban.slideover.company', placeholderKey: 'kanban.createDeal.companyPlaceholder', hintKey: 'kanban.slideover.customerFieldHint', min: 1 },
+  { key: 'contactPerson', owner: 'customer', highlight: 'contact', labelKey: 'kanban.slideover.contactName', placeholderKey: 'kanban.slideover.contactName', hintKey: 'kanban.slideover.customerFieldHint', nullable: true },
+  { key: 'phone', owner: 'customer', highlight: 'contact', labelKey: 'kanban.slideover.contactPhone', placeholderKey: 'kanban.slideover.contactPhone', hintKey: 'kanban.slideover.customerFieldHint', nullable: true },
+  { key: 'fromSource', owner: 'customer', highlight: 'contact', labelKey: 'customers.table.source', placeholderKey: 'customers.slideover.sourcePlaceholder', hintKey: 'kanban.slideover.customerFieldHint', nullable: true },
 ]
 
 const { t } = useI18n()
@@ -41,16 +48,25 @@ watch(() => store.card?.id, () => {
   draft.value = ''
 })
 
+function fieldValue(key: FieldKey): string {
+  const field = FIELDS.find((f) => f.key === key)!
+  if (field.owner === 'deal') {
+    return key === 'description' ? (details.value?.description ?? '') : ''
+  }
+  const customer = details.value?.customer
+  if (!customer) return ''
+  if (key === 'name') return customer.name
+  if (key === 'contactPerson') return customer.contactPerson ?? ''
+  if (key === 'phone') return customer.phone ?? ''
+  return customer.fromSource ?? ''
+}
+
 // Подсвеченное пустое поле сразу открываем на заполнение.
 watch(() => store.highlightFields, (fields) => {
   if (!canEdit.value || editingKey.value) return
-  const target = FIELDS.find((f) => fields.includes(f.highlight) && !(details.value?.[f.key] ?? '').trim())
+  const target = FIELDS.find((f) => fields.includes(f.highlight) && !fieldValue(f.key).trim())
   if (target) openEditor(target.key)
 })
-
-function fieldValue(key: FieldKey): string {
-  return details.value?.[key] ?? ''
-}
 
 function openEditor(key: FieldKey) {
   draft.value = fieldValue(key)
@@ -59,12 +75,24 @@ function openEditor(key: FieldKey) {
 
 const { mutate: save, isPending: isSaving } = useMutation({
   mutationKey: ['update deal fields'],
-  mutationFn: async (input: { key: FieldKey; value: string }) =>
-    updateDealApi(store.card!.id, { [input.key]: input.value } as Record<FieldKey, string>),
+  mutationFn: async (input: { key: FieldKey; value: string }) => {
+    const field = FIELDS.find((f) => f.key === input.key)!
+    if (field.owner === 'deal') {
+      return updateDealApi(store.card!.id, {
+        [input.key]: input.value,
+      } as UpdateDealFieldsPayload)
+    }
+    const customerId = details.value?.customer?.id
+    if (!customerId) throw new Error('No customer linked')
+    return updateCustomerApi(customerId, {
+      [input.key]: field.nullable && !input.value ? null : input.value,
+    } as UpdateCustomerPayload)
+  },
   onSuccess(_data, input) {
     const field = FIELDS.find((f) => f.key === input.key)!
     store.clearHighlight(field.highlight)
     queryClient.invalidateQueries({ queryKey: ['deals'] })
+    queryClient.invalidateQueries({ queryKey: ['customers'] })
     if (store.card) queryClient.invalidateQueries({ queryKey: ['deal', store.card.id] })
     editingKey.value = null
   },
@@ -134,6 +162,11 @@ function onSave() {
             </button>
           </div>
         </div>
+      </KanbanSlideoverLabel>
+    </div>
+    <div class="rounded px-2 py-1.5">
+      <KanbanSlideoverLabel label-text="Email">
+        <span class="whitespace-pre-wrap break-words text-sm">{{ details?.customer?.email ?? '—' }}</span>
       </KanbanSlideoverLabel>
     </div>
   </div>

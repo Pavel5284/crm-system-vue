@@ -299,7 +299,7 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
               <UiCardTitle>{{ card.name }}</UiCardTitle>
               <UiCardDescription class="mt-2 block">{{ convertCurrency(card.price, locale) }}</UiCardDescription>
             </UiCardHeader>
-            <UiCardContent class="text-xs">{{ t('kanban.company') }}: {{ card.companyName }}</UiCardContent>
+            <UiCardContent class="text-xs">{{ t('kanban.company') }}: {{ card.customerName }}</UiCardContent>
             <UiCardContent class="text-xs">{{ t('kanban.responsible') }}: {{ card.responsibleName ?? '—' }}</UiCardContent>
             <UiCardContent class="text-xs" :class="{ 'text-red-400 font-medium': isOverdue(card) }">
               {{ t('kanban.deadline') }}: {{ card.deadline ? formatDate(card.deadline, 'short', locale) : '—' }}
@@ -362,7 +362,7 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
                 <UiCardTitle>{{ card.name }}</UiCardTitle>
                 <UiCardDescription class="mt-2 block">{{ convertCurrency(card.price, locale) }}</UiCardDescription>
               </UiCardHeader>
-              <UiCardContent class="text-xs">{{ t('kanban.company') }}: {{ card.companyName }}</UiCardContent>
+              <UiCardContent class="text-xs">{{ t('kanban.company') }}: {{ card.customerName }}</UiCardContent>
               <UiCardContent class="text-xs">{{ t('kanban.responsible') }}: {{ card.responsibleName ?? '—' }}</UiCardContent>
               <UiCardContent class="text-xs" :class="{ 'text-red-400 font-medium': isOverdue(card) }">
                 {{ t('kanban.deadline') }}: {{ card.deadline ? formatDate(card.deadline, 'short', locale) : '—' }}

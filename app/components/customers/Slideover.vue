@@ -19,6 +19,8 @@ const isLocalOpen = computed({
 
 const nameRef = ref('')
 const emailRef = ref('')
+const phoneRef = ref('')
+const contactPersonRef = ref('')
 const avatarUrlRef = ref('')
 const fromSourceRef = ref('')
 
@@ -26,6 +28,8 @@ watch(() => store.customer, (customer) => {
   if (!customer) return
   nameRef.value = customer.name
   emailRef.value = customer.email
+  phoneRef.value = customer.phone ?? ''
+  contactPersonRef.value = customer.contactPerson ?? ''
   avatarUrlRef.value = customer.avatarUrl || ''
   fromSourceRef.value = customer.fromSource ?? ''
 }, { immediate: true })
@@ -37,7 +41,11 @@ const errorRef = ref('')
 const isDirty = computed(() => {
   const c = store.customer
   if (!c) return false
-  return nameRef.value !== c.name || emailRef.value !== c.email || (fromSourceRef.value || '') !== (c.fromSource ?? '')
+  return nameRef.value !== c.name
+    || emailRef.value !== c.email
+    || (phoneRef.value || '') !== (c.phone ?? '')
+    || (contactPersonRef.value || '') !== (c.contactPerson ?? '')
+    || (fromSourceRef.value || '') !== (c.fromSource ?? '')
 })
 
 const customerInitials = computed(() => {
@@ -87,6 +95,8 @@ async function onSave() {
     const updated = await updateCustomerApi(store.customer.id, {
       name: nameRef.value,
       email: emailRef.value,
+      phone: phoneRef.value || null,
+      contactPerson: contactPersonRef.value || null,
       fromSource: fromSourceRef.value || null,
     })
     await props.refetch()
@@ -116,6 +126,8 @@ async function onSave() {
       <div class="space-y-3">
         <UiInput :placeholder="t('customers.slideover.namePlaceholder')" type="text" class="input" v-model="nameRef"/>
         <UiInput placeholder="Email" type="email" class="input" v-model="emailRef"/>
+        <UiInput :placeholder="t('customers.slideover.phonePlaceholder')" type="text" class="input" v-model="phoneRef"/>
+        <UiInput :placeholder="t('customers.slideover.contactPersonPlaceholder')" type="text" class="input" v-model="contactPersonRef"/>
         <UiInput :placeholder="t('customers.slideover.sourcePlaceholder')" type="text" class="input" v-model="fromSourceRef"/>
       </div>
 

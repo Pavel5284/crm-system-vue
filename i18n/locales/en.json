@@ -123,6 +123,13 @@
       "pricePlaceholder": "Price",
       "emailPlaceholder": "Email",
       "companyPlaceholder": "Company",
+      "customerNamePlaceholder": "Contact person",
+      "customerSearchPlaceholder": "Search customers...",
+      "customerSelectPlaceholder": "Select a customer",
+      "existingCustomer": "Existing customer",
+      "newCustomer": "New customer",
+      "customerPhonePlaceholder": "Phone",
+      "sourcePlaceholder": "Source",
       "descriptionPlaceholder": "Description",
       "addButton": "Add",
       "adding": "Adding..."
@@ -138,6 +145,7 @@
       "descriptionHint": "Minimum 10 characters",
       "contactName": "Contact",
       "contactPhone": "Phone",
+      "customerFieldHint": "Changes apply to all deals of this customer",
       "edit": "Edit",
       "createdAt": "Created at",
       "commentsPlaceholder": "Add a comment",
@@ -198,13 +206,17 @@
       "avatar": "Avatar",
       "name": "Name",
       "email": "Email",
-      "source": "Source"
+      "phone": "Phone",
+      "source": "Source",
+      "dealsCount": "Deals"
     },
     "slideover": {
       "title": "About customer",
       "description": "Customer information",
       "namePlaceholder": "Name",
       "emailPlaceholder": "Email",
+      "phonePlaceholder": "Phone",
+      "contactPersonPlaceholder": "Contact person",
       "sourcePlaceholder": "Source",
       "save": "Save",
       "saving": "Saving..."

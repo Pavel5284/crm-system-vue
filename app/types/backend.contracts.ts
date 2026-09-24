@@ -124,37 +124,48 @@ export interface CustomerDto {
   id: string
   name: string
   email: string
+  phone: string | null
+  contactPerson: string | null
   avatarUrl: string
   fromSource: string | null
   createdAt: string
   updatedAt: string
+  /** Только в GET /customers: производное «Количество сделок» (count по customerId). */
+  dealsCount?: number
 }
 
 export interface UpdateCustomerPayload {
   name?: string
   email?: string
+  phone?: string | null
+  contactPerson?: string | null
   fromSource?: string | null
 }
 
 export type DealStatus = 'todo' | 'to-be-agreed' | 'in-progress' | 'produced' | 'done'
 
+/** Клиент сделки — джойн по customerId (client_id), единственный источник правды. */
+export interface DealCustomerRef {
+  id: string
+  name: string
+  email: string
+  phone: string | null
+  contactPerson: string | null
+  fromSource: string | null
+}
+
 export interface DealDto {
   id: string
   name: string
-  company: string
   description: string
   mainComment: string | null
   price: number
   status: DealStatus
   customerId: string
-  customerName: string
-  customerEmail: string
+  customer: DealCustomerRef
   responsibleUserId: string | null
-  contactName: string | null
-  contactPhone: string | null
   deadline: string | null
   priority: string
-  source: string | null
   isImported: boolean
   importedBy: string | null
   responsibleName: string | null
@@ -162,19 +173,25 @@ export interface DealDto {
   updatedAt: string
 }
 
+export interface NewCustomerPayload {
+  name: string
+  email: string
+  phone?: string
+  contactPerson?: string
+  fromSource?: string
+}
+
 export interface CreateDealPayload {
   name: string
-  company: string
   description: string
   price: number
-  customerEmail: string
-  customerName: string
+  /** Существующий клиент (выбор из списка). Ровно одно из customerId / newCustomer. */
+  customerId?: string
+  /** Новый клиент (создаётся вместе со сделкой). */
+  newCustomer?: NewCustomerPayload
   responsibleUserId: string
-  contactName?: string
-  contactPhone?: string
   deadline?: string
   priority?: string
-  source?: string
 }
 
 export interface ImportDealPayload extends CreateDealPayload {
@@ -456,7 +473,7 @@ export type UpdateCustomerError = CustomerErrorMessage
 export type CustomerAvatarError = CustomerErrorMessage
 
 export type GetDealsError = NoDomainError
-export type CreateDealError = NoDomainError
+export type CreateDealError = CustomerErrorMessage
 export type UpdateDealError = DealErrorMessage
 export type UpdateResponsiblesError = DealErrorMessage | Extract<AuthErrorMessage, 'Пользователь не найден'>
 export type DeleteDealError = DealErrorMessage

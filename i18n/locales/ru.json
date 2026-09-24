@@ -123,6 +123,13 @@
       "pricePlaceholder": "Цена",
       "emailPlaceholder": "Email",
       "companyPlaceholder": "Компания",
+      "customerNamePlaceholder": "Контактное лицо",
+      "customerSearchPlaceholder": "Поиск клиента...",
+      "customerSelectPlaceholder": "Выберите клиента",
+      "existingCustomer": "Существующий клиент",
+      "newCustomer": "Новый клиент",
+      "customerPhonePlaceholder": "Телефон",
+      "sourcePlaceholder": "Источник привлечения",
       "descriptionPlaceholder": "Описание",
       "addButton": "Добавить",
       "adding": "Добавление..."
@@ -138,6 +145,7 @@
       "descriptionHint": "Минимум 10 символов",
       "contactName": "Контакт",
       "contactPhone": "Телефон",
+      "customerFieldHint": "Изменение применится ко всем сделкам этого клиента",
       "edit": "Изменить",
       "createdAt": "Дата создания",
       "commentsPlaceholder": "Добавить комментарий",
@@ -198,13 +206,17 @@
       "avatar": "Изображение",
       "name": "Наименование",
       "email": "Email",
-      "source": "Источник привлечения"
+      "phone": "Телефон",
+      "source": "Источник привлечения",
+      "dealsCount": "Сделок"
     },
     "slideover": {
       "title": "О клиенте",
       "description": "Информация о клиенте",
       "namePlaceholder": "Имя",
       "emailPlaceholder": "Email",
+      "phonePlaceholder": "Телефон",
+      "contactPersonPlaceholder": "Контактное лицо",
       "sourcePlaceholder": "Источник привлечения",
       "save": "Сохранить",
       "saving": "Сохранение..."

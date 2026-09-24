@@ -2,8 +2,7 @@ import { defineStore } from 'pinia'
 
 export interface FilterableCard {
     name?: string | null
-    company: string | null
-    companyName: string | null
+    customerName: string | null
     responsibleName: string | null
     deadline: string | null
     createdAt: string
@@ -39,10 +38,9 @@ export const useDealFiltersStore = defineStore('deal-filters', {
                 const haystack = normalizeQuery(card.name)
                 if (!haystack.includes(nameQuery)) return false
             }
-            // Компания — точное совпадение из выпадающего меню.
-            // Сверяем с обоими полями: deal.company и customerName (companyName),
-            // т.к. на карточке отображается companyName, а в форме есть оба.
-            if (this.company && card.company !== this.company && card.companyName !== this.company) return false
+            // Клиент — точное совпадение из выпадающего меню
+            // по наименованию связанного клиента (customerName).
+            if (this.company && card.customerName !== this.company) return false
             if (this.responsible && card.responsibleName !== this.responsible) return false
             if (this.deadlineFrom || this.deadlineTo) {
                 if (!card.deadline) return false

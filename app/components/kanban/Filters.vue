@@ -17,11 +17,12 @@ const responsibleOptions = computed(() => {
   return [...new Set(names)].sort((a, b) => a.localeCompare(b))
 })
 
-// Компания — выпадающее меню: все уникальные значения deal.company + customerName.
+// Клиент — выпадающее меню: уникальные наименования из customerName
+// (единственный источник — связанный клиент по customerId).
 const companyOptions = computed(() => {
   const names = (props.columns ?? [])
     .flatMap((col) => col.items)
-    .flatMap((d) => [d.company, d.companyName])
+    .map((d) => d.customerName)
     .filter((n): n is string => !!n && n.trim() !== '')
   return [...new Set(names)].sort((a, b) => a.localeCompare(b))
 })

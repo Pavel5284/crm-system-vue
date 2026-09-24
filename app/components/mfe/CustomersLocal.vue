@@ -31,7 +31,9 @@ const customers = computed(() => data.value ?? [])
           <UiTableHead class="w-[80px]">{{ t('customers.table.avatar') }}</UiTableHead>
           <UiTableHead class="w-[200px]">{{ t('customers.table.name') }}</UiTableHead>
           <UiTableHead class="w-[200px]">Email</UiTableHead>
+          <UiTableHead>{{ t('customers.table.phone') }}</UiTableHead>
           <UiTableHead>{{ t('customers.table.source') }}</UiTableHead>
+          <UiTableHead>{{ t('customers.table.dealsCount') }}</UiTableHead>
         </UiTableRow>
       </UiTableHeader>
       <UiTableBody>
@@ -59,7 +61,9 @@ const customers = computed(() => data.value ?? [])
           </UiTableCell>
           <UiTableCell class="font-medium">{{customer.name}}</UiTableCell>
           <UiTableCell class="font-medium">{{customer.email}}</UiTableCell>
+          <UiTableCell class="font-medium">{{customer.phone ?? '—'}}</UiTableCell>
           <UiTableCell class="font-medium">{{customer.fromSource}}</UiTableCell>
+          <UiTableCell class="font-medium">{{customer.dealsCount ?? '—'}}</UiTableCell>
 
         </UiTableRow>
       </UiTableBody>

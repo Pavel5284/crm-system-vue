@@ -5,8 +5,8 @@ export interface ICard {
     name: string
     price: number
     createdAt: string
-    company: string
-    companyName: string
+    customerId: string
+    customerName: string
     responsibleName: string | null
     deadline: string | null
     status: string

@@ -31,10 +31,15 @@ const STRINGS: Record<MfeLocale, Record<string, string>> = {
     retry: 'Повторить',
     avatar: 'Изображение',
     name: 'Наименование',
+    phone: 'Телефон',
+    contact: 'Контактное лицо',
     source: 'Источник привлечения',
+    deals: 'Сделок',
     about: 'О клиенте',
     aboutDescription: 'Информация о клиенте',
     namePh: 'Имя',
+    phonePh: 'Телефон',
+    contactPh: 'Контактное лицо',
     sourcePh: 'Источник привлечения',
     save: 'Сохранить',
     saving: 'Сохранение...',
@@ -54,10 +59,15 @@ const STRINGS: Record<MfeLocale, Record<string, string>> = {
     retry: 'Retry',
     avatar: 'Avatar',
     name: 'Name',
+    phone: 'Phone',
+    contact: 'Contact person',
     source: 'Source',
+    deals: 'Deals',
     about: 'About customer',
     aboutDescription: 'Customer information',
     namePh: 'Name',
+    phonePh: 'Phone',
+    contactPh: 'Contact person',
     sourcePh: 'Source',
     save: 'Save',
     saving: 'Saving...',
@@ -128,6 +138,8 @@ const selected = ref<CustomerDto | null>(null)
 const isOpen = ref(false)
 const nameRef = ref('')
 const emailRef = ref('')
+const phoneRef = ref('')
+const contactPersonRef = ref('')
 const avatarUrlRef = ref('')
 const fromSourceRef = ref('')
 const isSaving = ref(false)
@@ -139,6 +151,8 @@ function open(customer: CustomerDto): void {
   selected.value = customer
   nameRef.value = customer.name
   emailRef.value = customer.email
+  phoneRef.value = customer.phone ?? ''
+  contactPersonRef.value = customer.contactPerson ?? ''
   avatarUrlRef.value = customer.avatarUrl || ''
   fromSourceRef.value = customer.fromSource ?? ''
   saveError.value = ''
@@ -157,6 +171,8 @@ const isDirty = computed(() => {
   return (
     nameRef.value !== c.name
     || emailRef.value !== c.email
+    || (phoneRef.value || '') !== (c.phone ?? '')
+    || (contactPersonRef.value || '') !== (c.contactPerson ?? '')
     || (fromSourceRef.value || '') !== (c.fromSource ?? '')
   )
 })
@@ -177,6 +193,8 @@ async function onSave(): Promise<void> {
     const payload: UpdateCustomerPayload = {
       name: nameRef.value,
       email: emailRef.value,
+      phone: phoneRef.value || null,
+      contactPerson: contactPersonRef.value || null,
       fromSource: fromSourceRef.value || null,
     }
     const updated = await request<CustomerDto>(`/customers/${selected.value.id}`, { method: 'PATCH', body: JSON.stringify(payload) })
@@ -264,7 +282,10 @@ async function onAvatarRemove(): Promise<void> {
             <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap w-[80px]">{{ t('avatar') }}</th>
             <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap w-[200px]">{{ t('name') }}</th>
             <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap w-[200px]">Email</th>
+            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">{{ t('phone') }}</th>
+            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">{{ t('contact') }}</th>
             <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">{{ t('source') }}</th>
+            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">{{ t('deals') }}</th>
           </tr>
         </thead>
         <tbody data-slot="table-body" class="[&_tr:last-child]:border-0">
@@ -293,7 +314,10 @@ async function onAvatarRemove(): Promise<void> {
             </td>
             <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ customer.name }}</td>
             <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ customer.email }}</td>
+            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ customer.phone ?? '—' }}</td>
+            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ customer.contactPerson ?? '—' }}</td>
             <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ customer.fromSource }}</td>
+            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ customer.dealsCount ?? '—' }}</td>
           </tr>
         </tbody>
       </table>
@@ -369,6 +393,8 @@ async function onAvatarRemove(): Promise<void> {
           <div class="space-y-3">
             <input v-model="nameRef" type="text" :class="INPUT_CLASS" :placeholder="t('namePh')" />
             <input v-model="emailRef" type="email" :class="INPUT_CLASS" placeholder="Email" />
+            <input v-model="phoneRef" type="text" :class="INPUT_CLASS" :placeholder="t('phonePh')" />
+            <input v-model="contactPersonRef" type="text" :class="INPUT_CLASS" :placeholder="t('contactPh')" />
             <input v-model="fromSourceRef" type="text" :class="INPUT_CLASS" :placeholder="t('sourcePh')" />
           </div>
 
