@@ -63,12 +63,27 @@ const getI18nT = (): ((key: string) => string) => {
   return (k: string) => k
 }
 
-const getToast = () => {
-  // Без гарда на getCurrentInstance: useToast() в Nuxt UI v4 построен
-  // на глобальном useState и работает и вне setup (обработчики событий,
-  // сокеты). С гардом тосты из apiFetch не всплывали вообще никогда.
+export type ApiToast = Pick<ReturnType<typeof useToast>, 'add'>
+
+let cachedToast: ApiToast | null = null
+
+// Захват инстанса вызывается один раз из app.vue (внутри setup).
+export const setApiToast = (toast: ApiToast | null): void => {
+  cachedToast = toast
+}
+
+const getToast = (): ApiToast | null => {
+  if (cachedToast) return cachedToast
+  // useToast() внутри вызывает inject(toastMaxInjectionKey): когда нет
+  // активного инстанса (async-продолжения apiFetch, обработчики, сокеты),
+  // Vue варнит "inject() can only be used inside setup()" на каждый вызов,
+  // хотя тост за счет useState все равно срабатывает. Поэтому вне setup —
+  // только кеш, useToast() здесь не вызываем.
+  if (!getCurrentInstance()) return null
   try {
-    return useToast()
+    const toast = useToast()
+    if (import.meta.client) cachedToast = toast
+    return toast
   } catch {
     return null
   }
