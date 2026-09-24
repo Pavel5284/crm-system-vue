@@ -17,7 +17,11 @@ useSeoMeta({
 type MfeMode = 'local' | 'remote' | 'auto'
 const mode = ((config.public.mfeCustomersMode as string | undefined) || 'auto') as MfeMode
 const remoteUrl = config.public.mfeCustomersRemoteUrl as string
-const apiBaseUrl = config.public.apiBaseUrl as string
+// Тот же base URL, что использует сам хост (useApiBaseUrl с фолбэком),
+// а не сырой runtimeConfig: иначе при пустом NUXT_PUBLIC_API_BASE_URL
+// хост работает за счёт фолбэка, а remote фетчит относительный URL
+// и получает HTML самой страницы вместо JSON API.
+const apiBaseUrl = useApiBaseUrl()
 
 const remoteComponent = shallowRef<Component | null>(null)
 const failed = ref(false)
