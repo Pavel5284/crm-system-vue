@@ -49,17 +49,23 @@
     "notifications": "Notifications",
     "noNotifications": "No new notifications",
     "clear": "Clear",
-    "wsTest": "WS-test",
+    "markAllRead": "Mark all read",
+    "unread": "Unread",
+    "hasUnread": "{count} unread notifications",
     "notificationsCount": "{count} notifications",
-    "status": {
-      "connected": "connected",
-      "connecting": "connecting",
-      "disconnected": "disconnected",
-      "unauthorized": "unauthorized",
-      "error": "error"
-    },
     "settings": "Settings",
     "language": "Language"
+  },
+  "notifications": {
+    "types": {
+      "dealAssigned": "Assigned as responsible",
+      "dealStageChanged": "Deal stage changed",
+      "dealDeadlineSoon": "Deal deadline soon",
+      "taskAssigned": "New task",
+      "taskDueSoon": "Task deadline soon",
+      "taskCompleted": "Task completed",
+      "unknown": "Notification"
+    }
   },
   "sidebar": {
     "logout": "Logout"
@@ -328,16 +334,6 @@
     "save": "Saving...",
     "saved": "Saved",
     "error": "Error"
-  },
-  "wsTest": {
-    "title": "WS test notifications",
-    "connect": "Connect",
-    "disconnect": "Disconnect",
-    "clear": "Clear",
-    "status": "Status:",
-    "socketId": "Socket id:",
-    "noNotifications": "No notifications yet.",
-    "connectedHint": "Send test notification via API."
   },
   "mfe": {
     "unavailableTitle": "Section temporarily unavailable",

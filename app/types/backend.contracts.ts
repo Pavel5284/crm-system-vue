@@ -374,7 +374,48 @@ export interface TasksQuery {
 // Notifications
 // ---------------------------------------------------------------------------
 
-export type NotificationType = 'TASK_ASSIGNED' | 'TASK_COMPLETED' | 'TASK_DUE_SOON'
+/**
+ * Реестр типов уведомлений (расширяемо: новый тип = новое значение +
+ * ветка в `app/utils/notifications.presentation.ts` + payload ниже).
+ * - DEAL_ASSIGNED — юзера назначили ответственным за сделку
+ * - TASK_ASSIGNED — новая задача для юзера
+ * - TASK_DUE_SOON / DEAL_DEADLINE_SOON — напоминание о дедлайне
+ */
+export type NotificationType =
+  | 'TASK_ASSIGNED'
+  | 'TASK_COMPLETED'
+  | 'TASK_DUE_SOON'
+  | 'DEAL_STAGE_CHANGED'
+  | 'DEAL_DEADLINE_SOON'
+  | 'DEAL_ASSIGNED'
+
+/** Уведомления со сделкой несут dealId — клик открывает слайовер сделки. */
+export type DealNotificationType =
+  | 'DEAL_STAGE_CHANGED'
+  | 'DEAL_DEADLINE_SOON'
+  | 'DEAL_ASSIGNED'
+
+/** Уведомления о задачах несут taskId (слайовер сделки не открывают). */
+export type TaskNotificationType = 'TASK_ASSIGNED' | 'TASK_COMPLETED' | 'TASK_DUE_SOON'
+
+export interface TaskNotificationPayload {
+  taskId: string
+  title: string
+}
+
+export interface DealNotificationPayload {
+  dealId: string
+  name: string
+  customerName?: string
+  fromStage?: string
+  toStage?: string
+  status?: string
+  deadline?: string | null
+  comment?: string | null
+  title?: string
+}
+
+export type NotificationPayload = TaskNotificationPayload | DealNotificationPayload | Record<string, unknown>
 
 export interface NotificationDto {
   id: string
@@ -511,3 +552,8 @@ export type DeleteTaskError = TaskErrorMessage
 
 export type GetNotificationsError = NoDomainError
 export type MarkNotificationReadError = NotificationErrorMessage
+export type MarkAllNotificationsReadError = NoDomainError
+
+export interface MarkAllNotificationsReadResponse {
+  updated: number
+}

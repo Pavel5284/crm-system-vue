@@ -49,17 +49,23 @@
     "notifications": "Уведомления",
     "noNotifications": "Нет новых уведомлений",
     "clear": "Очистить",
-    "wsTest": "WS-тест",
+    "markAllRead": "Прочитать все",
+    "unread": "Непрочитанное",
+    "hasUnread": "{count} непрочитанных уведомлений",
     "notificationsCount": "{count} уведомлений",
-    "status": {
-      "connected": "подключено",
-      "connecting": "подключение",
-      "disconnected": "отключено",
-      "unauthorized": "не авторизован",
-      "error": "ошибка"
-    },
     "settings": "Настройки",
     "language": "Язык"
+  },
+  "notifications": {
+    "types": {
+      "dealAssigned": "Вас назначили ответственным",
+      "dealStageChanged": "Сделка сменила этап",
+      "dealDeadlineSoon": "Скоро дедлайн сделки",
+      "taskAssigned": "Новая задача",
+      "taskDueSoon": "Скоро дедлайн задачи",
+      "taskCompleted": "Задача выполнена",
+      "unknown": "Уведомление"
+    }
   },
   "sidebar": {
     "logout": "Выйти"
@@ -328,16 +334,6 @@
     "save": "Сохранение...",
     "saved": "Сохранено",
     "error": "Ошибка"
-  },
-  "wsTest": {
-    "title": "WS-тест уведомлений",
-    "connect": "Подключиться",
-    "disconnect": "Отключиться",
-    "clear": "Очистить",
-    "status": "Статус:",
-    "socketId": "Socket id:",
-    "noNotifications": "Пока нет уведомлений.",
-    "connectedHint": "Отправь тестовое уведомление через API."
   },
   "mfe": {
     "unavailableTitle": "Раздел временно недоступен",

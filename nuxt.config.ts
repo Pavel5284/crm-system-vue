@@ -36,7 +36,6 @@ export default defineNuxtConfig({
     '/login': { ssr: false },
     '/register': { ssr: false },
     '/verify-email': { ssr: false },
-    '/ws-test': { ssr: false },
     '/**': {
       headers: {
         'X-Frame-Options': 'SAMEORIGIN',

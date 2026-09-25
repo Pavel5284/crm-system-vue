@@ -1,16 +1,33 @@
 ﻿<script setup lang="ts">
 import { useNotifications } from '~/composables/useNotifications'
+import { useOpenDeal } from '~/composables/useOpenDeal'
+import type { NotificationDto } from '~/types/backend.contracts'
+import {
+  getNotificationDealId,
+  getNotificationDetails,
+  getNotificationIcon,
+  getNotificationSubtitle,
+  getNotificationTitleKey,
+} from '~/utils/notifications.presentation'
 
 defineEmits<{ (e: 'toggle-menu'): void }>()
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const authStore = useAuthStore()
-const { status, notifications, connect, disconnect, clear } = useNotifications()
+const {
+  items: notifications,
+  unreadCount,
+  hasUnread,
+  connect,
+  disconnect,
+  clear,
+  markRead,
+  markAllRead,
+} = useNotifications()
+const { openDealById } = useOpenDeal()
 
 const showNotifications = ref(false)
 const showProfile = ref(false)
-
-const unreadCount = computed(() => notifications.value.length)
 
 const initials = computed(() => {
   const name = authStore.user.name?.trim()
@@ -23,20 +40,38 @@ const initials = computed(() => {
   return email ? email[0].toUpperCase() : '?'
 })
 
-const statusColor: Record<string, string> = {
-  connected: 'bg-green-500',
-  connecting: 'bg-yellow-500',
-  disconnected: 'bg-gray-400',
-  unauthorized: 'bg-red-500',
-  error: 'bg-red-500',
-}
-
 const dropdownRef = ref<HTMLElement | null>(null)
 const profileRef = ref<HTMLElement | null>(null)
 
 const handleClickOutside = (e: MouseEvent) => {
   if (dropdownRef.value && !dropdownRef.value.contains(e.target as Node)) showNotifications.value = false
   if (profileRef.value && !profileRef.value.contains(e.target as Node)) showProfile.value = false
+}
+
+const formatTime = (iso: string): string => {
+  try {
+    return new Date(iso).toLocaleString(locale.value === 'ru' ? 'ru-RU' : 'en-US', {
+      day: '2-digit',
+      month: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return iso
+  }
+}
+
+// Клик по уведомлению: помечаем прочитанным и открываем слайовер сделки,
+// если в payload есть dealId. Будущие типы без dealId — только mark read.
+const onNotificationClick = async (n: NotificationDto): Promise<void> => {
+  const dealId = getNotificationDealId(n)
+  showNotifications.value = false
+  if (!n.read) void markRead(n.id)
+  if (dealId) await openDealById(dealId)
+}
+
+const onMarkAllRead = async (): Promise<void> => {
+  await markAllRead()
 }
 
 onMounted(() => {
@@ -73,7 +108,7 @@ watch(() => authStore.isAuth, (v) => {
         <button
           type="button"
           class="relative inline-flex h-9 w-9 items-center justify-center rounded-full border border-border hover:bg-accent transition-colors"
-          :aria-label="t('header.notifications')"
+          :aria-label="unreadCount ? t('header.hasUnread', { count: unreadCount }) : t('header.notifications')"
           @click.stop="showNotifications = !showNotifications"
         >
           <Icon name="lucide:bell" size="18" />
@@ -83,7 +118,11 @@ watch(() => authStore.isAuth, (v) => {
           >
             {{ unreadCount > 99 ? '99+' : unreadCount }}
           </span>
-          <span :class="['absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background', statusColor[status] ?? 'bg-gray-400']" />
+          <!-- Зелёный индикатор — ТОЛЬКО при непрочитанных. Статус соединения здесь не показываем. -->
+          <span
+            v-if="hasUnread"
+            class="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-green-500"
+          />
         </button>
 
         <div
@@ -92,24 +131,37 @@ watch(() => authStore.isAuth, (v) => {
         >
           <div class="px-4 py-3 flex items-center justify-between border-b border-border">
             <p class="text-sm font-semibold">{{ t('header.notifications') }}</p>
-            <div class="flex items-center gap-2">
-              <span :class="['h-2 w-2 rounded-full', statusColor[status]]" />
-              <span class="text-xs text-muted-foreground capitalize">{{ t('header.status.' + status) }}</span>
-              <button v-if="unreadCount" type="button" class="text-xs text-primary hover:underline ml-2" @click="clear">{{ t('header.clear') }}</button>
-            </div>
+            <button v-if="hasUnread" type="button" class="text-xs text-primary hover:underline" @click="onMarkAllRead">{{ t('header.markAllRead') }}</button>
           </div>
 
           <div v-if="notifications.length" class="max-h-80 overflow-auto divide-y divide-border">
-            <div v-for="(n, i) in notifications" :key="i" class="px-4 py-3 text-xs leading-relaxed hover:bg-accent/50">
-              <pre class="whitespace-pre-wrap break-words font-sans text-xs">{{ typeof n === 'string' ? n : JSON.stringify(n, null, 2) }}</pre>
-            </div>
+            <button
+              v-for="n in notifications"
+              :key="n.id"
+              type="button"
+              class="w-full text-left px-4 py-3 text-xs leading-relaxed hover:bg-accent/50 flex gap-3 items-start transition-colors"
+              :class="{ 'bg-accent/30': !n.read }"
+              @click="onNotificationClick(n)"
+            >
+              <span class="mt-0.5 shrink-0 grid place-items-center h-7 w-7 rounded-full border border-border bg-muted/50">
+                <Icon :name="getNotificationIcon(n.type)" size="14" />
+              </span>
+              <span class="min-w-0 flex-1">
+                <span class="flex items-center gap-2">
+                  <span class="font-semibold text-[13px] truncate">{{ t(getNotificationTitleKey(n.type)) }}</span>
+                  <span v-if="!n.read" class="h-2 w-2 rounded-full bg-green-500 shrink-0" :title="t('header.unread')" />
+                </span>
+                <span v-if="getNotificationSubtitle(n)" class="block truncate text-foreground/90 mt-0.5">{{ getNotificationSubtitle(n) }}</span>
+                <span v-if="getNotificationDetails(n)" class="block text-muted-foreground mt-0.5 break-words">{{ getNotificationDetails(n) }}</span>
+                <span class="block text-[11px] text-muted-foreground mt-1">{{ formatTime(n.createdAt) }}</span>
+              </span>
+            </button>
           </div>
           <div v-else class="px-4 py-10 text-center text-sm text-muted-foreground">
             {{ t('header.noNotifications') }}
           </div>
 
-          <div class="px-4 py-2 border-t border-border bg-muted/30 flex justify-between items-center">
-            <NuxtLink to="/ws-test" class="text-xs text-primary hover:underline" @click="showNotifications=false">{{ t('header.wsTest') }}</NuxtLink>
+          <div class="px-4 py-2 border-t border-border bg-muted/30 flex justify-end items-center">
             <span class="text-[11px] text-muted-foreground">{{ t('header.notificationsCount', { count: unreadCount }) }}</span>
           </div>
         </div>
@@ -157,4 +209,3 @@ watch(() => authStore.isAuth, (v) => {
     </div>
   </header>
 </template>
-

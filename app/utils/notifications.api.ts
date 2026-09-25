@@ -1,6 +1,8 @@
 import { apiFetch } from '~/utils/api'
 import type {
   GetNotificationsError,
+  MarkAllNotificationsReadError,
+  MarkAllNotificationsReadResponse,
   MarkNotificationReadError,
   NotificationDto,
   NotificationErrorMessage,
@@ -13,6 +15,12 @@ export const getNotificationsApi = () =>
 
 export const markNotificationReadApi = (id: string) =>
   apiFetch<NotificationDto, MarkNotificationReadError>(`/notifications/${id}/read`, {
+    method: 'PATCH',
+    toast: false,
+  })
+
+export const markAllNotificationsReadApi = () =>
+  apiFetch<MarkAllNotificationsReadResponse, MarkAllNotificationsReadError>('/notifications/read-all', {
     method: 'PATCH',
     toast: false,
   })
