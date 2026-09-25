@@ -44,8 +44,23 @@ const upsertIncoming = (incoming: NotificationEvent): void => {
 const sleep = (ms: number): Promise<void> => new Promise((r) => { setTimeout(r, ms) })
 
 // Паузы между повторами при 503 «сервис просыпается»: холодный старт
-// free-плана ~50с, бэкенд уже пнул /health, ждём пробуждения.
-const WAKE_RETRY_DELAYS = [20_000, 30_000]
+// free-плана бывает дольше минуты, бэкенд уже пнул /health, ждём пробуждения.
+const WAKE_RETRY_DELAYS = [25_000, 35_000, 45_000]
+
+// Загрузка истории с автоповторами при 503 «сервис просыпается».
+// Вынесено отдельно, чтобы бросок последней ошибки ловился вызывающим
+// кодом, а не локальным catch (иначе — ворнинг инспекций).
+const fetchWithWakeRetries = async (): Promise<NotificationDto[]> => {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await getNotificationsApi()
+    } catch (e) {
+      const waking = e instanceof ApiError && e.statusCode === 503
+      if (!waking || attempt >= WAKE_RETRY_DELAYS.length) throw e
+      await sleep(WAKE_RETRY_DELAYS[attempt]!)
+    }
+  }
+}
 
 const fetchNotifications = async (force = false): Promise<void> => {
   if (isLoading.value && loadingPromise) {
@@ -57,20 +72,7 @@ const fetchNotifications = async (force = false): Promise<void> => {
   loadError.value = false
   loadingPromise = (async () => {
     try {
-      let list: NotificationDto[] = []
-      for (let attempt = 0; ; attempt++) {
-        try {
-          list = await getNotificationsApi()
-          break
-        } catch (e) {
-          const waking = e instanceof ApiError && e.statusCode === 503
-          if (waking && attempt < WAKE_RETRY_DELAYS.length) {
-            await sleep(WAKE_RETRY_DELAYS[attempt]!)
-            continue
-          }
-          throw e
-        }
-      }
+      const list = await fetchWithWakeRetries()
       items.value = [...list]
         .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
         .slice(0, 100)
