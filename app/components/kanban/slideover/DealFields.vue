@@ -9,7 +9,7 @@ import type { UpdateCustomerPayload, UpdateDealFieldsPayload } from '~/utils/crm
 // на связанном клиенте (PATCH /customers/:id): правка применяется
 // ко всем сделкам клиента, а не только к этой.
 type FieldOwner = 'deal' | 'customer'
-type FieldKey = 'description' | 'name' | 'contactPerson' | 'phone' | 'fromSource'
+type FieldKey = 'description' | 'name' | 'contactPerson' | 'phone' | 'fromSource' | 'email'
 
 const FIELDS: Array<{
   key: FieldKey
@@ -21,12 +21,15 @@ const FIELDS: Array<{
   min?: number
   nullable?: boolean
   textarea?: boolean
+  inputType?: string
+  isEmail?: boolean
 }> = [
   { key: 'description', owner: 'deal', highlight: 'description', labelKey: 'kanban.slideover.descriptionLabel', placeholderKey: 'kanban.createDeal.descriptionPlaceholder', hintKey: 'kanban.slideover.descriptionHint', min: 10, textarea: true },
   { key: 'name', owner: 'customer', highlight: 'company', labelKey: 'kanban.slideover.company', placeholderKey: 'kanban.createDeal.companyPlaceholder', hintKey: 'kanban.slideover.customerFieldHint', min: 1 },
   { key: 'contactPerson', owner: 'customer', highlight: 'contact', labelKey: 'kanban.slideover.contactName', placeholderKey: 'kanban.slideover.contactName', hintKey: 'kanban.slideover.customerFieldHint', nullable: true },
   { key: 'phone', owner: 'customer', highlight: 'contact', labelKey: 'kanban.slideover.contactPhone', placeholderKey: 'kanban.slideover.contactPhone', hintKey: 'kanban.slideover.customerFieldHint', nullable: true },
   { key: 'fromSource', owner: 'customer', highlight: 'contact', labelKey: 'customers.table.source', placeholderKey: 'customers.slideover.sourcePlaceholder', hintKey: 'kanban.slideover.customerFieldHint', nullable: true },
+  { key: 'email', owner: 'customer', highlight: 'contact', labelKey: 'customers.table.email', placeholderKey: 'kanban.createDeal.emailPlaceholder', hintKey: 'kanban.slideover.customerFieldHint', min: 3, inputType: 'email', isEmail: true },
 ]
 
 const { t } = useI18n()
@@ -42,10 +45,13 @@ const isHighlighted = (highlight: DealHighlightField) => store.highlightFields.i
 
 const editingKey = ref<FieldKey | null>(null)
 const draft = ref('')
+const isExpanded = ref(false)
+const companyName = computed(() => fieldValue('name'))
 
 watch(() => store.card?.id, () => {
   editingKey.value = null
   draft.value = ''
+  isExpanded.value = false
 })
 
 function fieldValue(key: FieldKey): string {
@@ -56,6 +62,7 @@ function fieldValue(key: FieldKey): string {
   const customer = details.value?.customer
   if (!customer) return ''
   if (key === 'name') return customer.name
+  if (key === 'email') return customer.email
   if (key === 'contactPerson') return customer.contactPerson ?? ''
   if (key === 'phone') return customer.phone ?? ''
   return customer.fromSource ?? ''
@@ -63,6 +70,7 @@ function fieldValue(key: FieldKey): string {
 
 // Подсвеченное пустое поле сразу открываем на заполнение.
 watch(() => store.highlightFields, (fields) => {
+  if (fields.length) isExpanded.value = true
   if (!canEdit.value || editingKey.value) return
   const target = FIELDS.find((f) => fields.includes(f.highlight) && !fieldValue(f.key).trim())
   if (target) openEditor(target.key)
@@ -106,6 +114,8 @@ const canSave = computed(() => {
   if (!editingKey.value || isSaving.value) return false
   const value = draft.value.trim()
   if (value === fieldValue(editingKey.value).trim()) return false
+  const field = FIELDS.find((f) => f.key === editingKey.value)
+  if (field?.isEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return false
   return value.length >= minFor(editingKey.value)
 })
 
@@ -117,6 +127,19 @@ function onSave() {
 
 <template>
   <div class="border-border bg-black/20 rounded p-3 mt-3">
+    <button type="button" class="company-toggle" @click="isExpanded = !isExpanded">
+      <span class="company-toggle-text">
+        <span class="company-toggle-label">{{ t('kanban.slideover.company') }}</span>
+        <span class="company-toggle-name">{{ companyName.trim() || '—' }}</span>
+      </span>
+      <Icon
+        name="lucide:chevron-down"
+        size="16"
+        class="company-toggle-icon"
+        :class="{ open: isExpanded }"
+      />
+    </button>
+    <div v-if="isExpanded">
     <div
       v-for="f in FIELDS"
       :key="f.key"
@@ -149,7 +172,7 @@ function onSave() {
             v-else
             v-model="draft"
             :placeholder="t(f.placeholderKey)"
-            type="text"
+            :type="f.inputType ?? 'text'"
             class="input"
           />
           <p v-if="f.hintKey" class="hint">{{ t(f.hintKey) }}</p>
@@ -164,15 +187,49 @@ function onSave() {
         </div>
       </KanbanSlideoverLabel>
     </div>
-    <div class="rounded px-2 py-1.5">
-      <KanbanSlideoverLabel label-text="Email">
-        <span class="whitespace-pre-wrap break-words text-sm">{{ details?.customer?.email ?? '—' }}</span>
-      </KanbanSlideoverLabel>
     </div>
   </div>
 </template>
 
 <style scoped>
+.company-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  text-align: left;
+  border-radius: 0.25rem;
+}
+.company-toggle:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+.company-toggle-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.company-toggle-label {
+  font-size: 0.75rem;
+  opacity: 0.75;
+}
+.company-toggle-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.company-toggle-icon {
+  flex-shrink: 0;
+  color: #aebed5;
+  transition: transform 0.2s;
+}
+.company-toggle-icon.open {
+  transform: rotate(180deg);
+}
 .input {
   border: 1px solid #161c26;
   margin-bottom: 0.5rem;

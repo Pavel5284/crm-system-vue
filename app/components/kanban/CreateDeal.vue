@@ -23,7 +23,7 @@ const [name, nameAttrs] = defineField('name')
 const [description, descriptionAttrs] = defineField('description')
 const [price, priceAttrs] = defineField('price')
 
-// Клиент сделки: выбор существующего (autocomplete) или создание нового.
+// Клиент сделки: выбор существующего (combobox) или создание нового.
 const customerMode = ref<'select' | 'new'>('select')
 const { data: customersData } = useQuery({
   queryKey: ['customers'],
@@ -35,6 +35,8 @@ const customers = computed(() => customersData.value ?? [])
 
 const customerSearch = ref('')
 const selectedCustomerId = ref('')
+const isCustomerDropdownOpen = ref(false)
+const customerComboboxRef = ref<HTMLElement | null>(null)
 const filteredCustomers = computed(() => {
   const q = customerSearch.value.trim().toLowerCase()
   if (!q) return customers.value
@@ -42,6 +44,41 @@ const filteredCustomers = computed(() => {
     c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q),
   )
 })
+const selectedCustomer = computed(() =>
+  customers.value.find((c) => c.id === selectedCustomerId.value),
+)
+
+function selectCustomer(c: { id: string; name: string }) {
+  selectedCustomerId.value = c.id
+  customerSearch.value = c.name
+  isCustomerDropdownOpen.value = false
+}
+
+function onCustomerInput() {
+  isCustomerDropdownOpen.value = true
+  if (selectedCustomer.value && selectedCustomer.value.name !== customerSearch.value) {
+    selectedCustomerId.value = ''
+  }
+}
+
+function clearSelectedCustomer() {
+  selectedCustomerId.value = ''
+  customerSearch.value = ''
+  isCustomerDropdownOpen.value = true
+}
+
+function onCustomerClickOutside(e: MouseEvent) {
+  if (customerComboboxRef.value && !customerComboboxRef.value.contains(e.target as Node)) {
+    isCustomerDropdownOpen.value = false
+    // Если текст не соответствует выбранному — сбрасываем выбор
+    if (selectedCustomer.value && selectedCustomer.value.name !== customerSearch.value) {
+      // оставляем текст как фильтр, но выбор уже сброшен в onCustomerInput
+    }
+  }
+}
+
+onMounted(() => document.addEventListener('click', onCustomerClickOutside))
+onUnmounted(() => document.removeEventListener('click', onCustomerClickOutside))
 
 const newName = ref('')
 const newEmail = ref('')
@@ -84,6 +121,7 @@ const {mutate, isPending} = useMutation({
     handleReset()
     customerSearch.value = ''
     selectedCustomerId.value = ''
+    isCustomerDropdownOpen.value = false
     newName.value = ''
     newEmail.value = ''
     newPhone.value = ''
@@ -166,18 +204,44 @@ const onSubmit = handleSubmit(values => {
       </button>
     </div>
     <template v-if="customerMode === 'select'">
-      <UiInput
-        :placeholder="t('kanban.createDeal.customerSearchPlaceholder')"
-        v-model="customerSearch"
-        type="text"
-        class="input"
-      />
-      <select v-model="selectedCustomerId" required class="input select">
-        <option value="" disabled>{{ t('kanban.createDeal.customerSelectPlaceholder') }}</option>
-        <option v-for="c in filteredCustomers" :key="c.id" :value="c.id">
-          {{ c.name }} — {{ c.email }}
-        </option>
-      </select>
+      <div ref="customerComboboxRef" class="combobox">
+        <UiInput
+          :placeholder="t('kanban.createDeal.customerSearchPlaceholder')"
+          v-model="customerSearch"
+          type="text"
+          class="input"
+          autocomplete="off"
+          @focus="isCustomerDropdownOpen = true"
+          @click="isCustomerDropdownOpen = true"
+          @input="onCustomerInput"
+          @keydown.escape="isCustomerDropdownOpen = false"
+          @keydown.down.prevent="isCustomerDropdownOpen = true"
+        />
+        <button
+          v-if="customerSearch || selectedCustomerId"
+          type="button"
+          class="combobox-clear"
+          @click="clearSelectedCustomer"
+          aria-label="clear"
+        >
+          ✕
+        </button>
+        <ul v-if="isCustomerDropdownOpen" class="dropdown">
+          <li
+            v-for="c in filteredCustomers"
+            :key="c.id"
+            class="dropdown-item"
+            :class="{ selected: c.id === selectedCustomerId }"
+            @mousedown.prevent="selectCustomer(c)"
+          >
+            <span class="dropdown-name">{{ c.name }}</span>
+            <span class="dropdown-email">{{ c.email }}</span>
+          </li>
+          <li v-if="!filteredCustomers.length" class="dropdown-empty">
+            {{ t('common.noData') }}
+          </li>
+        </ul>
+      </div>
     </template>
     <template v-else>
       <UiInput
@@ -232,16 +296,73 @@ const onSubmit = handleSubmit(values => {
   border-color: #a252c8;
   transition: border-color 0.2s;
 }
-.select {
-  width: 100%;
-  background: transparent;
-  border-radius: 0.25rem;
-  padding: 0.375rem 0.5rem;
-  font-size: 0.8rem;
-  color: inherit;
+.combobox {
+  position: relative;
+  margin-bottom: 0.5rem;
 }
-.select option {
+.combobox :deep(.input) {
+  margin-bottom: 0;
+}
+.combobox-clear {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.45rem;
+  font-size: 0.7rem;
+  color: #748092;
+  line-height: 1;
+}
+.combobox-clear:hover {
+  color: white;
+}
+.dropdown {
+  position: absolute;
+  z-index: 30;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  max-height: 12rem;
+  overflow-y: auto;
   background: #161c26;
+  border: 1px solid #2a3342;
+  border-radius: 0.375rem;
+  padding: 0.25rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+.dropdown-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  text-align: left;
+}
+.dropdown-item:hover {
+  background: #222c3d;
+}
+.dropdown-item.selected {
+  background: #2c2140;
+  outline: 1px solid #a252c8;
+}
+.dropdown-name {
+  font-size: 0.8rem;
+  color: white;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dropdown-email {
+  font-size: 0.7rem;
+  color: #748092;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dropdown-empty {
+  padding: 0.5rem;
+  font-size: 0.75rem;
+  color: #748092;
+  text-align: center;
 }
 
 .mode-switch {

@@ -34,6 +34,19 @@ const SUCCESS_TOAST_MAP: Record<string, string> = {
   "DELETE /users/profile/avatar": "api.avatarRemoved",
 }
 
+// Мутации без success-тоста: auth-флоу (своя UX-логика/редиректы) и отправка
+// сообщений в чат (сообщение и так видно в диалоге — тост был бы спамом).
+// Ошибки для этих путей по-прежнему показывают error-тост.
+const SILENT_SUCCESS_PATHS = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/refresh",
+  "/auth/logout",
+  "/auth/verify-email",
+  "/auth/resend-verification",
+  "/chat/messages",
+]
+
 const getSuccessMessageForRequest = (path: string, method?: string): string | null => {
   const keyWithMethod = `${method ?? "GET"} ${path}`
   if (SUCCESS_TOAST_MAP[keyWithMethod]) return SUCCESS_TOAST_MAP[keyWithMethod]
@@ -191,7 +204,16 @@ export const apiFetch = async <T, TError extends string = string>(path: string, 
       } else {
         toast.add({ title: getI18nT()(autoMsg), color: "success" })
       }
+      return
     }
+    // Дефолт: любая мутация (POST/PATCH/PUT/DELETE) показывает тост «Сохранено».
+    // Технические/фоновые запросы — в исключениях ниже.
+    const effectiveMethod = (method ?? (fetchOptions.method as string) ?? "GET").toUpperCase()
+    const isMutation = effectiveMethod === "POST" || effectiveMethod === "PATCH"
+      || effectiveMethod === "PUT" || effectiveMethod === "DELETE"
+    if (!isMutation) return
+    if (SILENT_SUCCESS_PATHS.some((p) => path.includes(p))) return
+    toast.add({ title: getI18nT()("api.saved"), color: "success" })
   }
 
   const showErrorToast = (error: unknown): void => {

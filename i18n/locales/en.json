@@ -326,6 +326,7 @@
     "avatarUpdated": "Avatar updated",
     "avatarRemoved": "Avatar removed",
     "save": "Saving...",
+    "saved": "Saved",
     "error": "Error"
   },
   "wsTest": {
