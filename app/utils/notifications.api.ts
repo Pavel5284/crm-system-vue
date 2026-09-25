@@ -1,5 +1,7 @@
 import { apiFetch } from '~/utils/api'
 import type {
+  DeleteReadNotificationsError,
+  DeleteReadNotificationsResponse,
   GetNotificationsError,
   MarkAllNotificationsReadError,
   MarkAllNotificationsReadResponse,
@@ -23,6 +25,13 @@ export const markNotificationReadApi = (id: string) =>
 export const markAllNotificationsReadApi = () =>
   apiFetch<MarkAllNotificationsReadResponse, MarkAllNotificationsReadError>('/notifications/read-all', {
     method: 'PATCH',
+    toast: false,
+    timeout: 20_000,
+  })
+
+export const deleteReadNotificationsApi = () =>
+  apiFetch<DeleteReadNotificationsResponse, DeleteReadNotificationsError>('/notifications/read', {
+    method: 'DELETE',
     toast: false,
     timeout: 20_000,
   })

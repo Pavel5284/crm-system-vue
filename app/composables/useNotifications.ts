@@ -1,7 +1,7 @@
 ﻿import { io, type Socket } from "socket.io-client"
 import type { NotificationDto, NotificationEvent } from "~/types/backend.contracts"
 import { isRecord } from "~/types/api.types"
-import { getNotificationsApi, markAllNotificationsReadApi, markNotificationReadApi } from "~/utils/notifications.api"
+import { getNotificationsApi, markAllNotificationsReadApi, markNotificationReadApi, deleteReadNotificationsApi } from "~/utils/notifications.api"
 
 type ConnectionStatus = "connecting" | "connected" | "disconnected" | "unauthorized" | "error"
 
@@ -19,6 +19,7 @@ let loadingPromise: Promise<void> | null = null
 
 const unreadCount = computed(() => items.value.filter((n) => !n.read).length)
 const hasUnread = computed(() => unreadCount.value > 0)
+const hasRead = computed(() => items.value.some((n) => n.read))
 
 const isNotificationEvent = (value: unknown): value is NotificationEvent => {
   if (!isRecord(value)) return false
@@ -95,6 +96,19 @@ const markAllRead = async (): Promise<void> => {
   }
 }
 
+// Удаление прочитанных из БД (п. «Удалять прочитанные»): список реально
+// очищается, а не только гаснет. Непрочитанные не трогаем.
+const deleteRead = async (): Promise<void> => {
+  if (!hasRead.value) return
+  const snapshot = [...items.value]
+  items.value = items.value.filter((n) => !n.read)
+  try {
+    await deleteReadNotificationsApi()
+  } catch {
+    items.value = snapshot
+  }
+}
+
 export const useNotifications = () => {
   const connect = (): void => {
     if (socket?.connected) {
@@ -160,6 +174,7 @@ export const useNotifications = () => {
     notifications: readonly(items),
     unreadCount: readonly(unreadCount),
     hasUnread: readonly(hasUnread),
+    hasRead: readonly(hasRead),
     isLoading: readonly(isLoading),
     loadError: readonly(loadError),
     error: readonly(error),
@@ -169,5 +184,6 @@ export const useNotifications = () => {
     refresh: fetchNotifications,
     markRead,
     markAllRead,
+    deleteRead,
   }
 }

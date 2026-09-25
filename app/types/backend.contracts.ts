@@ -553,7 +553,12 @@ export type DeleteTaskError = TaskErrorMessage
 export type GetNotificationsError = NoDomainError
 export type MarkNotificationReadError = NotificationErrorMessage
 export type MarkAllNotificationsReadError = NoDomainError
+export type DeleteReadNotificationsError = NoDomainError
 
 export interface MarkAllNotificationsReadResponse {
   updated: number
+}
+
+export interface DeleteReadNotificationsResponse {
+  deleted: number
 }

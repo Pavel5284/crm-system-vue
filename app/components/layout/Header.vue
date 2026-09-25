@@ -18,6 +18,7 @@ const {
   items: notifications,
   unreadCount,
   hasUnread,
+  hasRead,
   isLoading: notificationsLoading,
   loadError: notificationsError,
   connect,
@@ -26,6 +27,7 @@ const {
   refresh: refreshNotifications,
   markRead,
   markAllRead,
+  deleteRead,
 } = useNotifications()
 const { openDealById } = useOpenDeal()
 
@@ -134,7 +136,10 @@ watch(() => authStore.isAuth, (v) => {
         >
           <div class="px-4 py-3 flex items-center justify-between border-b border-border">
             <p class="text-sm font-semibold">{{ t('header.notifications') }}</p>
-            <button v-if="hasUnread" type="button" class="text-xs text-primary hover:underline" @click="onMarkAllRead">{{ t('header.markAllRead') }}</button>
+            <div class="flex items-center gap-3">
+              <button v-if="hasUnread" type="button" class="text-xs text-primary hover:underline" @click="onMarkAllRead">{{ t('header.markAllRead') }}</button>
+              <button v-if="hasRead" type="button" class="text-xs text-muted-foreground hover:underline" @click="deleteRead">{{ t('header.clear') }}</button>
+            </div>
           </div>
 
           <div v-if="notifications.length" class="max-h-80 overflow-auto divide-y divide-border">
