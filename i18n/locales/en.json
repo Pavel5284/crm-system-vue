@@ -57,6 +57,7 @@
     "language": "Language"
   },
   "notifications": {
+    "loadFailed": "Failed to load notifications — service is waking up, try again",
     "types": {
       "dealAssigned": "Assigned as responsible",
       "dealStageChanged": "Deal stage changed",

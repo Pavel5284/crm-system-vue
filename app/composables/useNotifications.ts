@@ -13,6 +13,7 @@ const items = ref<NotificationDto[]>([])
 const error = ref<string>("")
 const isLoading = ref(false)
 const isLoaded = ref(false)
+const loadError = ref(false)
 let socket: Socket | null = null
 let loadingPromise: Promise<void> | null = null
 
@@ -46,6 +47,7 @@ const fetchNotifications = async (force = false): Promise<void> => {
   }
   if (isLoaded.value && !force) return
   isLoading.value = true
+  loadError.value = false
   loadingPromise = (async () => {
     try {
       const list = await getNotificationsApi()
@@ -54,7 +56,9 @@ const fetchNotifications = async (force = false): Promise<void> => {
         .slice(0, 100)
       isLoaded.value = true
     } catch {
-      // Тихо: дропдаун покажет пустое состояние, WS-пуши продолжат работать.
+      // Спящий микросервис (504) / сеть: показываем ошибку с повтором,
+      // а не вечную загрузку. WS-пуши продолжат работать.
+      loadError.value = true
     } finally {
       isLoading.value = false
       loadingPromise = null
@@ -157,6 +161,7 @@ export const useNotifications = () => {
     unreadCount: readonly(unreadCount),
     hasUnread: readonly(hasUnread),
     isLoading: readonly(isLoading),
+    loadError: readonly(loadError),
     error: readonly(error),
     connect,
     disconnect,

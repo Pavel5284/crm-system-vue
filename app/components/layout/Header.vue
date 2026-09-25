@@ -18,9 +18,12 @@ const {
   items: notifications,
   unreadCount,
   hasUnread,
+  isLoading: notificationsLoading,
+  loadError: notificationsError,
   connect,
   disconnect,
   clear,
+  refresh: refreshNotifications,
   markRead,
   markAllRead,
 } = useNotifications()
@@ -158,7 +161,12 @@ watch(() => authStore.isAuth, (v) => {
             </button>
           </div>
           <div v-else class="px-4 py-10 text-center text-sm text-muted-foreground">
-            {{ t('header.noNotifications') }}
+            <p v-if="notificationsLoading">{{ t('common.loading') }}</p>
+            <template v-else-if="notificationsError">
+              <p>{{ t('notifications.loadFailed') }}</p>
+              <button type="button" class="mt-2 text-xs text-primary hover:underline" @click="refreshNotifications(true)">{{ t('common.tryAgain') }}</button>
+            </template>
+            <p v-else>{{ t('header.noNotifications') }}</p>
           </div>
 
           <div class="px-4 py-2 border-t border-border bg-muted/30 flex justify-end items-center">
