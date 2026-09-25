@@ -25,13 +25,14 @@ export const markNotificationReadApi = (id: string) =>
 export const markAllNotificationsReadApi = () =>
   apiFetch<MarkAllNotificationsReadResponse, MarkAllNotificationsReadError>('/notifications/read-all', {
     method: 'PATCH',
-    toast: false,
+    // Успех тихий (точка и так гаснет), а 504 на спящем free-плане показываем тостом.
+    toast: { success: false },
     timeout: 20_000,
   })
 
 export const deleteReadNotificationsApi = () =>
   apiFetch<DeleteReadNotificationsResponse, DeleteReadNotificationsError>('/notifications/read', {
     method: 'DELETE',
-    toast: false,
+    toast: { success: false },
     timeout: 20_000,
   })

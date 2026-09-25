@@ -1,6 +1,6 @@
 ﻿import { io, type Socket } from "socket.io-client"
 import type { NotificationDto, NotificationEvent } from "~/types/backend.contracts"
-import { isRecord } from "~/types/api.types"
+import { ApiError, isRecord } from "~/types/api.types"
 import { getNotificationsApi, markAllNotificationsReadApi, markNotificationReadApi, deleteReadNotificationsApi } from "~/utils/notifications.api"
 
 type ConnectionStatus = "connecting" | "connected" | "disconnected" | "unauthorized" | "error"
@@ -41,6 +41,12 @@ const upsertIncoming = (incoming: NotificationEvent): void => {
   if (items.value.length > 100) items.value.length = 100
 }
 
+const sleep = (ms: number): Promise<void> => new Promise((r) => { setTimeout(r, ms) })
+
+// Паузы между повторами при 503 «сервис просыпается»: холодный старт
+// free-плана ~50с, бэкенд уже пнул /health, ждём пробуждения.
+const WAKE_RETRY_DELAYS = [20_000, 30_000]
+
 const fetchNotifications = async (force = false): Promise<void> => {
   if (isLoading.value && loadingPromise) {
     await loadingPromise
@@ -51,7 +57,20 @@ const fetchNotifications = async (force = false): Promise<void> => {
   loadError.value = false
   loadingPromise = (async () => {
     try {
-      const list = await getNotificationsApi()
+      let list: NotificationDto[] = []
+      for (let attempt = 0; ; attempt++) {
+        try {
+          list = await getNotificationsApi()
+          break
+        } catch (e) {
+          const waking = e instanceof ApiError && e.statusCode === 503
+          if (waking && attempt < WAKE_RETRY_DELAYS.length) {
+            await sleep(WAKE_RETRY_DELAYS[attempt]!)
+            continue
+          }
+          throw e
+        }
+      }
       items.value = [...list]
         .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))
         .slice(0, 100)
