@@ -1,6 +1,6 @@
 ﻿<script setup lang="ts">
-import PhoneInput from '~/components/ui/phone/PhoneInput.vue'
-import { isPhoneDisplayValid } from '~/utils/phone.ts'
+import PhoneInput from '@crm/ui-kit/PhoneInput.vue'
+import { isPhoneDisplayValid } from '@crm/ui-kit/phone'
 import type { CreateDealPayload } from "~/types/backend.contracts";
 import {createDealApi, getCustomersApi} from "~/utils/crm.api"
 import { getApiErrorMessage } from '~/utils/api'
@@ -270,6 +270,7 @@ const onSubmit = handleSubmit(values => {
       <div class="mb-2">
         <PhoneInput
           v-model="newPhone"
+          :placeholder="t('settings.profile.phonePlaceholder')"
           :hint="t('settings.profile.phoneHint')"
           :error="newPhoneError"
         />

@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
-import { cn } from './lib/cn'
-import { handlePhoneKeydown, sanitizePhoneDisplay, truncatePhoneDigits } from './lib/phone'
+import { cn } from './cn'
+import { handlePhoneKeydown, sanitizePhoneDisplay, truncatePhoneDigits } from './phone'
 
-// Зеркало host `app/components/ui/phone/PhoneInput.vue`.
-// Отличие: в remote нет vue-i18n, поэтому placeholder/hint/error
-// передаёт родитель (CustomersPage через свой t()).
-// Классы — 1-в-1 из host, чтобы выглядело одинаково.
+// Презентационный инпут телефона: санитизация ввода, keydown-фильтр,
+// слоты hint/error. Без i18n внутри (пакет используют host и remotes,
+// у remote свой t()) — placeholder/hint/error передаёт родитель.
 const props = withDefaults(
   defineProps<{
     modelValue?: string

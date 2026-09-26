@@ -1,0 +1,18 @@
+{
+  "name": "@crm/ui-kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Общие презентационные компоненты и утилиты для host и всех remotes (правило №5: дизайн-система — общий пакет, не федерируется). Без Nuxt/i18n-зависимостей: строки локализации передаются пропсами.",
+  "exports": {
+    "./PhoneInput.vue": "./src/PhoneInput.vue",
+    "./phone": "./src/phone.ts"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^3.6.0"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  }
+}

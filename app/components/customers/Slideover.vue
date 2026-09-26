@@ -1,6 +1,6 @@
 ﻿<script lang="ts" setup>
-import PhoneInput from '~/components/ui/phone/PhoneInput.vue'
-import { isPhoneDisplayValid } from '~/utils/phone.ts'
+import PhoneInput from '@crm/ui-kit/PhoneInput.vue'
+import { isPhoneDisplayValid } from '@crm/ui-kit/phone'
 import { getApiErrorMessage } from '~/utils/api'
 import { deleteCustomerAvatarApi, updateCustomerApi, updateCustomerAvatarApi } from '~/utils/crm.api'
 
@@ -134,7 +134,7 @@ async function onSave() {
       <div class="space-y-3">
         <UiInput :placeholder="t('customers.slideover.namePlaceholder')" type="text" class="input" v-model="nameRef"/>
         <UiInput placeholder="Email" type="email" class="input" v-model="emailRef"/>
-        <PhoneInput v-model="phoneRef" :hint="t('settings.profile.phoneHint')" :error="phoneError"/>
+        <PhoneInput v-model="phoneRef" :placeholder="t('settings.profile.phonePlaceholder')" :hint="t('settings.profile.phoneHint')" :error="phoneError"/>
         <UiInput :placeholder="t('customers.slideover.contactPersonPlaceholder')" type="text" class="input" v-model="contactPersonRef"/>
         <UiInput :placeholder="t('customers.slideover.sourcePlaceholder')" type="text" class="input" v-model="fromSourceRef"/>
       </div>

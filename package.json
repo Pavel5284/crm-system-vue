@@ -13,6 +13,7 @@
     "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@crm/ui-kit": "workspace:*",
     "@module-federation/runtime": "^2.9.0",
     "@nuxt/icon": "^2.4.1",
     "@nuxt/image": "^2.1.0",

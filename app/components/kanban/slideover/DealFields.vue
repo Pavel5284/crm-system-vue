@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import PhoneInput from '~/components/ui/phone/PhoneInput.vue'
-import { isPhoneDisplayValid } from '~/utils/phone.ts'
+import PhoneInput from '@crm/ui-kit/PhoneInput.vue'
+import { isPhoneDisplayValid } from '@crm/ui-kit/phone'
 import { useQueryClient } from '@tanstack/vue-query'
 import { useDealSlideStore, type DealHighlightField } from '@/stores/deal-slide.store'
 import { useDealDetailsQuery } from '@/components/kanban/useDealDetailsQuery'
@@ -181,6 +181,7 @@ function onSave() {
           <PhoneInput
             v-else-if="f.key === 'phone'"
             v-model="draft"
+            :placeholder="t('settings.profile.phonePlaceholder')"
             :hint="t('settings.profile.phoneHint')"
             :error="phoneError"
           />

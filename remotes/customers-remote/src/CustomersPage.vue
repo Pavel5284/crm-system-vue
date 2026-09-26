@@ -12,7 +12,7 @@ import {
 import { computed, onMounted, ref } from 'vue'
 import type { CustomerDto, CustomersPageProps, MfeLocale, UpdateCustomerPayload } from '@crm/mfe-contracts'
 import { cn } from './lib/cn'
-import PhoneInput from './PhoneInput.vue'
+import PhoneInput from '@crm/ui-kit/PhoneInput.vue'
 
 // ВАЖНО: тему/styles.css здесь НЕ импортируем. Remote рендерится внутри
 // страницы хоста и пользуется его собранным CSS 1-в-1 (те же классы —

@@ -1,8 +1,9 @@
 ﻿<script setup lang="ts">
+import PhoneInput from '@crm/ui-kit/PhoneInput.vue'
 import { useForm } from '@tanstack/vue-form'
 import { z } from 'zod'
 import { getProfileApi, removeAvatarApi, updateAvatarApi, updateProfileApi } from '~/utils/auth.api.ts'
-import { isPhoneDisplayValid, normalizePhone, phoneToPayload } from '~/utils/phone.ts'
+import { isPhoneDisplayValid, normalizePhone, phoneToPayload } from '@crm/ui-kit/phone'
 
 const { t } = useI18n()
 
@@ -213,7 +214,7 @@ onMounted(loadMe)
             <ProfileFormField name="phone" v-slot="{ field }">
               <div>
                 <label class="text-xs font-medium">{{ t('settings.profile.phoneLabel') }}</label>
-                <UiPhoneInput :model-value="field.state.value" @update:model-value="field.handleChange" @blur="field.handleBlur" :error="formatFieldErrors(field.state.meta.errors)" :hint="t('settings.profile.phoneHint')" class="mt-1" />
+                <PhoneInput :model-value="field.state.value" @update:model-value="field.handleChange" @blur="field.handleBlur" :placeholder="t('settings.profile.phonePlaceholder')" :error="formatFieldErrors(field.state.meta.errors)" :hint="t('settings.profile.phoneHint')" class="mt-1" />
               </div>
             </ProfileFormField>
             <ProfileFormField name="telegram" v-slot="{ field }">
