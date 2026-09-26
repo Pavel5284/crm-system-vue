@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import PhoneInput from '~/components/ui/phone/PhoneInput.vue'
+import { isPhoneDisplayValid } from '~/utils/phone.ts'
 import { useQueryClient } from '@tanstack/vue-query'
 import { useDealSlideStore, type DealHighlightField } from '@/stores/deal-slide.store'
 import { useDealDetailsQuery } from '@/components/kanban/useDealDetailsQuery'
@@ -27,7 +29,7 @@ const FIELDS: Array<{
   { key: 'description', owner: 'deal', highlight: 'description', labelKey: 'kanban.slideover.descriptionLabel', placeholderKey: 'kanban.createDeal.descriptionPlaceholder', hintKey: 'kanban.slideover.descriptionHint', min: 10, textarea: true },
   { key: 'name', owner: 'customer', highlight: 'company', labelKey: 'kanban.slideover.company', placeholderKey: 'kanban.createDeal.companyPlaceholder', hintKey: 'kanban.slideover.customerFieldHint', min: 1 },
   { key: 'contactPerson', owner: 'customer', highlight: 'contact', labelKey: 'kanban.slideover.contactName', placeholderKey: 'kanban.slideover.contactName', hintKey: 'kanban.slideover.customerFieldHint', nullable: true },
-  { key: 'phone', owner: 'customer', highlight: 'contact', labelKey: 'kanban.slideover.contactPhone', placeholderKey: 'kanban.slideover.contactPhone', hintKey: 'kanban.slideover.customerFieldHint', nullable: true },
+  { key: 'phone', owner: 'customer', highlight: 'contact', labelKey: 'kanban.slideover.contactPhone', placeholderKey: 'settings.profile.phonePlaceholder', hintKey: 'kanban.slideover.customerFieldHint', nullable: true },
   { key: 'fromSource', owner: 'customer', highlight: 'contact', labelKey: 'customers.table.source', placeholderKey: 'customers.slideover.sourcePlaceholder', hintKey: 'kanban.slideover.customerFieldHint', nullable: true },
   { key: 'email', owner: 'customer', highlight: 'contact', labelKey: 'customers.table.email', placeholderKey: 'kanban.createDeal.emailPlaceholder', hintKey: 'kanban.slideover.customerFieldHint', min: 3, inputType: 'email', isEmail: true },
 ]
@@ -116,7 +118,15 @@ const canSave = computed(() => {
   if (value === fieldValue(editingKey.value).trim()) return false
   const field = FIELDS.find((f) => f.key === editingKey.value)
   if (field?.isEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return false
+  if (editingKey.value === 'phone' && !isPhoneDisplayValid(value)) return false
   return value.length >= minFor(editingKey.value)
+})
+
+const phoneError = computed(() => {
+  if (editingKey.value !== 'phone') return ''
+  const value = draft.value.trim()
+  if (!value || isPhoneDisplayValid(value)) return ''
+  return t('settings.profile.validation.phoneInvalid')
 })
 
 function onSave() {
@@ -167,6 +177,12 @@ function onSave() {
             :placeholder="t(f.placeholderKey)"
             rows="3"
             class="input w-full"
+          />
+          <PhoneInput
+            v-else-if="f.key === 'phone'"
+            v-model="draft"
+            :hint="t('settings.profile.phoneHint')"
+            :error="phoneError"
           />
           <UiInput
             v-else

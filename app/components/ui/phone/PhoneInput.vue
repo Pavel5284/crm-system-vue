@@ -3,10 +3,11 @@ import type { HTMLAttributes } from 'vue'
 import { cn } from '@/lib/utils'
 import { handlePhoneKeydown, sanitizePhoneDisplay, truncatePhoneDigits } from '~/utils/phone.ts'
 
+const { t } = useI18n()
+
 const props = withDefaults(
   defineProps<{
     modelValue?: string
-    placeholder?: string
     disabled?: boolean
     autocomplete?: string
     maxlength?: number | string
@@ -16,7 +17,6 @@ const props = withDefaults(
   }>(),
   {
     modelValue: '',
-    placeholder: '',
     disabled: false,
     autocomplete: 'tel',
     maxlength: 25,
@@ -50,7 +50,7 @@ const onBlur = (e: FocusEvent) => {
       :value="props.modelValue ?? ''"
       type="tel"
       inputmode="tel"
-      :placeholder="props.placeholder"
+      :placeholder="t('settings.profile.phonePlaceholder')"
       :autocomplete="props.autocomplete"
       :disabled="props.disabled"
       :maxlength="props.maxlength"

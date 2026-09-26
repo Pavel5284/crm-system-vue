@@ -1,4 +1,6 @@
 ﻿<script setup lang="ts">
+import PhoneInput from '~/components/ui/phone/PhoneInput.vue'
+import { isPhoneDisplayValid } from '~/utils/phone.ts'
 import type { CreateDealPayload } from "~/types/backend.contracts";
 import {createDealApi, getCustomersApi} from "~/utils/crm.api"
 import { getApiErrorMessage } from '~/utils/api'
@@ -90,7 +92,14 @@ const submitError = ref('')
 
 const isCustomerValid = computed(() => {
   if (customerMode.value === 'select') return selectedCustomerId.value !== ''
+  if (newPhone.value.trim() && !isPhoneDisplayValid(newPhone.value.trim())) return false
   return newName.value.trim() !== '' && newEmail.value.trim() !== ''
+})
+
+const newPhoneError = computed(() => {
+  const value = newPhone.value.trim()
+  if (!value || isPhoneDisplayValid(value)) return ''
+  return t('settings.profile.validation.phoneInvalid')
 })
 
 const {mutate, isPending} = useMutation({
@@ -258,12 +267,13 @@ const onSubmit = handleSubmit(values => {
         required
         class="input"
       />
-      <UiInput
-        :placeholder="t('kanban.createDeal.customerPhonePlaceholder')"
-        v-model="newPhone"
-        type="text"
-        class="input"
-      />
+      <div class="mb-2">
+        <PhoneInput
+          v-model="newPhone"
+          :hint="t('settings.profile.phoneHint')"
+          :error="newPhoneError"
+        />
+      </div>
       <UiInput
         :placeholder="t('kanban.createDeal.customerNamePlaceholder')"
         v-model="newContact"

@@ -213,7 +213,7 @@ onMounted(loadMe)
             <ProfileFormField name="phone" v-slot="{ field }">
               <div>
                 <label class="text-xs font-medium">{{ t('settings.profile.phoneLabel') }}</label>
-                <UiPhoneInput :model-value="field.state.value" @update:model-value="field.handleChange" @blur="field.handleBlur" :placeholder="t('settings.profile.phonePlaceholder')" :error="formatFieldErrors(field.state.meta.errors)" :hint="t('settings.profile.phoneHint')" class="mt-1" />
+                <UiPhoneInput :model-value="field.state.value" @update:model-value="field.handleChange" @blur="field.handleBlur" :error="formatFieldErrors(field.state.meta.errors)" :hint="t('settings.profile.phoneHint')" class="mt-1" />
               </div>
             </ProfileFormField>
             <ProfileFormField name="telegram" v-slot="{ field }">
