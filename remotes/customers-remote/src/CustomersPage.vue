@@ -12,6 +12,7 @@ import {
 import { computed, onMounted, ref } from 'vue'
 import type { CustomerDto, CustomersPageProps, MfeLocale, UpdateCustomerPayload } from '@crm/mfe-contracts'
 import { cn } from './lib/cn'
+import PhoneInput from './PhoneInput.vue'
 
 // ВАЖНО: тему/styles.css здесь НЕ импортируем. Remote рендерится внутри
 // страницы хоста и пользуется его собранным CSS 1-в-1 (те же классы —
@@ -39,6 +40,7 @@ const STRINGS: Record<MfeLocale, Record<string, string>> = {
     aboutDescription: 'Информация о клиенте',
     namePh: 'Имя',
     phonePh: 'Телефон',
+    phoneHint: 'Формат: 7-20 цифр',
     contactPh: 'Контактное лицо',
     sourcePh: 'Источник привлечения',
     save: 'Сохранить',
@@ -67,6 +69,7 @@ const STRINGS: Record<MfeLocale, Record<string, string>> = {
     aboutDescription: 'Customer information',
     namePh: 'Name',
     phonePh: 'Phone',
+    phoneHint: 'Format: 7-20 digits',
     contactPh: 'Contact person',
     sourcePh: 'Source',
     save: 'Save',
@@ -393,7 +396,7 @@ async function onAvatarRemove(): Promise<void> {
           <div class="space-y-3">
             <input v-model="nameRef" type="text" :class="INPUT_CLASS" :placeholder="t('namePh')" />
             <input v-model="emailRef" type="email" :class="INPUT_CLASS" placeholder="Email" />
-            <input v-model="phoneRef" type="text" :class="INPUT_CLASS" :placeholder="t('phonePh')" />
+            <PhoneInput v-model="phoneRef" :placeholder="t('phonePh')" :hint="t('phoneHint')" />
             <input v-model="contactPersonRef" type="text" :class="INPUT_CLASS" :placeholder="t('contactPh')" />
             <input v-model="fromSourceRef" type="text" :class="INPUT_CLASS" :placeholder="t('sourcePh')" />
           </div>

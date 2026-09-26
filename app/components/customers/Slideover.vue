@@ -1,5 +1,6 @@
 ﻿<script lang="ts" setup>
 import PhoneInput from '~/components/ui/phone/PhoneInput.vue'
+import { isPhoneDisplayValid } from '~/utils/phone.ts'
 import { getApiErrorMessage } from '~/utils/api'
 import { deleteCustomerAvatarApi, updateCustomerApi, updateCustomerAvatarApi } from '~/utils/crm.api'
 
@@ -38,6 +39,12 @@ watch(() => store.customer, (customer) => {
 const isSaving = ref(false)
 const isAvatarSaving = ref(false)
 const errorRef = ref('')
+
+const phoneError = computed(() => {
+  const value = phoneRef.value.trim()
+  if (!value || isPhoneDisplayValid(value)) return ''
+  return t('settings.profile.validation.phoneInvalid')
+})
 
 const isDirty = computed(() => {
   const c = store.customer
@@ -127,7 +134,7 @@ async function onSave() {
       <div class="space-y-3">
         <UiInput :placeholder="t('customers.slideover.namePlaceholder')" type="text" class="input" v-model="nameRef"/>
         <UiInput placeholder="Email" type="email" class="input" v-model="emailRef"/>
-        <PhoneInput v-model="phoneRef" :hint="t('settings.profile.phoneHint')"/>
+        <PhoneInput v-model="phoneRef" :hint="t('settings.profile.phoneHint')" :error="phoneError"/>
         <UiInput :placeholder="t('customers.slideover.contactPersonPlaceholder')" type="text" class="input" v-model="contactPersonRef"/>
         <UiInput :placeholder="t('customers.slideover.sourcePlaceholder')" type="text" class="input" v-model="fromSourceRef"/>
       </div>
@@ -135,7 +142,7 @@ async function onSave() {
       <p v-if="errorRef" class="text-red-500 text-sm mt-3">{{ errorRef }}</p>
 
       <div class="flex items-center gap-3 mt-5">
-        <UiButton type="button" :disabled="isSaving || !isDirty" @click="onSave">
+        <UiButton type="button" :disabled="isSaving || !isDirty || !!phoneError" @click="onSave">
           {{ isSaving ? t('customers.slideover.saving') : t('customers.slideover.save') }}
         </UiButton>
       </div>
