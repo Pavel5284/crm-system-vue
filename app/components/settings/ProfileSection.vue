@@ -2,7 +2,7 @@
 import { useForm } from '@tanstack/vue-form'
 import { z } from 'zod'
 import { getProfileApi, removeAvatarApi, updateAvatarApi, updateProfileApi } from '~/utils/auth.api.ts'
-import { handlePhoneInput, handlePhoneKeydown, isPhoneDisplayValid, normalizePhone, phoneToPayload } from '~/utils/phone.ts'
+import { isPhoneDisplayValid, normalizePhone, phoneToPayload } from '~/utils/phone.ts'
 
 const { t } = useI18n()
 
@@ -213,9 +213,7 @@ onMounted(loadMe)
             <ProfileFormField name="phone" v-slot="{ field }">
               <div>
                 <label class="text-xs font-medium">{{ t('settings.profile.phoneLabel') }}</label>
-                <UiInput :modelValue="field.state.value" @update:modelValue="(val: string | number) => handlePhoneInput(val, field)" @blur="field.handleBlur" @keydown="handlePhoneKeydown" :placeholder="t('settings.profile.phonePlaceholder')" autocomplete="tel" type="tel" inputmode="tel" maxlength="25" class="mt-1" />
-                <p v-if="field.state.meta.errors.length" class="text-red-500 text-[11px] mt-1">{{ formatFieldErrors(field.state.meta.errors) }}</p>
-                <p v-else class="text-[11px] text-muted-foreground mt-1">{{ t('settings.profile.phoneHint') }}</p>
+                <UiPhoneInput :model-value="field.state.value" @update:model-value="field.handleChange" @blur="field.handleBlur" :placeholder="t('settings.profile.phonePlaceholder')" :error="formatFieldErrors(field.state.meta.errors)" :hint="t('settings.profile.phoneHint')" class="mt-1" />
               </div>
             </ProfileFormField>
             <ProfileFormField name="telegram" v-slot="{ field }">
