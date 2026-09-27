@@ -2,6 +2,7 @@
 import type { NotificationDto, NotificationEvent } from "~/types/backend.contracts"
 import { ApiError, isRecord } from "~/types/api.types"
 import { getNotificationsApi, markAllNotificationsReadApi, markNotificationReadApi, deleteReadNotificationsApi } from "~/utils/notifications.api"
+import { wakeNotificationsService } from "~/utils/service-wake"
 
 type ConnectionStatus = "connecting" | "connected" | "disconnected" | "unauthorized" | "error"
 
@@ -72,6 +73,9 @@ const fetchNotifications = async (force = false): Promise<void> => {
   loadError.value = false
   loadingPromise = (async () => {
     try {
+      // Браузер держит wake-соединение к /health сервиса (как ручное открытие),
+      // затем запрос к gateway идёт уже в тёплый сервис. Один раз за сессию.
+      await wakeNotificationsService()
       const list = await fetchWithWakeRetries()
       items.value = [...list]
         .sort((a, b) => +new Date(b.createdAt) - +new Date(a.createdAt))

@@ -6,6 +6,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
+      // Прямое пробуждение notifications-service из браузера (wake перед
+      // первым запросом истории). Без переменной — дефолт в service-wake.
+      notificationsBaseUrl: process.env.NUXT_PUBLIC_NOTIFICATIONS_BASE_URL,
       // Cloudflare Turnstile (капча на регистрации). Без ключа виджет
       // не рендерится, бэкенд без TURNSTILE_SECRET_KEY проверку пропускает.
       turnstileSiteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY,
