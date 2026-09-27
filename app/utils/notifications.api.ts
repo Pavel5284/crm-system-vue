@@ -13,13 +13,15 @@ import type {
 export type { NotificationDto, NotificationErrorMessage }
 
 export const getNotificationsApi = () =>
-  apiFetch<NotificationDto[], GetNotificationsError>('/notifications', { toast: false, timeout: 20_000 })
+  // Gateway при спящем notifications-service ждёт пробуждения (poll /health
+  // до 60с) и повторяет RPC — один запрос может идти до ~90с.
+  apiFetch<NotificationDto[], GetNotificationsError>('/notifications', { toast: false, timeout: 100_000 })
 
 export const markNotificationReadApi = (id: string) =>
   apiFetch<NotificationDto, MarkNotificationReadError>(`/notifications/${id}/read`, {
     method: 'PATCH',
     toast: false,
-    timeout: 20_000,
+    timeout: 100_000,
   })
 
 export const markAllNotificationsReadApi = () =>
@@ -27,12 +29,12 @@ export const markAllNotificationsReadApi = () =>
     method: 'PATCH',
     // Успех тихий (точка и так гаснет), а 504 на спящем free-плане показываем тостом.
     toast: { success: false },
-    timeout: 20_000,
+    timeout: 100_000,
   })
 
 export const deleteReadNotificationsApi = () =>
   apiFetch<DeleteReadNotificationsResponse, DeleteReadNotificationsError>('/notifications/read', {
     method: 'DELETE',
     toast: { success: false },
-    timeout: 20_000,
+    timeout: 100_000,
   })

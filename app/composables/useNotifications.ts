@@ -55,7 +55,7 @@ const fetchWithWakeRetries = async (): Promise<NotificationDto[]> => {
     try {
       return await getNotificationsApi()
     } catch (e) {
-      const waking = e instanceof ApiError && e.statusCode === 503
+      const waking = e instanceof ApiError && (e.statusCode === 503 || e.statusCode === 504)
       if (!waking || attempt >= WAKE_RETRY_DELAYS.length) throw e
       await sleep(WAKE_RETRY_DELAYS[attempt]!)
     }
