@@ -11,6 +11,9 @@ importers:
       '@crm/ui-kit':
         specifier: workspace:*
         version: link:packages/ui-kit
+      '@crm/ui-theme':
+        specifier: workspace:*
+        version: link:packages/ui-theme
       '@module-federation/runtime':
         specifier: ^2.9.0
         version: 2.9.0

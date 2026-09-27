@@ -34,8 +34,10 @@ const emit = defineEmits<{
 }>()
 
 const onInput = (e: Event) => {
-  const val = (e.target as HTMLInputElement).value
-  emit('update:modelValue', truncatePhoneDigits(sanitizePhoneDisplay(val)))
+  const el = e.target as HTMLInputElement
+  const normalized = truncatePhoneDigits(sanitizePhoneDisplay(el.value))
+  if (el.value !== normalized) el.value = normalized
+  emit('update:modelValue', normalized)
 }
 
 const onKeydown = (e: KeyboardEvent) => {

@@ -1,5 +1,7 @@
 ﻿<script lang="ts" setup>
 import PhoneInput from '@crm/ui-kit/PhoneInput.vue'
+import AvatarUploader from '@crm/ui-kit/AvatarUploader.vue'
+import { getInitials } from '@crm/ui-kit/avatar'
 import { isPhoneDisplayValid } from '@crm/ui-kit/phone'
 import { getApiErrorMessage } from '~/utils/api'
 import { deleteCustomerAvatarApi, updateCustomerApi, updateCustomerAvatarApi } from '~/utils/crm.api'
@@ -56,13 +58,9 @@ const isDirty = computed(() => {
     || (fromSourceRef.value || '') !== (c.fromSource ?? '')
 })
 
-const customerInitials = computed(() => {
-  const name = nameRef.value || store.customer?.name || ''
-  if (!name) return '?'
-  const parts = name.split(/\s+/).filter(Boolean)
-  if (parts.length >= 2) return `${parts[0]?.[0] ?? ''}${parts[1]?.[0] ?? ''}`.toUpperCase()
-  return parts[0]?.slice(0, 2).toUpperCase() ?? '?'
-})
+const customerInitials = computed(() =>
+  getInitials(nameRef.value || store.customer?.name || ''),
+)
 
 async function onCustomerAvatarUpload(dataUrl: string) {
   if (!store.customer) return
@@ -127,7 +125,25 @@ async function onSave() {
   >
     <template #body>
       <div class="mb-5 flex flex-col items-center gap-3">
-        <UiAvatarUploader v-model="avatarUrlRef" :initials="customerInitials" :size="96" v-model:saving="isAvatarSaving" @upload="onCustomerAvatarUpload" @remove="onCustomerAvatarRemove" />
+        <AvatarUploader
+          v-model="avatarUrlRef"
+          :initials="customerInitials"
+          :size="96"
+          v-model:saving="isAvatarSaving"
+          :labels="{
+            upload: t('avatar.upload'),
+            remove: t('avatar.remove'),
+            fileTooLarge: t('avatar.fileTooLarge'),
+            onlyImage: t('avatar.onlyImage'),
+            readError: t('avatar.readError'),
+          }"
+          @upload="onCustomerAvatarUpload"
+          @remove="onCustomerAvatarRemove"
+        >
+          <template #icon="{ saving }">
+            <Icon :name="saving ? 'lucide:loader-2' : 'lucide:camera'" size="16" :class="saving && 'animate-spin'" />
+          </template>
+        </AvatarUploader>
         <p class="text-xs text-muted-foreground">{{ t('avatar.hint') }}</p>
       </div>
 

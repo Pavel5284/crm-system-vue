@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Общие презентационные компоненты и утилиты для host и всех remotes (правило №5: дизайн-система — общий пакет, не федерируется). Без Nuxt/i18n-зависимостей: строки локализации передаются пропсами.",
   "exports": {
+    "./AvatarUploader.vue": "./src/AvatarUploader.vue",
     "./PhoneInput.vue": "./src/PhoneInput.vue",
+    "./avatar": "./src/avatar.ts",
     "./phone": "./src/phone.ts"
   },
   "dependencies": {

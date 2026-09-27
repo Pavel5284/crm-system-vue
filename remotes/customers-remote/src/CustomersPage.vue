@@ -11,7 +11,10 @@ import {
 } from 'reka-ui'
 import { computed, onMounted, ref } from 'vue'
 import type { CustomerDto, CustomersPageProps, MfeLocale, UpdateCustomerPayload } from '@crm/mfe-contracts'
+import { getInitials } from '@crm/ui-kit/avatar'
+import { isPhoneDisplayValid } from '@crm/ui-kit/phone'
 import { cn } from './lib/cn'
+import AvatarUploader from '@crm/ui-kit/AvatarUploader.vue'
 import PhoneInput from '@crm/ui-kit/PhoneInput.vue'
 
 // ВАЖНО: тему/styles.css здесь НЕ импортируем. Remote рендерится внутри
@@ -41,6 +44,7 @@ const STRINGS: Record<MfeLocale, Record<string, string>> = {
     namePh: 'Имя',
     phonePh: 'Телефон',
     phoneHint: 'Формат: 7-20 цифр',
+    phoneInvalid: 'Неверный телефон',
     contactPh: 'Контактное лицо',
     sourcePh: 'Источник привлечения',
     save: 'Сохранить',
@@ -70,6 +74,7 @@ const STRINGS: Record<MfeLocale, Record<string, string>> = {
     namePh: 'Name',
     phonePh: 'Phone',
     phoneHint: 'Format: 7-20 digits',
+    phoneInvalid: 'Invalid phone',
     contactPh: 'Contact person',
     sourcePh: 'Source',
     save: 'Save',
@@ -86,7 +91,7 @@ const STRINGS: Record<MfeLocale, Record<string, string>> = {
 }
 
 // Классы — 1-в-1 из host (`ui/table/*`, `ui/input/Input.vue`,
-// `ui/button/index.ts`, `ui/AvatarUploader.vue`), чтобы remote
+// `ui/button/index.ts`, `@crm/ui-kit/AvatarUploader.vue`), чтобы remote
 // выглядел как слайдовер home page (там тот же USlideover).
 const INPUT_CLASS = 'file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive'
 const BTN_BASE = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-medium transition-all cursor-pointer disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 has-[>svg]:px-3'
@@ -148,7 +153,6 @@ const fromSourceRef = ref('')
 const isSaving = ref(false)
 const isAvatarSaving = ref(false)
 const saveError = ref('')
-const avatarErrorRef = ref('')
 
 function open(customer: CustomerDto): void {
   selected.value = customer
@@ -159,7 +163,6 @@ function open(customer: CustomerDto): void {
   avatarUrlRef.value = customer.avatarUrl || ''
   fromSourceRef.value = customer.fromSource ?? ''
   saveError.value = ''
-  avatarErrorRef.value = ''
   isOpen.value = true
 }
 
@@ -180,16 +183,18 @@ const isDirty = computed(() => {
   )
 })
 
-const initials = computed(() => {
-  const name = nameRef.value || selected.value?.name || ''
-  if (!name) return '?'
-  const parts = name.split(/\s+/).filter(Boolean)
-  if (parts.length >= 2) return `${parts[0]?.[0] ?? ''}${parts[1]?.[0] ?? ''}`.toUpperCase()
-  return parts[0]?.slice(0, 2).toUpperCase() ?? '?'
+const phoneError = computed(() => {
+  const value = phoneRef.value.trim()
+  if (!value || isPhoneDisplayValid(value)) return ''
+  return t('phoneInvalid')
 })
 
+const initials = computed(() =>
+  getInitials(nameRef.value || selected.value?.name || ''),
+)
+
 async function onSave(): Promise<void> {
-  if (!selected.value) return
+  if (!selected.value || phoneError.value) return
   saveError.value = ''
   isSaving.value = true
   try {
@@ -210,27 +215,6 @@ async function onSave(): Promise<void> {
   } finally {
     isSaving.value = false
   }
-}
-
-function onAvatarFile(event: Event): void {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  input.value = ''
-  if (!file || !selected.value) return
-  // Валидация как в host `UiAvatarUploader` (2MB, только изображения).
-  if (file.size > 2 * 1024 * 1024) {
-    avatarErrorRef.value = t('avatarFileTooLarge')
-    return
-  }
-  if (!file.type.startsWith('image/')) {
-    avatarErrorRef.value = t('avatarOnlyImage')
-    return
-  }
-  avatarErrorRef.value = ''
-  const reader = new FileReader()
-  reader.onload = () => { void onAvatarDataUrl(String(reader.result)) }
-  reader.onerror = () => { avatarErrorRef.value = t('avatarReadError') }
-  reader.readAsDataURL(file)
 }
 
 async function onAvatarDataUrl(dataUrl: string): Promise<void> {
@@ -354,49 +338,33 @@ async function onAvatarRemove(): Promise<void> {
 
           <div data-slot="body" class="flex-1 overflow-y-auto p-4 sm:p-6">
           <div class="mb-5 flex flex-col items-center gap-3">
-            <div class="flex flex-col items-center gap-3 shrink-0">
-              <div class="relative">
-                <img
-                  v-if="avatarUrlRef"
-                  :src="avatarUrlRef"
-                  alt="avatar"
-                  class="rounded-full object-cover border-2 border-border"
-                  :style="{ width: '96px', height: '96px' }"
-                />
-                <div
-                  v-else
-                  class="rounded-full bg-primary text-primary-foreground grid place-items-center font-bold border-2 border-border"
-                  :style="{ width: '96px', height: '96px', fontSize: '27px' }"
-                >
-                  {{ initials }}
-                </div>
-                <label
-                  :class="cn('absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-primary text-primary-foreground grid place-items-center cursor-pointer shadow hover:opacity-90 transition-opacity', isAvatarSaving && 'opacity-50 pointer-events-none')"
-                  :title="t('avatarUpload')"
-                >
-                  <Loader2 v-if="isAvatarSaving" :size="16" class="animate-spin" />
-                  <Camera v-else :size="16" />
-                  <input type="file" accept="image/*" class="hidden" :disabled="isAvatarSaving" @change="onAvatarFile" />
-                </label>
-              </div>
-              <button
-                v-if="avatarUrlRef"
-                type="button"
-                class="text-xs text-red-500 hover:underline disabled:opacity-50"
-                :disabled="isAvatarSaving"
-                @click="onAvatarRemove"
-              >
-                {{ t('avatarRemove') }}
-              </button>
-              <p v-if="avatarErrorRef" class="text-red-500 text-xs">{{ avatarErrorRef }}</p>
-            </div>
+            <AvatarUploader
+              v-model="avatarUrlRef"
+              :initials="initials"
+              :size="96"
+              v-model:saving="isAvatarSaving"
+              :labels="{
+                upload: t('avatarUpload'),
+                remove: t('avatarRemove'),
+                fileTooLarge: t('avatarFileTooLarge'),
+                onlyImage: t('avatarOnlyImage'),
+                readError: t('avatarReadError'),
+              }"
+              @upload="onAvatarDataUrl"
+              @remove="onAvatarRemove"
+            >
+              <template #icon="{ saving }">
+                <Loader2 v-if="saving" :size="16" class="animate-spin" />
+                <Camera v-else :size="16" />
+              </template>
+            </AvatarUploader>
             <p class="text-xs text-muted-foreground">{{ t('avatarHint') }}</p>
           </div>
 
           <div class="space-y-3">
             <input v-model="nameRef" type="text" :class="INPUT_CLASS" :placeholder="t('namePh')" />
             <input v-model="emailRef" type="email" :class="INPUT_CLASS" placeholder="Email" />
-            <PhoneInput v-model="phoneRef" :placeholder="t('phonePh')" :hint="t('phoneHint')" />
+            <PhoneInput v-model="phoneRef" :placeholder="t('phonePh')" :hint="t('phoneHint')" :error="phoneError" />
             <input v-model="contactPersonRef" type="text" :class="INPUT_CLASS" :placeholder="t('contactPh')" />
             <input v-model="fromSourceRef" type="text" :class="INPUT_CLASS" :placeholder="t('sourcePh')" />
           </div>
@@ -404,7 +372,7 @@ async function onAvatarRemove(): Promise<void> {
           <p v-if="saveError" class="text-red-500 text-sm mt-3">{{ saveError }}</p>
 
           <div class="flex items-center gap-3 mt-5">
-            <button type="button" :class="cn(BTN_BASE, BTN_DEFAULT)" :disabled="isSaving || !isDirty" @click="onSave">
+            <button type="button" :class="cn(BTN_BASE, BTN_DEFAULT)" :disabled="isSaving || !isDirty || !!phoneError" @click="onSave">
               {{ isSaving ? t('saving') : t('save') }}
             </button>
           </div>

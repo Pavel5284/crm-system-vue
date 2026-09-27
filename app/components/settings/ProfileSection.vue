@@ -1,5 +1,6 @@
 ﻿<script setup lang="ts">
 import PhoneInput from '@crm/ui-kit/PhoneInput.vue'
+import AvatarUploader from '@crm/ui-kit/AvatarUploader.vue'
 import { useForm } from '@tanstack/vue-form'
 import { z } from 'zod'
 import { getProfileApi, removeAvatarApi, updateAvatarApi, updateProfileApi } from '~/utils/auth.api.ts'
@@ -173,7 +174,24 @@ onMounted(loadMe)
     <form class="p-6" @submit.prevent="() => profileForm.handleSubmit()">
       <div class="flex flex-col lg:flex-row gap-8">
         <div class="flex flex-col items-center text-center shrink-0 lg:w-56">
-          <UiAvatarUploader v-model="authStore.user.avatarUrl" :initials="avatarInitials" :saving="isAvatarSaving" @upload="onAvatarUpload" @remove="onAvatarRemove" />
+          <AvatarUploader
+            v-model="authStore.user.avatarUrl"
+            :initials="avatarInitials"
+            :saving="isAvatarSaving"
+            :labels="{
+              upload: t('avatar.upload'),
+              remove: t('avatar.remove'),
+              fileTooLarge: t('avatar.fileTooLarge'),
+              onlyImage: t('avatar.onlyImage'),
+              readError: t('avatar.readError'),
+            }"
+            @upload="onAvatarUpload"
+            @remove="onAvatarRemove"
+          >
+            <template #icon="{ saving }">
+              <Icon :name="saving ? 'lucide:loader-2' : 'lucide:camera'" size="16" :class="saving && 'animate-spin'" />
+            </template>
+          </AvatarUploader>
           <p class="mt-4 text-sm font-semibold">{{ authStore.user.name }}</p>
           <p class="text-xs text-muted-foreground">{{ authStore.user.email }}</p>
           <p v-if="authStore.user.position" class="text-xs text-muted-foreground mt-1">{{ authStore.user.position }}</p>
