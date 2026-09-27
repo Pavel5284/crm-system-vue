@@ -1,0 +1,19 @@
+{
+  // Общий замкнутый конфиг workspace-пакетов (правило: пакеты не зависят от хоста).
+  // Vite/tsconfck ищет tsconfig вверх от файла и останавливается на ближайшем:
+  // этот файл перехватывает все пакеты до корневого Nuxt-tsconfig со ссылками
+  // на генерированный .nuxt/, которого нет на Vercel (там не запускается
+  // `nuxt prepare`) — иначе сборка remote падает с ENOENT на .nuxt/tsconfig.app.json.
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true
+  },
+  "include": ["ui-kit/src", "ui-theme/src", "mfe-contracts/src"]
+}

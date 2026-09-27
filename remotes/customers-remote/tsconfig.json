@@ -1,15 +1,11 @@
 {
+  // Опции наследуются из общего конфига workspace-пакетов
+  // (packages/tsconfig.json) — единый источник compilerOptions.
+  // Собственные здесь только include (исходники remote + конфиг Vite)
+  // и types (Vite Client API: import.meta.env в src/main.ts).
+  "extends": "../../packages/tsconfig.json",
+  "include": ["src", "vite.config.ts"],
   "compilerOptions": {
-    "target": "ES2020",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "strict": true,
-    "skipLibCheck": true,
-    "jsx": "preserve",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
     "types": ["vite/client"]
-  },
-  "include": ["src", "vite.config.ts"]
+  }
 }
