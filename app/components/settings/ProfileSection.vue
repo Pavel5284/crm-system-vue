@@ -4,7 +4,8 @@ import AvatarUploader from '@crm/ui-kit/AvatarUploader.vue'
 import { useForm } from '@tanstack/vue-form'
 import { z } from 'zod'
 import { getProfileApi, removeAvatarApi, updateAvatarApi, updateProfileApi } from '~/utils/auth.api.ts'
-import { containsControlChars } from '~/utils/validation'
+import { createNameSchema } from '~/schemas/name.schema'
+import { createTelegramSchema } from '~/schemas/telegram.schema'
 import { isPhoneDisplayValid, normalizePhone, phoneToPayload } from '@crm/ui-kit/phone'
 
 const { t } = useI18n()
@@ -18,18 +19,8 @@ type ProfileFormValues = {
 
 const authStore = useAuthStore()
 
-// Должности для выпадающего списка. value — канонические значения,
-// сохраняемые в БД; labelKey — перевод для отображения.
-const POSITION_DEFAULT = 'Менеджер'
-const POSITION_OPTIONS = [
-  { value: 'Менеджер', labelKey: 'settings.profile.positionOptions.manager' },
-  { value: 'Старший менеджер', labelKey: 'settings.profile.positionOptions.seniorManager' },
-  { value: 'Руководитель отдела', labelKey: 'settings.profile.positionOptions.headOfDepartment' },
-  { value: 'Директор', labelKey: 'settings.profile.positionOptions.director' },
-  { value: 'Администратор', labelKey: 'settings.profile.positionOptions.administrator' },
-  { value: 'Технолог', labelKey: 'settings.profile.positionOptions.technologist' },
-  { value: 'Логист', labelKey: 'settings.profile.positionOptions.logist' },
-] as const
+// Должность по умолчанию для новой анкеты.
+const POSITION_DEFAULT = 'Менеджер' as const
 
 const avatarInitials = computed(() => {
   const name = authStore.user.name
@@ -76,10 +67,10 @@ const onAvatarRemove = async () => {
 }
 
 const profileSchema = z.object({
-  name: z.string().trim().min(2, t('settings.profile.validation.nameMin')).max(100, t('settings.profile.validation.nameMax')).refine((v) => !containsControlChars(v), t('validation.nameInvalid')),
+  name: createNameSchema(t),
   position: z.string().trim().max(100, t('settings.profile.validation.positionMax')),
   phone: z.string().trim().refine(v => isPhoneDisplayValid(v), t('settings.profile.validation.phoneInvalid')),
-  telegram: z.string().trim().refine(v => !v || /^@?[a-zA-Z0-9_]{3,32}$/.test(v), t('settings.profile.validation.telegramInvalid')),
+  telegram: createTelegramSchema(t),
 })
 
 const profileForm = useForm({
@@ -119,16 +110,6 @@ const isSaving = profileForm.useStore((state) => state.isSubmitting)
 const initialProfile = ref<ProfileFormValues>({ name: '', position: '', phone: '', telegram: '' })
 
 const formValues = profileForm.useStore((state) => state.values)
-
-// Старые произвольные значения должности, которых нет в списке,
-// показываем как есть — чтобы не терять данные при загрузке.
-const positionOptions = computed(() => {
-  const cur = formValues.value.position?.trim()
-  if (cur && !POSITION_OPTIONS.some((o) => o.value === cur)) {
-    return [...POSITION_OPTIONS, { value: cur, labelKey: '' }]
-  }
-  return [...POSITION_OPTIONS]
-})
 
 const isProfileDirty = computed(() => {
   const cur = formValues.value
@@ -205,28 +186,14 @@ onMounted(loadMe)
 
         <div class="flex-1 space-y-4 min-w-0">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <ProfileFormField name="name" v-slot="{ field }">
-              <div>
-                <label class="text-xs font-medium">{{ t('settings.profile.nameLabel') }}</label>
-                <UiInput :modelValue="field.state.value" @update:modelValue="(val: string | number) => field.handleChange(val as string)" @blur="field.handleBlur" :placeholder="t('settings.profile.namePlaceholder')" autocomplete="name" class="mt-1" />
-                <p v-if="field.state.meta.errors.length" class="text-red-500 text-[11px] mt-1">{{ formatFieldErrors(field.state.meta.errors) }}</p>
-              </div>
-            </ProfileFormField>
-            <ProfileFormField name="position" v-slot="{ field }">
-              <div>
-                <label class="text-xs font-medium">{{ t('settings.profile.positionLabel') }}</label>
-                <select
-                  :value="field.state.value"
-                  @change="(e: Event) => { field.handleChange((e.target as HTMLSelectElement).value); field.handleBlur() }"
-                  class="mt-1 h-9 w-full rounded-md border border-input bg-background px-2.5 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                >
-                  <option v-for="o in positionOptions" :key="o.value" :value="o.value">
-                    {{ o.labelKey ? t(o.labelKey) : o.value }}
-                  </option>
-                </select>
-                <p v-if="field.state.meta.errors.length" class="text-red-500 text-[11px] mt-1">{{ formatFieldErrors(field.state.meta.errors) }}</p>
-              </div>
-            </ProfileFormField>
+            <div>
+              <label class="text-xs font-medium">{{ t('settings.profile.nameLabel') }}</label>
+              <FormNameField :form="profileForm" :placeholder="t('settings.profile.namePlaceholder')" class="mt-1" />
+            </div>
+            <div>
+              <label class="text-xs font-medium">{{ t('settings.profile.positionLabel') }}</label>
+              <FormPositionSelect :form="profileForm" />
+            </div>
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -236,14 +203,10 @@ onMounted(loadMe)
                 <PhoneInput :model-value="field.state.value" @update:model-value="field.handleChange" @blur="field.handleBlur" :placeholder="t('settings.profile.phonePlaceholder')" :error="formatFieldErrors(field.state.meta.errors)" :hint="t('settings.profile.phoneHint')" class="mt-1" />
               </div>
             </ProfileFormField>
-            <ProfileFormField name="telegram" v-slot="{ field }">
-              <div>
-                <label class="text-xs font-medium">Telegram</label>
-                <UiInput :modelValue="field.state.value" @update:modelValue="(val: string | number) => field.handleChange(val as string)" @blur="field.handleBlur" :placeholder="t('settings.profile.telegramPlaceholder')" class="mt-1" />
-                <p v-if="field.state.meta.errors.length" class="text-red-500 text-[11px] mt-1">{{ formatFieldErrors(field.state.meta.errors) }}</p>
-                <p v-else class="text-[11px] text-muted-foreground mt-1">{{ t('settings.profile.telegramHint') }}</p>
-              </div>
-            </ProfileFormField>
+            <div>
+              <label class="text-xs font-medium">Telegram</label>
+              <FormTelegramField :form="profileForm" :placeholder="t('settings.profile.telegramPlaceholder')" :hint="t('settings.profile.telegramHint')" class="mt-1" />
+            </div>
           </div>
 
           <div>

@@ -81,6 +81,7 @@
     "passwordTooShort": "Пароль должен содержать минимум 8 символов",
     "passwordTooLong": "Пароль не длиннее 128 символов",
     "passwordInvalid": "Используйте только английские буквы, цифры и символы",
+    "telegramInvalid": "Неверный Telegram",
     "namePlaceholder": "Имя",
     "nameRequired": "Введите имя",
     "nameTooLong": "Имя не длиннее 100 символов",
@@ -262,11 +263,8 @@
       "save": "Сохранить",
       "saving": "Сохранение...",
       "validation": {
-        "nameMin": "Минимум 2 символа",
-        "nameMax": "Максимум 100 символов",
         "positionMax": "Максимум 100",
-        "phoneInvalid": "Неверный телефон",
-        "telegramInvalid": "Неверный Telegram"
+        "phoneInvalid": "Неверный телефон"
       }
     },
     "history": {

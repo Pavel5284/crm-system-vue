@@ -81,6 +81,7 @@
     "passwordTooShort": "Password must be at least 8 characters",
     "passwordTooLong": "Password must be at most 128 characters",
     "passwordInvalid": "Use only English letters, numbers and symbols",
+    "telegramInvalid": "Invalid Telegram",
     "namePlaceholder": "Name",
     "nameRequired": "Enter name",
     "nameTooLong": "Name must be at most 100 characters",
@@ -262,11 +263,8 @@
       "save": "Save",
       "saving": "Saving...",
       "validation": {
-        "nameMin": "Minimum 2 characters",
-        "nameMax": "Maximum 100 characters",
         "positionMax": "Maximum 100",
-        "phoneInvalid": "Invalid phone",
-        "telegramInvalid": "Invalid Telegram"
+        "phoneInvalid": "Invalid phone"
       }
     },
     "history": {
