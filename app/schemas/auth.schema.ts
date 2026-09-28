@@ -1,7 +1,8 @@
 import { z } from 'zod'
-import { isValidEmailFormat } from '~/utils/validation'
+import { createEmailSchema, type TranslateFn } from './email.schema'
+import { createPasswordSchema } from './password.schema'
 
-export type TranslateFn = (key: string, params?: Record<string, unknown>) => string
+export type { TranslateFn } from './email.schema'
 
 export interface RegisterFormValues {
   name: string
@@ -20,27 +21,8 @@ export const createRegisterSchema = (t: TranslateFn) =>
         .trim()
         .min(1, t('register.nameRequired'))
         .max(100, t('register.nameTooLong')),
-      email: z
-        .string()
-        .trim()
-        .superRefine((v, ctx) => {
-          // Одна ошибка за раз: пусто → enterEmail, иначе длина/формат.
-          if (!v) {
-            ctx.addIssue({ code: 'custom', message: t('register.enterEmail') })
-            return
-          }
-          if (v.length > 254) {
-            ctx.addIssue({ code: 'custom', message: t('register.emailTooLong') })
-            return
-          }
-          if (!isValidEmailFormat(v)) {
-            ctx.addIssue({ code: 'custom', message: t('register.invalidEmail') })
-          }
-        }),
-      password: z
-        .string()
-        .min(8, t('register.passwordTooShort'))
-        .max(128, t('register.passwordTooLong')),
+      email: createEmailSchema(t),
+      password: createPasswordSchema(t),
       confirmPassword: z.string().min(1, t('register.passwordsMismatch')),
     })
     .refine((d) => d.password === d.confirmPassword, {
@@ -58,31 +40,6 @@ export interface LoginFormValues {
 // раскрываем), только верхние лимиты. Одна ошибка за раз через superRefine.
 export const createLoginSchema = (t: TranslateFn) =>
   z.object({
-    email: z
-      .string()
-      .trim()
-      .superRefine((v, ctx) => {
-        if (!v) {
-          ctx.addIssue({ code: 'custom', message: t('login.enterEmail') })
-          return
-        }
-        if (v.length > 254) {
-          ctx.addIssue({ code: 'custom', message: t('login.emailTooLong') })
-          return
-        }
-        if (!isValidEmailFormat(v)) {
-          ctx.addIssue({ code: 'custom', message: t('login.invalidEmail') })
-        }
-      }),
-    password: z
-      .string()
-      .superRefine((v, ctx) => {
-        if (!v) {
-          ctx.addIssue({ code: 'custom', message: t('login.passwordRequired') })
-          return
-        }
-        if (v.length > 128) {
-          ctx.addIssue({ code: 'custom', message: t('login.passwordTooLong') })
-        }
-      }),
+    email: createEmailSchema(t),
+    password: createPasswordSchema(t, { minLength: false }),
   })

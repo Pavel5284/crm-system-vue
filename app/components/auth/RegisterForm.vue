@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useForm as useTanStackForm } from '@tanstack/vue-form'
 import { createRegisterSchema } from '~/schemas/auth.schema'
+import { formatFieldErrors } from '~/utils/form-errors'
 import {useRegister} from "~/composables/auth/useRegister.ts";
 
 const { t } = useI18n()
@@ -69,21 +70,6 @@ const RegisterField = form.Field
 const isSubmitting = form.useStore((state) => state.isSubmitting)
 const formValues = form.useStore((state) => state.values)
 
-const formatFieldError = (err: unknown): string => {
-  if (typeof err === 'string') return err
-  if (err && typeof err === 'object' && 'message' in err) {
-    const m = (err as { message?: unknown }).message
-    if (typeof m === 'string') return m
-  }
-  try {
-    return JSON.stringify(err)
-  }
-  catch {
-    return String(err)
-  }
-}
-const formatFieldErrors = (errors: unknown[]): string => [...new Set(errors.map(formatFieldError))].join(', ')
-
 const isSubmitDisabled = computed(() => isPending.value || isSubmitting.value || captchaPending.value)
 </script>
 
@@ -105,34 +91,8 @@ const isSubmitDisabled = computed(() => isPending.value || isSubmitting.value ||
         </div>
       </RegisterField>
 
-      <RegisterField name="email" v-slot="{ field }">
-        <div class="mb-2">
-          <UiInput
-            :modelValue="field.state.value"
-            :placeholder="t('register.emailPlaceholder')"
-            type="email"
-            autocomplete="email"
-            name="email"
-            :error="field.state.meta.errors.length ? formatFieldErrors(field.state.meta.errors) : undefined"
-            @update:modelValue="(val: string | number) => field.handleChange(val as string)"
-            @blur="field.handleBlur"
-          />
-        </div>
-      </RegisterField>
-
-      <RegisterField name="password" v-slot="{ field }">
-        <div class="mb-2">
-          <UiInputPassword
-            :modelValue="field.state.value"
-            :placeholder="t('register.passwordPlaceholder')"
-            autocomplete="new-password"
-            name="new-password"
-            :error="field.state.meta.errors.length ? formatFieldErrors(field.state.meta.errors) : undefined"
-            @update:modelValue="(val: string | number) => field.handleChange(val as string)"
-            @blur="field.handleBlur"
-          />
-        </div>
-      </RegisterField>
+      <FormEmailField :form="form" />
+      <FormPasswordField :form="form" name="new-password" autocomplete="new-password" />
 
       <RegisterField name="confirmPassword" v-slot="{ field }">
         <div class="mb-2">
