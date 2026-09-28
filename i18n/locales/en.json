@@ -80,9 +80,11 @@
     "passwordRequired": "Enter password",
     "passwordTooShort": "Password must be at least 8 characters",
     "passwordTooLong": "Password must be at most 128 characters",
+    "passwordInvalid": "Use only English letters, numbers and symbols",
     "namePlaceholder": "Name",
     "nameRequired": "Enter name",
-    "nameTooLong": "Name must be at most 100 characters"
+    "nameTooLong": "Name must be at most 100 characters",
+    "nameInvalid": "Invalid characters in name"
   },
   "login": {
     "title": "Login",

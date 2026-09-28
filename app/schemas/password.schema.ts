@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '~/utils/validation'
+import { isAsciiPrintable, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '~/utils/validation'
 import type { TranslateFn } from './email.schema'
 
 export interface PasswordValidationMessages {
@@ -8,10 +8,13 @@ export interface PasswordValidationMessages {
   tooLong: string
   // Текст на значение короче minLength; по умолчанию совпадает с empty.
   tooShort?: string
+  // Текст на не-ASCII символы: пароли только на печатном ASCII.
+  invalid: string
 }
 
 // minLength: false — без проверки минимума (политику не раскрываем,
 // только empty + верхний лимит). Иначе min + max (зеркало backend DTO).
+// В обоих режимах состав ограничен печатным ASCII (см. isAsciiPrintable).
 export const createPasswordSchemaFromMessages = (
   messages: PasswordValidationMessages,
   options: { minLength?: number | false } = {},
@@ -27,6 +30,10 @@ export const createPasswordSchemaFromMessages = (
         }
         if (v.length > PASSWORD_MAX_LENGTH) {
           ctx.addIssue({ code: 'custom', message: messages.tooLong })
+          return
+        }
+        if (!isAsciiPrintable(v)) {
+          ctx.addIssue({ code: 'custom', message: messages.invalid })
         }
       })
   }
@@ -34,6 +41,7 @@ export const createPasswordSchemaFromMessages = (
     .string()
     .min(minLength, messages.tooShort ?? messages.empty)
     .max(PASSWORD_MAX_LENGTH, messages.tooLong)
+    .refine((v) => isAsciiPrintable(v), messages.invalid)
 }
 
 // Правило для password-полей: сообщения всегда одинаковые (validation.*),
@@ -48,6 +56,7 @@ export const createPasswordSchema = (
       empty: t('validation.passwordRequired'),
       tooShort: t('validation.passwordTooShort'),
       tooLong: t('validation.passwordTooLong'),
+      invalid: t('validation.passwordInvalid'),
     },
     options,
   )

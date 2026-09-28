@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { isValidEmailFormat } from '~/utils/validation'
+import { containsControlChars, isValidEmailFormat } from '~/utils/validation'
 
 export type TranslateFn = (key: string, params?: Record<string, unknown>) => string
 
@@ -24,7 +24,8 @@ export const createEmailSchemaFromMessages = (messages: EmailValidationMessages)
         ctx.addIssue({ code: 'custom', message: messages.tooLong })
         return
       }
-      if (!isValidEmailFormat(v)) {
+      // Управляющие символы (\0, \n, ...) формат-regex не ловит — проверяем явно.
+      if (!isValidEmailFormat(v) || containsControlChars(v)) {
         ctx.addIssue({ code: 'custom', message: messages.invalid })
       }
     })
