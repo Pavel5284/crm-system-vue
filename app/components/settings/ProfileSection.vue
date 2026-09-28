@@ -4,6 +4,7 @@ import AvatarUploader from '@crm/ui-kit/AvatarUploader.vue'
 import { useForm } from '@tanstack/vue-form'
 import { z } from 'zod'
 import { getProfileApi, removeAvatarApi, updateAvatarApi, updateProfileApi } from '~/utils/auth.api.ts'
+import { containsControlChars } from '~/utils/validation'
 import { isPhoneDisplayValid, normalizePhone, phoneToPayload } from '@crm/ui-kit/phone'
 
 const { t } = useI18n()
@@ -75,7 +76,7 @@ const onAvatarRemove = async () => {
 }
 
 const profileSchema = z.object({
-  name: z.string().trim().min(2, t('settings.profile.validation.nameMin')).max(100, t('settings.profile.validation.nameMax')),
+  name: z.string().trim().min(2, t('settings.profile.validation.nameMin')).max(100, t('settings.profile.validation.nameMax')).refine((v) => !containsControlChars(v), t('validation.nameInvalid')),
   position: z.string().trim().max(100, t('settings.profile.validation.positionMax')),
   phone: z.string().trim().refine(v => isPhoneDisplayValid(v), t('settings.profile.validation.phoneInvalid')),
   telegram: z.string().trim().refine(v => !v || /^@?[a-zA-Z0-9_]{3,32}$/.test(v), t('settings.profile.validation.telegramInvalid')),

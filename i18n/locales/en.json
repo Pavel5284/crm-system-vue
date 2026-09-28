@@ -84,7 +84,9 @@
     "namePlaceholder": "Name",
     "nameRequired": "Enter name",
     "nameTooLong": "Name must be at most 100 characters",
-    "nameInvalid": "Invalid characters in name"
+    "nameInvalid": "Invalid characters in name. Allowed: letters, numbers, spaces and punctuation",
+    "invalidCharacters": "Invalid characters. Allowed: letters, numbers, spaces and punctuation",
+    "textTooLong": "Value too long (max {max} characters)"
   },
   "login": {
     "title": "Login",

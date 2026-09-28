@@ -1,6 +1,7 @@
 ﻿<script setup lang="ts">
 import PhoneInput from '@crm/ui-kit/PhoneInput.vue'
 import { isPhoneDisplayValid } from '@crm/ui-kit/phone'
+import { containsControlChars, CUSTOMER_TEXT_MAX_LENGTH, isValidEmailFormat } from '~/utils/validation'
 import type { CreateDealPayload } from "~/types/backend.contracts";
 import {createDealApi, getCustomersApi} from "~/utils/crm.api"
 import { getApiErrorMessage } from '~/utils/api'
@@ -93,7 +94,18 @@ const submitError = ref('')
 const isCustomerValid = computed(() => {
   if (customerMode.value === 'select') return selectedCustomerId.value !== ''
   if (newPhone.value.trim() && !isPhoneDisplayValid(newPhone.value.trim())) return false
-  return newName.value.trim() !== '' && newEmail.value.trim() !== ''
+  const name = newName.value.trim()
+  const email = newEmail.value.trim()
+  if (!name || !email || !isValidEmailFormat(email)) return false
+  if (name.length > CUSTOMER_TEXT_MAX_LENGTH || containsControlChars(newName.value)) return false
+  // Управляющие символы в однострочных полях — потенциальная инъекция
+  // переносов в логи/хранилище; бэкенд (NewCustomerDto) проверяет тоже.
+  for (const value of [newContact.value, newSource.value]) {
+    const text = value.trim()
+    if (text.length > CUSTOMER_TEXT_MAX_LENGTH) return false
+    if (text && containsControlChars(text)) return false
+  }
+  return true
 })
 
 const newPhoneError = computed(() => {
@@ -144,6 +156,17 @@ const {mutate, isPending} = useMutation({
 })
 const onSubmit = handleSubmit(values => {
   submitError.value = ''
+  // Название сделки — однострочное: управляющие символы и сверхлимит
+  // отклоняем здесь (бэкенд CreateDealDto — тоже).
+  const dealName = values.name.trim()
+  if (dealName.length > CUSTOMER_TEXT_MAX_LENGTH) {
+    submitError.value = t('validation.textTooLong', { max: CUSTOMER_TEXT_MAX_LENGTH })
+    return
+  }
+  if (dealName && containsControlChars(dealName)) {
+    submitError.value = t('validation.invalidCharacters')
+    return
+  }
   mutate(values)
 })
 </script>

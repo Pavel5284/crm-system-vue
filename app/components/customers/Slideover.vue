@@ -4,6 +4,7 @@ import AvatarUploader from '@crm/ui-kit/AvatarUploader.vue'
 import { getInitials } from '@crm/ui-kit/avatar'
 import { isPhoneDisplayValid } from '@crm/ui-kit/phone'
 import { getApiErrorMessage } from '~/utils/api'
+import { containsControlChars, CUSTOMER_TEXT_MAX_LENGTH, isValidEmailFormat } from '~/utils/validation'
 import { deleteCustomerAvatarApi, updateCustomerApi, updateCustomerAvatarApi } from '~/utils/crm.api'
 
 const { t } = useI18n()
@@ -46,6 +47,24 @@ const phoneError = computed(() => {
   const value = phoneRef.value.trim()
   if (!value || isPhoneDisplayValid(value)) return ''
   return t('settings.profile.validation.phoneInvalid')
+})
+
+// Проверка полей перед сохранением: бэкенд тоже валидирует (UpdateCustomerDto),
+// но мусор лучше не отправлять в сеть. Управляющие символы (\n, NUL и т.п.)
+// в однострочных полях — потенциальная инъекция переносов в логи/хранилище.
+const customerFieldsError = computed(() => {
+  const name = nameRef.value.trim()
+  if (!name) return t('validation.nameRequired')
+  if (name.length > CUSTOMER_TEXT_MAX_LENGTH) return t('validation.textTooLong', { max: CUSTOMER_TEXT_MAX_LENGTH })
+  if (containsControlChars(nameRef.value)) return t('validation.nameInvalid')
+  const email = emailRef.value.trim()
+  if (email && !isValidEmailFormat(email)) return t('validation.emailInvalid')
+  for (const value of [contactPersonRef.value, fromSourceRef.value]) {
+    const text = value.trim()
+    if (text.length > CUSTOMER_TEXT_MAX_LENGTH) return t('validation.textTooLong', { max: CUSTOMER_TEXT_MAX_LENGTH })
+    if (text && containsControlChars(text)) return t('validation.invalidCharacters')
+  }
+  return ''
 })
 
 const isDirty = computed(() => {
@@ -96,14 +115,19 @@ async function onCustomerAvatarRemove() {
 async function onSave() {
   if (!store.customer) return
   errorRef.value = ''
+  const fieldsError = customerFieldsError.value || phoneError.value
+  if (fieldsError) {
+    errorRef.value = fieldsError
+    return
+  }
   isSaving.value = true
   try {
     const updated = await updateCustomerApi(store.customer.id, {
-      name: nameRef.value,
-      email: emailRef.value,
-      phone: phoneRef.value || null,
-      contactPerson: contactPersonRef.value || null,
-      fromSource: fromSourceRef.value || null,
+      name: nameRef.value.trim(),
+      email: emailRef.value.trim(),
+      phone: phoneRef.value.trim() || null,
+      contactPerson: contactPersonRef.value.trim() || null,
+      fromSource: fromSourceRef.value.trim() || null,
     })
     await props.refetch()
     // слайдовер НЕ закрываем: обновляем стор ответом, чтобы сбросить isDirty
@@ -158,7 +182,7 @@ async function onSave() {
       <p v-if="errorRef" class="text-red-500 text-sm mt-3">{{ errorRef }}</p>
 
       <div class="flex items-center gap-3 mt-5">
-        <UiButton type="button" :disabled="isSaving || !isDirty || !!phoneError" @click="onSave">
+        <UiButton type="button" :disabled="isSaving || !isDirty || !!phoneError || !!customerFieldsError" @click="onSave">
           {{ isSaving ? t('customers.slideover.saving') : t('customers.slideover.save') }}
         </UiButton>
       </div>
