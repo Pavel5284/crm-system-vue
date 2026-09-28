@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { createEmailSchema, type TranslateFn } from './email.schema'
+import { createNameSchema } from './name.schema'
 import { createPasswordSchema } from './password.schema'
 
 export type { TranslateFn } from './email.schema'
@@ -16,11 +17,7 @@ export interface RegisterFormValues {
 export const createRegisterSchema = (t: TranslateFn) =>
   z
     .object({
-      name: z
-        .string()
-        .trim()
-        .min(1, t('register.nameRequired'))
-        .max(100, t('register.nameTooLong')),
+      name: createNameSchema(t),
       email: createEmailSchema(t),
       password: createPasswordSchema(t),
       confirmPassword: z.string().min(1, t('register.passwordsMismatch')),

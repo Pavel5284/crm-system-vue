@@ -79,7 +79,10 @@
     "passwordPlaceholder": "Password",
     "passwordRequired": "Enter password",
     "passwordTooShort": "Password must be at least 8 characters",
-    "passwordTooLong": "Password must be at most 128 characters"
+    "passwordTooLong": "Password must be at most 128 characters",
+    "namePlaceholder": "Name",
+    "nameRequired": "Enter name",
+    "nameTooLong": "Name must be at most 100 characters"
   },
   "login": {
     "title": "Login",
@@ -91,13 +94,10 @@
   "register": {
     "title": "Register",
     "seoTitle": "Register | CRM System",
-    "namePlaceholder": "Name",
     "confirmPasswordPlaceholder": "Confirm password",
     "registerButton": "Register",
     "haveAccount": "Already have an account? Login",
     "passwordsMismatch": "Passwords do not match",
-    "nameRequired": "Enter name",
-    "nameTooLong": "Name must be at most 100 characters",
     "captchaRequired": "Please confirm you are not a robot",
     "captchaVerifying": "Verifying...",
     "success": "Success",

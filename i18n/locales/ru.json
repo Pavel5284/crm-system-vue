@@ -79,7 +79,10 @@
     "passwordPlaceholder": "Пароль",
     "passwordRequired": "Введите пароль",
     "passwordTooShort": "Пароль должен содержать минимум 8 символов",
-    "passwordTooLong": "Пароль не длиннее 128 символов"
+    "passwordTooLong": "Пароль не длиннее 128 символов",
+    "namePlaceholder": "Имя",
+    "nameRequired": "Введите имя",
+    "nameTooLong": "Имя не длиннее 100 символов"
   },
   "login": {
     "title": "Вход",
@@ -91,13 +94,10 @@
   "register": {
     "title": "Регистрация",
     "seoTitle": "Регистрация | CRM Система",
-    "namePlaceholder": "Имя",
     "confirmPasswordPlaceholder": "Подтвердите пароль",
     "registerButton": "Зарегистрироваться",
     "haveAccount": "Уже есть аккаунт? Войти",
     "passwordsMismatch": "Пароли не совпадают",
-    "nameRequired": "Введите имя",
-    "nameTooLong": "Имя не длиннее 100 символов",
     "captchaRequired": "Подтвердите, что вы не робот",
     "captchaVerifying": "Проверка...",
     "success": "Успешно",

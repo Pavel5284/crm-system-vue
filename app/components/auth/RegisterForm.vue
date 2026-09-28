@@ -76,20 +76,7 @@ const isSubmitDisabled = computed(() => isPending.value || isSubmitting.value ||
 <template>
   <div>
     <form v-if="!successMessage" autocomplete="on" @submit.prevent="() => form.handleSubmit()">
-      <RegisterField name="name" v-slot="{ field }">
-        <div class="mb-2">
-          <UiInput
-            :modelValue="field.state.value"
-            :placeholder="t('register.namePlaceholder')"
-            type="text"
-            autocomplete="name"
-            name="name"
-            :error="field.state.meta.errors.length ? formatFieldErrors(field.state.meta.errors) : undefined"
-            @update:modelValue="(val: string | number) => field.handleChange(val as string)"
-            @blur="field.handleBlur"
-          />
-        </div>
-      </RegisterField>
+      <FormNameField :form="form" />
 
       <FormEmailField :form="form" />
       <FormPasswordField :form="form" name="new-password" autocomplete="new-password" />
