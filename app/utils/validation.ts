@@ -6,6 +6,8 @@ export const PASSWORD_MAX_LENGTH = 128
 export const NAME_MAX_LENGTH = 100
 // Текстовые поля клиентов/сделок (customers/dto, deals/dto) — max 200.
 export const CUSTOMER_TEXT_MAX_LENGTH = 200
+// Текст комментария к сделке (comments/dto) — max 2000.
+export const COMMENT_TEXT_MAX_LENGTH = 2000
 
 const EMAIL_FORMAT_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 

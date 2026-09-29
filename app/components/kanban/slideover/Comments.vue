@@ -6,7 +6,7 @@ import { formatDate } from '~/utils/formatDate';
 
 const { t, locale } = useI18n()
 const {data, refetch, isLoading} = useComments()
-const {commentRef, writeComment} = useCreateComment({refetch})
+const {commentRef, commentError, writeComment} = useCreateComment({refetch})
 const {deleteComment} = useDeleteComment({refetch})
 
 </script>
@@ -16,10 +16,11 @@ const {deleteComment} = useDeleteComment({refetch})
     <UiInput
         :placeholder="t('comments.placeholder')"
         v-model="commentRef"
+        :error="commentError || undefined"
         @keyup.enter="writeComment"
         class="flex-1"
     />
-    <UiButton @click="writeComment" size="sm" class="px-2">
+    <UiButton @click="writeComment" size="sm" class="px-2" :disabled="!commentRef.trim() || !!commentError">
       <Icon name="heroicons:arrow-right" size="18"/>
     </UiButton>
   </div>

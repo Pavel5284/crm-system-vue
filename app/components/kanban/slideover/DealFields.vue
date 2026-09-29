@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import PhoneInput from '@crm/ui-kit/PhoneInput.vue'
 import { isPhoneDisplayValid } from '@crm/ui-kit/phone'
+import { containsControlChars, isValidEmailFormat } from '~/utils/validation'
 import { useQueryClient } from '@tanstack/vue-query'
 import { useDealSlideStore, type DealHighlightField } from '@/stores/deal-slide.store'
 import { useDealDetailsQuery } from '@/components/kanban/useDealDetailsQuery'
@@ -112,12 +113,27 @@ function minFor(key: FieldKey): number {
   return FIELDS.find((f) => f.key === key)?.min ?? 0
 }
 
+// Лимиты — зеркало бэкенд-DTO: клиенты — 200, email — 254 (IsEmail),
+// описание сделки — 5000. Управляющие символы запрещены везде,
+// кроме многострочного description (там переводы легитимны;
+// NUL-байт отловит серверный RejectNullBytesInterceptor).
+const MAX_LENGTH: Record<FieldKey, number> = {
+  description: 5000,
+  name: 200,
+  contactPerson: 200,
+  phone: 50,
+  fromSource: 200,
+  email: 254,
+}
+
 const canSave = computed(() => {
   if (!editingKey.value || isSaving.value) return false
   const value = draft.value.trim()
   if (value === fieldValue(editingKey.value).trim()) return false
+  if (value.length > MAX_LENGTH[editingKey.value]) return false
+  if (editingKey.value !== 'description' && containsControlChars(draft.value)) return false
   const field = FIELDS.find((f) => f.key === editingKey.value)
-  if (field?.isEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) return false
+  if (field?.isEmail && !isValidEmailFormat(value)) return false
   if (editingKey.value === 'phone' && !isPhoneDisplayValid(value)) return false
   return value.length >= minFor(editingKey.value)
 })
