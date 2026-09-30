@@ -24,10 +24,47 @@
     display: none;
   }
   /*noinspection CssUnknownPseudoSelector*/
-  input::-webkit-credentials-auto-fill-button,
+  input::-webkit-credentials-auto-fill-button {
+    visibility: hidden;
+    display: none !important;
+    pointer-events: none;
+  }
+  /*noinspection CssUnknownPseudoSelector*/
   input::-webkit-contacts-auto-fill-button {
     visibility: hidden;
     display: none !important;
     pointer-events: none;
+  }
+}
+
+@layer components {
+  /* Бейджи статусов биллинга (заказы/платежи). Классы подставляются
+     динамически через billing-status.ts — держать здесь глобально,
+     а не в scoped-стилях компонентов. */
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid #2a3342;
+    white-space: nowrap;
+  }
+  .badge-ok {
+    border-color: #1f5b33;
+    color: #7ddba3;
+  }
+  .badge-warn {
+    border-color: #6b5416;
+    color: #e8c15a;
+  }
+  .badge-bad {
+    border-color: #5b2323;
+    color: #e5a3a3;
+  }
+  .badge-info {
+    border-color: #274b63;
+    color: #8ec5e8;
+  }
+  .badge-neutral {
+    color: #aebed5;
   }
 }
