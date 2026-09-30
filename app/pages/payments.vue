@@ -126,7 +126,7 @@ const canConfirm = (p: PaymentListDto) =>
         </option>
       </select>
       <select v-model="selectedOrderId" class="input">
-        <option value="" disabled>{{ t('payments.order') }}</option>
+        <option value="" disabled hidden>{{ t('payments.order') }}</option>
         <option v-for="o in (ordersData ?? [])" :key="o.id" :value="o.id">
           №{{ o.number }} · {{ o.customerName }} · {{ o.total }}
         </option>

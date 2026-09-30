@@ -11,6 +11,15 @@ defineProps<{
 function print() {
   window.print()
 }
+
+// Коды из селекта (`orders.units.*`) — в локализованную подпись,
+// старые произвольные строки из БД — как есть.
+function unitText(unit: string | null): string {
+  if (!unit) return ''
+  const key = `orders.units.${unit}`
+  const label = t(key)
+  return label !== key ? ` ${label}` : ` ${unit}`
+}
 </script>
 
 <template>
@@ -42,7 +51,7 @@ function print() {
         <tbody>
           <tr v-for="item in order.items" :key="item.id">
             <td>{{ item.name }}</td>
-            <td>{{ item.quantity }}{{ item.unit ? ` ${item.unit}` : '' }}</td>
+            <td>{{ item.quantity }}{{ unitText(item.unit) }}</td>
             <td>{{ convertCurrency(item.price, locale) }}</td>
             <td>{{ convertCurrency(item.lineTotal, locale) }}</td>
           </tr>

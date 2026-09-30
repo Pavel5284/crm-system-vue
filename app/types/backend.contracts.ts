@@ -627,6 +627,7 @@ export type DealErrorMessage = `Сделка ${string} не найдена`
 export type CommentErrorMessage =
   | `Сделка ${string} не найдена`
   | `Комментарий ${string} не найден`
+  | 'Недостаточно прав для удаления комментария'
 
 export type ChatErrorMessage =
   | 'Нельзя писать самому себе'

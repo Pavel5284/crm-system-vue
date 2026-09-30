@@ -283,22 +283,6 @@ textarea.input {
   outline: none;
   transition: border-color 0.2s;
 }
-.btn-mini {
-  font-size: 0.75rem;
-  border: 1px solid #161c26;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  color: #aebed5;
-  transition: border-color 0.2s, color 0.2s;
-  white-space: nowrap;
-}
-.btn-mini:hover:not(:disabled) {
-  border-color: #482c65;
-  color: white;
-}
-.btn-mini:disabled {
-  opacity: 0.5;
-}
 .hint {
   font-size: 0.75rem;
   color: #748092;

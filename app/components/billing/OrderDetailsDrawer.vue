@@ -2,7 +2,15 @@
 import { useQueryClient } from '@tanstack/vue-query'
 import { formatDate } from '~/utils/formatDate'
 import { getApiErrorMessage } from '~/utils/api'
-import { orderBadgeClass, paymentBadgeClass } from '~/utils/billing-status'
+import {
+  CUSTOM_UNIT,
+  UNIT_CODES,
+  orderBadgeClass,
+  paymentBadgeClass,
+  toOrderItemPayload,
+  type ItemDraft,
+} from '~/utils/billing-status'
+import BillingItemsEditor from '~/components/billing/ItemsEditor.vue'
 import BillingPaymentCreateDialog from '~/components/billing/PaymentCreateDialog.vue'
 import BillingOrderInvoice from '~/components/billing/OrderInvoice.vue'
 import {
@@ -12,6 +20,7 @@ import {
   deletePaymentApi,
   getOrderApi,
   refundPaymentApi,
+  updateOrderApi,
 } from '~/utils/billing.api'
 import {
   canCancelOrder,
@@ -47,6 +56,7 @@ function open(id: string) {
   error.value = ''
   confirmDelete.value = false
   expandedPayments.value = []
+  editing.value = false
   isOpen.value = true
 }
 
@@ -120,6 +130,65 @@ function togglePaymentHistory(id: string) {
     : [...expandedPayments.value, id]
 }
 
+// Правка заказа (только DRAFT/CONFIRMED — как на бэкенде).
+// Позиции заменяются целиком, итог бэкенд пересчитает сам.
+const canEditOrder = computed(
+  () =>
+    canUpdateOrder(role.value) &&
+    (order.value?.status === 'DRAFT' || order.value?.status === 'CONFIRMED'),
+)
+
+const editing = ref(false)
+const editComment = ref('')
+const editItems = ref<ItemDraft[]>([])
+const editError = ref('')
+
+function unitToDraft(unit: string | null): Pick<ItemDraft, 'unitSelect' | 'unitCustom'> {
+  if (!unit) return { unitSelect: '', unitCustom: '' }
+  if ((UNIT_CODES as readonly string[]).includes(unit))
+    return { unitSelect: unit, unitCustom: '' }
+  return { unitSelect: CUSTOM_UNIT, unitCustom: unit }
+}
+
+function startEdit() {
+  if (!order.value) return
+  editing.value = true
+  editError.value = ''
+  editComment.value = order.value.comment ?? ''
+  editItems.value = order.value.items.map((item, idx) => ({
+    key: idx + 1,
+    name: item.name,
+    quantity: item.quantity,
+    price: item.price,
+    ...unitToDraft(item.unit),
+  }))
+}
+
+const { mutate: saveEdit, isPending: isSaving } = useMutation({
+  mutationKey: ['update order'],
+  mutationFn: () =>
+    updateOrderApi(orderId.value as string, {
+      comment: editComment.value,
+      items: toOrderItemPayload(editItems.value),
+    }),
+  onSuccess() {
+    invalidate()
+    editing.value = false
+  },
+  onError(e) {
+    editError.value = getApiErrorMessage(e)
+  },
+})
+
+// Подпись единицы в списке позиций (код → локализация,
+// старые строки — как есть).
+function unitText(unit: string | null): string {
+  if (!unit) return ''
+  const key = `orders.units.${unit}`
+  const label = t(key)
+  return label !== key ? ` ${label}` : ` ${unit}`
+}
+
 function onDeleteClick() {
   if (!confirmDelete.value) {
     confirmDelete.value = true
@@ -138,12 +207,7 @@ function openPaymentDialog() {
 }
 
 function canConfirmPayment(p: PaymentDto) {
-  return (
-    p.status === 'PENDING' &&
-    (role.value === 'ADMIN' ||
-      role.value === 'MANAGER' ||
-      role.value === 'USER')
-  )
+  return p.status === 'PENDING' && canUpdateOrder(role.value)
 }
 </script>
 
@@ -224,6 +288,13 @@ function canConfirmPayment(p: PaymentDto) {
             {{ t('orders.actions.invoice') }}
           </button>
           <button
+            v-if="canEditOrder && !editing"
+            class="btn-mini"
+            @click="startEdit"
+          >
+            {{ t('orders.actions.edit') }}
+          </button>
+          <button
             v-if="canDeleteOrder(role)"
             class="btn-mini danger"
             :disabled="isDeleting"
@@ -231,6 +302,40 @@ function canConfirmPayment(p: PaymentDto) {
           >
             {{ confirmDelete ? t('common.delete') + '?' : t('orders.actions.delete') }}
           </button>
+        </div>
+
+        <h3 class="section">{{ t('orders.items') }}</h3>
+        <div v-if="!editing">
+          <p v-if="!order.items.length" class="muted">—</p>
+          <div v-for="item in order.items" :key="item.id" class="item-line">
+            <span class="font-medium">{{ item.name }}</span>
+            <span class="muted">
+              {{ item.quantity }}{{ unitText(item.unit) }} ×
+              {{ convertCurrency(item.price, locale) }} =
+              {{ convertCurrency(item.lineTotal, locale) }}
+            </span>
+          </div>
+        </div>
+        <div v-else>
+          <div class="field">
+            <label class="label">{{ t('orders.comment') }}</label>
+            <UiInput
+              v-model="editComment"
+              :placeholder="t('orders.commentPlaceholder')"
+              type="text"
+              class="input"
+            />
+          </div>
+          <BillingItemsEditor v-model="editItems" />
+          <p v-if="editError" class="error">{{ editError }}</p>
+          <div class="actions">
+            <button class="btn-mini" :disabled="isSaving" @click="saveEdit()">
+              {{ isSaving ? t('common.saving') : t('common.save') }}
+            </button>
+            <button class="btn-mini" @click="editing = false">
+              {{ t('common.cancel') }}
+            </button>
+          </div>
         </div>
 
         <h3 class="section">{{ t('orders.details.paymentsTitle') }}</h3>
@@ -395,6 +500,29 @@ function canConfirmPayment(p: PaymentDto) {
   font-size: 0.85rem;
   font-weight: 600;
   margin: 0.75rem 0 0.375rem;
+}
+.item-line {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 0.8rem;
+  padding: 0.375rem 0;
+  border-bottom: 1px solid #161c26;
+}
+.field {
+  margin-bottom: 0.5rem;
+}
+.label {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.75;
+  margin-bottom: 0.25rem;
+}
+.input {
+  border: 1px solid #161c26;
+}
+.input::placeholder {
+  color: #748092;
 }
 .muted {
   font-size: 0.75rem;

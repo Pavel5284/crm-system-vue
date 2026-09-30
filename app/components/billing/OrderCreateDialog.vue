@@ -3,7 +3,12 @@ import { useQueryClient } from '@tanstack/vue-query'
 import { getApiErrorMessage } from '~/utils/api'
 import { createOrderApi } from '~/utils/billing.api'
 import { getCustomersApi, getDealsApi } from '~/utils/crm.api'
-import type { OrderItemInput, OrderListDto } from '~/types/backend.contracts'
+import {
+  toOrderItemPayload,
+  type ItemDraft,
+} from '~/utils/billing-status'
+import BillingItemsEditor from '~/components/billing/ItemsEditor.vue'
+import type { OrderListDto } from '~/types/backend.contracts'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -25,11 +30,7 @@ const totalInput = ref('')
 const comment = ref('')
 const error = ref('')
 
-interface ItemRow extends OrderItemInput {
-  key: number
-}
-let itemKey = 0
-const items = ref<ItemRow[]>([])
+const items = ref<ItemDraft[]>([])
 
 watch(
   () => props.dealId,
@@ -61,17 +62,34 @@ const selectedDeal = computed(() =>
   deals.value.find((d) => d.id === selectedDealId.value),
 )
 
-// Сумма позиций — подсказка для ручного total.
-const itemsSum = computed(() =>
-  items.value.reduce(
+// Заполненные позиции — итог заказа, когда они есть.
+const namedItems = computed(() => items.value.filter((row) => row.name.trim()))
+
+// Сумма позиций — итог заказа, когда позиции есть.
+const itemsSum = computed(() => {
+  const raw = namedItems.value.reduce(
     (sum, row) => sum + (Number(row.price) || 0) * (Number(row.quantity) || 0),
     0,
-  ),
+  )
+  return Math.round((raw + Number.EPSILON) * 100) / 100
+})
+
+const hasItems = computed(() => namedItems.value.length > 0)
+
+// Есть позиции — итог всегда из них (ручной ввод заблокирован).
+// Нет позиций — сумма вводится вручную (напр. цена сделки).
+watch(
+  [itemsSum, hasItems],
+  ([sum, withItems]) => {
+    if (withItems) totalInput.value = String(sum)
+  },
+  { immediate: true },
 )
 
 // Предзаполнение суммы из сделки при открытии / смене сделки.
+// Только пока нет позиций: с позициями итог всегда из них.
 watch([isOpen, selectedDealId, () => deals.value], ([open]) => {
-  if (!open || mode.value !== 'deal') return
+  if (!open || mode.value !== 'deal' || namedItems.value.length) return
   if (totalInput.value) return
   const deal = selectedDeal.value
   if (deal) totalInput.value = String(deal.price)
@@ -95,22 +113,16 @@ function open() {
 
 defineExpose({ open })
 
-function addItem() {
-  items.value.push({ key: ++itemKey, name: '', quantity: 1, unit: '', price: 0 })
-}
-
-function removeItem(key: number) {
-  items.value = items.value.filter((row) => row.key !== key)
-}
-
 const canSubmit = computed(() => {
   if (isPending.value) return false
   if (mode.value === 'deal' && !selectedDealId.value) return false
   if (mode.value === 'manual' && !selectedCustomerId.value) return false
   const total = totalInput.value.trim()
   if (total !== '' && !(Number(total) >= 0)) return false
-  for (const row of items.value) {
-    if (!row.name.trim()) return false
+  // Нужна либо сумма, либо хотя бы одна заполненная позиция.
+  // Строки без названия — черновики: в итог и на сервер не идут.
+  if (total === '' && !namedItems.value.length) return false
+  for (const row of namedItems.value) {
     if (!(Number(row.quantity) > 0) || !(Number(row.price) >= 0)) return false
   }
   return true
@@ -122,19 +134,17 @@ const { mutate, isPending } = useMutation({
     const payload: Parameters<typeof createOrderApi>[0] = {}
     if (mode.value === 'deal') payload.dealId = selectedDealId.value
     else payload.customerId = selectedCustomerId.value
-    const total = totalInput.value.trim()
-    if (total !== '') payload.total = Number(total)
     const trimmedComment = comment.value.trim()
     if (trimmedComment) payload.comment = trimmedComment
-    const rows = items.value
-      .filter((row) => row.name.trim())
-      .map(({ name, quantity, unit, price }) => ({
-        name: name.trim(),
-        quantity: Number(quantity),
-        ...(unit?.trim() ? { unit: unit.trim() } : {}),
-        price: Number(price),
-      }))
-    if (rows.length) payload.items = rows
+    // Итог всегда из позиций, если они есть (бэкенд посчитает сам).
+    // Ручная сумма — только когда позиций нет.
+    const rows = toOrderItemPayload(items.value)
+    if (rows.length) {
+      payload.items = rows
+    } else {
+      const total = totalInput.value.trim()
+      if (total !== '') payload.total = Number(total)
+    }
     return createOrderApi(payload)
   },
   onSuccess(order) {
@@ -179,7 +189,7 @@ const { mutate, isPending } = useMutation({
           :disabled="!!props.dealId"
           class="input w-full"
         >
-          <option value="" disabled>{{ t('orders.sourceDeal') }}</option>
+          <option value="" disabled hidden>{{ t('orders.sourceDeal') }}</option>
           <option v-for="d in deals" :key="d.id" :value="d.id">
             {{ d.name }} · {{ d.customer.name }}
           </option>
@@ -189,7 +199,7 @@ const { mutate, isPending } = useMutation({
       <div v-else class="field">
         <label class="label">{{ t('orders.sourceCustomer') }}</label>
         <select v-model="selectedCustomerId" class="input w-full">
-          <option value="" disabled>{{ t('orders.sourceCustomer') }}</option>
+          <option value="" disabled hidden>{{ t('orders.sourceCustomer') }}</option>
           <option v-for="c in customers" :key="c.id" :value="c.id">
             {{ c.name }} · {{ c.email }}
           </option>
@@ -204,50 +214,14 @@ const { mutate, isPending } = useMutation({
           min="0"
           step="0.01"
           class="input"
+          :disabled="hasItems"
         />
-        <p v-if="itemsSum > 0" class="hint">
-          {{ t('orders.items') }}: {{ itemsSum }}
-        </p>
+        <p v-if="hasItems" class="hint">{{ t('orders.totalFromItems') }}</p>
       </div>
 
       <div class="field">
-        <div class="row-between">
-          <label class="label">{{ t('orders.items') }}</label>
-          <button type="button" class="btn-mini" @click="addItem">
-            {{ t('orders.addItem') }}
-          </button>
-        </div>
-        <div v-for="row in items" :key="row.key" class="item-row">
-          <UiInput
-            v-model="row.name"
-            :placeholder="t('orders.itemNamePlaceholder')"
-            type="text"
-            class="input grow"
-          />
-          <UiInput
-            v-model="row.quantity"
-            :title="t('orders.itemQty')"
-            type="number"
-            min="0.001"
-            step="0.001"
-            class="input w-20"
-          />
-          <UiInput
-            v-model="row.price"
-            :title="t('orders.itemPrice')"
-            type="number"
-            min="0"
-            step="0.01"
-            class="input w-24"
-          />
-          <button
-            type="button"
-            class="btn-mini danger"
-            @click="removeItem(row.key)"
-          >
-            ✕
-          </button>
-        </div>
+        <label class="label">{{ t('orders.items') }}</label>
+        <BillingItemsEditor v-model="items" />
       </div>
 
       <div class="field">
@@ -262,7 +236,7 @@ const { mutate, isPending } = useMutation({
 
       <p v-if="error" class="error">{{ error }}</p>
 
-      <UiButton type="button" :disabled="!canSubmit" @click="mutate()">
+      <UiButton type="button" class="submit" :disabled="!canSubmit" @click="mutate()">
         {{ isPending ? t('orders.creating') : t('common.create') }}
       </UiButton>
     </template>
@@ -307,33 +281,8 @@ const { mutate, isPending } = useMutation({
   color: #748092;
   margin-top: 0.25rem;
 }
-.row-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.25rem;
-}
-.item-row {
-  display: flex;
-  gap: 0.375rem;
-  align-items: center;
-  margin-bottom: 0.375rem;
-}
-.btn-mini {
-  font-size: 0.75rem;
-  border: 1px solid #161c26;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  color: #aebed5;
-  white-space: nowrap;
-}
-.btn-mini:hover:not(:disabled) {
-  border-color: #482c65;
-  color: white;
-}
-.btn-mini.danger {
-  border-color: #5b2323;
-  color: #e5a3a3;
+.submit {
+  width: 100%;
 }
 .error {
   font-size: 0.75rem;
