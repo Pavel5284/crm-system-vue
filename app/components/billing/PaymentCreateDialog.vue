@@ -1,0 +1,152 @@
+<script setup lang="ts">
+import { useQueryClient } from '@tanstack/vue-query'
+import { getApiErrorMessage } from '~/utils/api'
+import { createPaymentApi } from '~/utils/billing.api'
+import type { PaymentDto, PaymentMethod } from '~/types/backend.contracts'
+
+const { t } = useI18n()
+const queryClient = useQueryClient()
+
+const emit = defineEmits<{
+  created: [payment: PaymentDto]
+}>()
+
+const isOpen = ref(false)
+const orderId = ref('')
+const orderLabel = ref('')
+const amountInput = ref('')
+const method = ref<PaymentMethod>('TRANSFER')
+const instantConfirm = ref(true)
+const comment = ref('')
+const error = ref('')
+
+const METHODS: PaymentMethod[] = ['TRANSFER', 'CARD', 'CASH', 'SBP', 'OTHER']
+
+function open(input: { orderId: string; orderLabel?: string; remaining?: number }) {
+  orderId.value = input.orderId
+  orderLabel.value = input.orderLabel ?? ''
+  amountInput.value =
+    input.remaining !== undefined && input.remaining > 0
+      ? String(input.remaining)
+      : ''
+  method.value = 'TRANSFER'
+  instantConfirm.value = true
+  comment.value = ''
+  error.value = ''
+  isOpen.value = true
+}
+
+defineExpose({ open })
+
+const canSubmit = computed(() => {
+  if (isPending.value || !orderId.value) return false
+  return Number(amountInput.value) > 0
+})
+
+const { mutate, isPending } = useMutation({
+  mutationKey: ['create payment'],
+  mutationFn: () =>
+    createPaymentApi({
+      orderId: orderId.value,
+      amount: Number(amountInput.value),
+      method: method.value,
+      ...(instantConfirm.value ? { status: 'SUCCEEDED' as const } : {}),
+      ...(comment.value.trim() ? { comment: comment.value.trim() } : {}),
+    }),
+  onSuccess(payment) {
+    queryClient.invalidateQueries({ queryKey: ['orders'] })
+    queryClient.invalidateQueries({ queryKey: ['order', orderId.value] })
+    queryClient.invalidateQueries({ queryKey: ['payments'] })
+    emit('created', payment)
+    isOpen.value = false
+  },
+  onError(e) {
+    error.value = getApiErrorMessage(e)
+  },
+})
+</script>
+
+<template>
+  <USlideover
+    v-model:open="isOpen"
+    side="right"
+    :title="t('payments.createTitle')"
+  >
+    <template #body>
+      <p v-if="orderLabel" class="order-label">{{ orderLabel }}</p>
+
+      <div class="field">
+        <label class="label">{{ t('payments.amount') }}</label>
+        <UiInput
+          v-model="amountInput"
+          type="number"
+          min="0.01"
+          step="0.01"
+          class="input"
+        />
+      </div>
+
+      <div class="field">
+        <label class="label">{{ t('payments.method') }}</label>
+        <select v-model="method" class="input w-full">
+          <option v-for="m in METHODS" :key="m" :value="m">
+            {{ t(`payments.methodNames.${m}`) }}
+          </option>
+        </select>
+      </div>
+
+      <label class="check">
+        <input v-model="instantConfirm" type="checkbox" />
+        {{ t('payments.actions.confirm') }}
+      </label>
+
+      <div class="field">
+        <UiInput
+          v-model="comment"
+          :placeholder="t('payments.commentPlaceholder')"
+          type="text"
+          class="input"
+        />
+      </div>
+
+      <p v-if="error" class="error">{{ error }}</p>
+
+      <UiButton type="button" :disabled="!canSubmit" @click="mutate()">
+        {{ isPending ? t('payments.creating') : t('common.create') }}
+      </UiButton>
+    </template>
+  </USlideover>
+</template>
+
+<style scoped>
+.order-label {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  margin-bottom: 0.75rem;
+}
+.field {
+  margin-bottom: 0.75rem;
+}
+.label {
+  display: block;
+  font-size: 0.75rem;
+  opacity: 0.75;
+  margin-bottom: 0.25rem;
+}
+.input {
+  border: 1px solid #161c26;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+}
+.error {
+  font-size: 0.75rem;
+  color: #e5a3a3;
+  margin-bottom: 0.5rem;
+}
+</style>

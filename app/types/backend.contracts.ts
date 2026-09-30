@@ -440,6 +440,167 @@ export interface NotificationEvent {
 }
 
 // ---------------------------------------------------------------------------
+// Orders / Payments (billing)
+// ---------------------------------------------------------------------------
+
+export type OrderStatus =
+  | 'DRAFT'
+  | 'CONFIRMED'
+  | 'PARTIALLY_PAID'
+  | 'PAID'
+  | 'CANCELLED'
+  | 'REFUNDED'
+
+export type PaymentStatus = 'PENDING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED' | 'REFUNDED'
+
+export type PaymentMethod = 'CASH' | 'CARD' | 'TRANSFER' | 'SBP' | 'OTHER'
+
+export interface OrderListDto {
+  id: string
+  number: number
+  dealId: string | null
+  dealName: string | null
+  customerId: string
+  customerName: string
+  total: number
+  paid: number
+  remaining: number
+  status: OrderStatus
+  comment: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OrderItemInput {
+  name: string
+  quantity: number
+  unit?: string
+  price: number
+  spec?: string
+}
+
+export interface CreateOrderPayload {
+  dealId?: string
+  customerId?: string
+  total?: number
+  comment?: string
+  items?: OrderItemInput[]
+}
+
+export interface UpdateOrderPayload {
+  comment?: string
+  total?: number
+  items?: OrderItemInput[]
+}
+
+export interface ChangeOrderStatusPayload {
+  status: OrderStatus
+  comment?: string
+}
+
+export interface OrderItemDto {
+  id: string
+  orderId: string
+  name: string
+  quantity: number
+  unit: string | null
+  price: number
+  lineTotal: number
+  spec: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface OrderStatusHistoryDto {
+  id: string
+  orderId: string
+  fromStatus: OrderStatus | null
+  toStatus: OrderStatus
+  changedByUserId: string | null
+  changedBy: DealUserRef | null
+  comment: string | null
+  createdAt: string
+}
+
+export interface PaymentDto {
+  id: string
+  orderId: string
+  amount: number
+  method: PaymentMethod
+  status: PaymentStatus
+  comment: string | null
+  paidAt: string | null
+  createdById: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PaymentListDto extends PaymentDto {
+  orderNumber: number
+  orderTotal: number
+  orderStatus: OrderStatus
+  customerName: string
+}
+
+export interface PaymentStatusHistoryDto {
+  id: string
+  paymentId: string
+  fromStatus: PaymentStatus | null
+  toStatus: PaymentStatus
+  changedByUserId: string | null
+  changedBy: DealUserRef | null
+  comment: string | null
+  createdAt: string
+}
+
+export interface PaymentDetailsDto extends PaymentDto {
+  statusHistory: PaymentStatusHistoryDto[]
+}
+
+export interface OrderPaymentDto extends PaymentDto {
+  statusHistory: PaymentStatusHistoryDto[]
+}
+
+export interface OrderDetailsDto {
+  id: string
+  number: number
+  dealId: string | null
+  deal: {
+    id: string
+    name: string
+    price: number
+    status: string
+    customerId: string
+  } | null
+  customerId: string
+  customer: DealCustomerRef
+  createdBy: DealUserRef | null
+  total: number
+  paid: number
+  remaining: number
+  status: OrderStatus
+  comment: string | null
+  items: OrderItemDto[]
+  payments: OrderPaymentDto[]
+  statusHistory: OrderStatusHistoryDto[]
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreatePaymentPayload {
+  orderId: string
+  amount: number
+  method?: PaymentMethod
+  status?: PaymentStatus
+  comment?: string
+}
+
+export interface ChangePaymentStatusPayload {
+  status: PaymentStatus
+  comment?: string
+}
+
+// ---------------------------------------------------------------------------
 // Тексты ошибок — 1-в-1 с бэкендом
 // ---------------------------------------------------------------------------
 
@@ -477,6 +638,28 @@ export type TaskErrorMessage =
   | 'Недостаточно прав для изменения этой задачи'
 
 export type NotificationErrorMessage = 'Уведомление не найдено'
+
+export type OrderErrorMessage =
+  | `Заказ ${string} не найден`
+  | 'Укажите либо dealId, либо customerId, но не оба сразу'
+  | 'Укажите источник заказа: dealId (из сделки) или customerId (вручную)'
+  | 'Укажите total или позиции заказа (items) для расчёта суммы'
+  | 'Сумма заказа не может быть отрицательной'
+  | `Сумма заказа (${string}) меньше уже оплаченного (${string})`
+  | `Заказ в статусе "${string}" нельзя редактировать (только DRAFT/CONFIRMED)`
+  | `Переход заказа из "${string}" в "${string}" запрещён`
+  | `Переход в "${string}" доступен только администратору`
+  | 'Заказ с движением денег нельзя удалить — отмените или верните его'
+
+export type PaymentErrorMessage =
+  | `Платёж ${string} не найден`
+  | `Заказ ${string} не найден`
+  | `Нельзя принимать оплату по заказу в статусе "${string}"`
+  | `Нельзя подтверждать оплату по заказу в статусе "${string}"`
+  | 'При создании допустимы только статусы PENDING или SUCCEEDED'
+  | `Платёж ${number} превышает остаток ${number} по заказу`
+  | `Переход платежа из "${string}" в "${string}" запрещён`
+  | `Платёж в статусе "${string}" нельзя удалить — используйте возврат`
 
 export type ValidationErrorMessage = string
 
@@ -554,6 +737,21 @@ export type GetNotificationsError = NoDomainError
 export type MarkNotificationReadError = NotificationErrorMessage
 export type MarkAllNotificationsReadError = NoDomainError
 export type DeleteReadNotificationsError = NoDomainError
+
+// --- orders / payments ------------------------------------------------------
+export type GetOrdersError = NoDomainError
+export type GetOrderError = OrderErrorMessage
+export type CreateOrderError = OrderErrorMessage
+export type UpdateOrderError = OrderErrorMessage
+export type ChangeOrderStatusError = OrderErrorMessage
+export type DeleteOrderError = OrderErrorMessage
+
+export type GetPaymentsError = NoDomainError
+export type GetPaymentError = PaymentErrorMessage
+export type CreatePaymentError = PaymentErrorMessage | OrderErrorMessage
+export type ChangePaymentStatusError = PaymentErrorMessage | OrderErrorMessage
+export type RefundPaymentError = PaymentErrorMessage | OrderErrorMessage
+export type DeletePaymentError = PaymentErrorMessage
 
 export interface MarkAllNotificationsReadResponse {
   updated: number

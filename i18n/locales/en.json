@@ -230,6 +230,141 @@
       "saving": "Saving..."
     }
   },
+  "orders": {
+    "title": "Orders",
+    "seoTitle": "Orders | CRM System",
+    "listTitle": "Order list",
+    "loading": "Loading...",
+    "empty": "No orders yet",
+    "createTitle": "New order",
+    "createFromDeal": "Create order",
+    "creating": "Creating...",
+    "sourceDeal": "Deal",
+    "sourceCustomer": "Customer",
+    "total": "Total",
+    "comment": "Comment",
+    "commentPlaceholder": "Order comment...",
+    "items": "Items",
+    "addItem": "Add item",
+    "itemNamePlaceholder": "Item name",
+    "itemQty": "Qty",
+    "itemPrice": "Price",
+    "itemUnit": "Unit",
+    "removeItem": "Remove",
+    "table": {
+      "number": "No.",
+      "customer": "Customer",
+      "deal": "Deal",
+      "total": "Total",
+      "paid": "Paid",
+      "remaining": "Remaining",
+      "status": "Status",
+      "created": "Created"
+    },
+    "status": {
+      "DRAFT": "Draft",
+      "CONFIRMED": "Confirmed",
+      "PARTIALLY_PAID": "Partially paid",
+      "PAID": "Paid",
+      "CANCELLED": "Cancelled",
+      "REFUNDED": "Refunded"
+    },
+    "actions": {
+      "confirm": "Confirm",
+      "cancel": "Cancel",
+      "refund": "Refund",
+      "delete": "Delete",
+      "invoice": "Invoice",
+      "addPayment": "Add payment",
+      "details": "Details"
+    },
+    "details": {
+      "title": "Order",
+      "customer": "Customer",
+      "deal": "Deal",
+      "noDeal": "No deal (manual)",
+      "total": "Total",
+      "paid": "Paid",
+      "remaining": "Remaining",
+      "status": "Status",
+      "comment": "Comment",
+      "createdAt": "Created",
+      "historyTitle": "Status history",
+      "historyEmpty": "No status changes yet",
+      "paymentsTitle": "Payments",
+      "paymentsEmpty": "No payments yet"
+    },
+    "filters": {
+      "status": "Status",
+      "allStatuses": "All statuses",
+      "search": "Search by customer..."
+    },
+    "invoice": {
+      "title": "Invoice",
+      "orderNo": "Order",
+      "date": "Date",
+      "deal": "Deal",
+      "from": "Vendor",
+      "to": "Customer",
+      "item": "Item",
+      "qty": "Qty",
+      "price": "Price",
+      "sum": "Amount",
+      "total": "Total",
+      "paid": "Paid",
+      "remaining": "Due",
+      "comment": "Comment",
+      "print": "Print / PDF",
+      "close": "Close"
+    }
+  },
+  "payments": {
+    "title": "Payments",
+    "seoTitle": "Payments | CRM System",
+    "listTitle": "Payment list",
+    "loading": "Loading...",
+    "empty": "No payments yet",
+    "createTitle": "New payment",
+    "creating": "Creating...",
+    "order": "Order",
+    "amount": "Amount",
+    "method": "Method",
+    "commentPlaceholder": "Payment comment...",
+    "methodNames": {
+      "CASH": "Cash",
+      "CARD": "Card",
+      "TRANSFER": "Transfer",
+      "SBP": "SBP",
+      "OTHER": "Other"
+    },
+    "status": {
+      "PENDING": "Pending",
+      "SUCCEEDED": "Succeeded",
+      "FAILED": "Failed",
+      "CANCELLED": "Cancelled",
+      "REFUNDED": "Refunded"
+    },
+    "table": {
+      "order": "Order",
+      "customer": "Customer",
+      "amount": "Amount",
+      "method": "Method",
+      "status": "Status",
+      "created": "Created"
+    },
+    "actions": {
+      "confirm": "Confirm",
+      "fail": "Reject",
+      "refund": "Refund",
+      "delete": "Delete"
+    },
+    "historyTitle": "History",
+    "historyEmpty": "No changes yet",
+    "filters": {
+      "status": "Status",
+      "allStatuses": "All statuses"
+    }
+  },
   "settings": {
     "title": "Settings",
     "seoTitle": "Settings | CRM System",

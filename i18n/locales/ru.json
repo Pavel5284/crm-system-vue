@@ -230,6 +230,141 @@
       "saving": "Сохранение..."
     }
   },
+  "orders": {
+    "title": "Заказы",
+    "seoTitle": "Заказы | CRM Система",
+    "listTitle": "Список заказов",
+    "loading": "Загрузка...",
+    "empty": "Заказов пока нет",
+    "createTitle": "Новый заказ",
+    "createFromDeal": "Создать заказ",
+    "creating": "Создание...",
+    "sourceDeal": "Сделка",
+    "sourceCustomer": "Клиент",
+    "total": "Сумма",
+    "comment": "Комментарий",
+    "commentPlaceholder": "Комментарий к заказу...",
+    "items": "Позиции",
+    "addItem": "Добавить позицию",
+    "itemNamePlaceholder": "Название позиции",
+    "itemQty": "Кол-во",
+    "itemPrice": "Цена",
+    "itemUnit": "Ед.",
+    "removeItem": "Убрать",
+    "table": {
+      "number": "№",
+      "customer": "Клиент",
+      "deal": "Сделка",
+      "total": "Сумма",
+      "paid": "Оплачено",
+      "remaining": "Остаток",
+      "status": "Статус",
+      "created": "Создан"
+    },
+    "status": {
+      "DRAFT": "Черновик",
+      "CONFIRMED": "Подтверждён",
+      "PARTIALLY_PAID": "Частично оплачен",
+      "PAID": "Оплачен",
+      "CANCELLED": "Отменён",
+      "REFUNDED": "Возвращён"
+    },
+    "actions": {
+      "confirm": "Подтвердить",
+      "cancel": "Отменить",
+      "refund": "Вернуть",
+      "delete": "Удалить",
+      "invoice": "Счёт",
+      "addPayment": "Принять оплату",
+      "details": "Детали"
+    },
+    "details": {
+      "title": "Заказ",
+      "customer": "Клиент",
+      "deal": "Сделка",
+      "noDeal": "Без сделки (ручной)",
+      "total": "Сумма",
+      "paid": "Оплачено",
+      "remaining": "Остаток",
+      "status": "Статус",
+      "comment": "Комментарий",
+      "createdAt": "Создан",
+      "historyTitle": "История статусов",
+      "historyEmpty": "Изменений статуса пока нет",
+      "paymentsTitle": "Оплаты",
+      "paymentsEmpty": "Оплат пока нет"
+    },
+    "filters": {
+      "status": "Статус",
+      "allStatuses": "Все статусы",
+      "search": "Поиск по клиенту..."
+    },
+    "invoice": {
+      "title": "Счёт на оплату",
+      "orderNo": "Заказ",
+      "date": "Дата",
+      "deal": "Сделка",
+      "from": "Поставщик",
+      "to": "Покупатель",
+      "item": "Наименование",
+      "qty": "Кол-во",
+      "price": "Цена",
+      "sum": "Сумма",
+      "total": "Итого",
+      "paid": "Оплачено",
+      "remaining": "К доплате",
+      "comment": "Комментарий",
+      "print": "Печать / PDF",
+      "close": "Закрыть"
+    }
+  },
+  "payments": {
+    "title": "Платежи",
+    "seoTitle": "Платежи | CRM Система",
+    "listTitle": "Список платежей",
+    "loading": "Загрузка...",
+    "empty": "Платежей пока нет",
+    "createTitle": "Новая оплата",
+    "creating": "Создание...",
+    "order": "Заказ",
+    "amount": "Сумма",
+    "method": "Способ",
+    "commentPlaceholder": "Комментарий к оплате...",
+    "methodNames": {
+      "CASH": "Наличные",
+      "CARD": "Карта",
+      "TRANSFER": "Перевод",
+      "SBP": "СБП",
+      "OTHER": "Другое"
+    },
+    "status": {
+      "PENDING": "Ожидает",
+      "SUCCEEDED": "Успешен",
+      "FAILED": "Ошибка",
+      "CANCELLED": "Отменён",
+      "REFUNDED": "Возвращён"
+    },
+    "table": {
+      "order": "Заказ",
+      "customer": "Клиент",
+      "amount": "Сумма",
+      "method": "Способ",
+      "status": "Статус",
+      "created": "Создан"
+    },
+    "actions": {
+      "confirm": "Подтвердить",
+      "fail": "Отклонить",
+      "refund": "Вернуть",
+      "delete": "Удалить"
+    },
+    "historyTitle": "История",
+    "historyEmpty": "Изменений пока нет",
+    "filters": {
+      "status": "Статус",
+      "allStatuses": "Все статусы"
+    }
+  },
   "settings": {
     "title": "Настройки",
     "seoTitle": "Настройки | CRM Система",
