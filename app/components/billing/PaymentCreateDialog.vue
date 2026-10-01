@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { useQueryClient } from '@tanstack/vue-query'
 import { getApiErrorMessage } from '~/utils/api'
-import { createPaymentApi } from '~/utils/billing.api'
+import { createPaymentApi, getOrdersApi } from '~/utils/billing.api'
 import type { PaymentDto, PaymentMethod } from '~/types/backend.contracts'
 
 const { t } = useI18n()
+const authStore = useAuthStore()
 const queryClient = useQueryClient()
 
 const emit = defineEmits<{
@@ -12,6 +13,8 @@ const emit = defineEmits<{
 }>()
 
 const isOpen = ref(false)
+// Предвыбранный заказ (из карточки заказа). Пусто — выбор внутри диалога.
+const presetOrder = ref('')
 const orderId = ref('')
 const orderLabel = ref('')
 const amountInput = ref('')
@@ -22,11 +25,32 @@ const error = ref('')
 
 const METHODS: PaymentMethod[] = ['TRANSFER', 'CARD', 'CASH', 'SBP', 'OTHER']
 
-function open(input: { orderId: string; orderLabel?: string; remaining?: number }) {
-  orderId.value = input.orderId
-  orderLabel.value = input.orderLabel ?? ''
+const { data: ordersData } = useQuery({
+  queryKey: ['orders'],
+  queryFn: () => getOrdersApi(),
+  refetchInterval: false,
+  enabled: computed(() => isOpen.value && !presetOrder.value && authStore.isAuth),
+})
+
+const selectedOrder = computed(() =>
+  (ordersData.value ?? []).find((o) => o.id === orderId.value),
+)
+
+// Подставляем остаток выбранного заказа, пока сумму не ввели вручную.
+watch(orderId, () => {
+  if (amountInput.value.trim()) return
+  const remaining = selectedOrder.value?.remaining
+  if (remaining !== undefined && remaining > 0) {
+    amountInput.value = String(remaining)
+  }
+})
+
+function open(input?: { orderId?: string; orderLabel?: string; remaining?: number }) {
+  presetOrder.value = input?.orderId ?? ''
+  orderId.value = input?.orderId ?? ''
+  orderLabel.value = input?.orderLabel ?? ''
   amountInput.value =
-    input.remaining !== undefined && input.remaining > 0
+    input?.remaining !== undefined && input.remaining > 0
       ? String(input.remaining)
       : ''
   method.value = 'TRANSFER'
@@ -74,6 +98,16 @@ const { mutate, isPending } = useMutation({
   >
     <template #body>
       <p v-if="orderLabel" class="order-label">{{ orderLabel }}</p>
+
+      <div v-if="!presetOrder" class="field">
+        <label class="label">{{ t('payments.order') }}</label>
+        <select v-model="orderId" class="input w-full">
+          <option value="" disabled hidden>{{ t('payments.order') }}</option>
+          <option v-for="o in (ordersData ?? [])" :key="o.id" :value="o.id">
+            №{{ o.number }} · {{ o.customerName }} · {{ o.total }}
+          </option>
+        </select>
+      </div>
 
       <div class="field">
         <label class="label">{{ t('payments.amount') }}</label>

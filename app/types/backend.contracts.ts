@@ -554,6 +554,17 @@ export interface PaymentStatusHistoryDto {
 }
 
 export interface PaymentDetailsDto extends PaymentDto {
+  order: {
+    id: string
+    number: number
+    total: number
+    status: OrderStatus
+    customer: {
+      id: string
+      name: string
+    }
+  }
+  createdBy: DealUserRef | null
   statusHistory: PaymentStatusHistoryDto[]
 }
 

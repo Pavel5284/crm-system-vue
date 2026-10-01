@@ -12,11 +12,13 @@ import type {
   DeletePaymentError,
   GetOrderError,
   GetOrdersError,
+  GetPaymentError,
   GetPaymentsError,
   NoContent,
   OrderDetailsDto,
   OrderListDto,
   OrderStatus,
+  PaymentDetailsDto,
   PaymentDto,
   PaymentListDto,
   PaymentStatus,
@@ -70,6 +72,9 @@ export const getPaymentsApi = (query?: {
   apiFetch<PaymentListDto[], GetPaymentsError>('/payments', {
     query: query as Record<string, string | undefined>,
   })
+
+export const getPaymentApi = (paymentId: string) =>
+  apiFetch<PaymentDetailsDto, GetPaymentError>(`/payments/${paymentId}`)
 
 export const createPaymentApi = (payload: CreatePaymentPayload) =>
   apiFetch<PaymentDto, CreatePaymentError>('/payments', {

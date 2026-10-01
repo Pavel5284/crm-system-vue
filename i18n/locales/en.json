@@ -376,12 +376,21 @@
     },
     "actions": {
       "confirm": "Confirm",
-      "fail": "Reject",
+      "cancel": "Cancel",
       "refund": "Refund",
       "delete": "Delete"
     },
     "historyTitle": "History",
     "historyEmpty": "No changes yet",
+    "details": {
+      "title": "Payment",
+      "order": "Order",
+      "customer": "Customer",
+      "paidAt": "Paid at",
+      "createdBy": "Created by",
+      "comment": "Comment",
+      "openOrder": "To order"
+    },
     "filters": {
       "status": "Status",
       "allStatuses": "All statuses"

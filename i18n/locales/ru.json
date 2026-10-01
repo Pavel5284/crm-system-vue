@@ -376,12 +376,21 @@
     },
     "actions": {
       "confirm": "Подтвердить",
-      "fail": "Отклонить",
+      "cancel": "Отменить",
       "refund": "Вернуть",
       "delete": "Удалить"
     },
     "historyTitle": "История",
     "historyEmpty": "Изменений пока нет",
+    "details": {
+      "title": "Платёж",
+      "order": "Заказ",
+      "customer": "Клиент",
+      "paidAt": "Оплачен",
+      "createdBy": "Создал",
+      "comment": "Комментарий",
+      "openOrder": "К заказу"
+    },
     "filters": {
       "status": "Статус",
       "allStatuses": "Все статусы"

@@ -125,7 +125,7 @@ watch(
               {{ t(`orders.status.${o.status}`) }}
             </span>
           </UiTableCell>
-          <UiTableCell>{{ formatDate(o.createdAt, 'short', locale) }}</UiTableCell>
+          <UiTableCell>{{ formatDate(o.createdAt, 'full', locale) }}</UiTableCell>
         </UiTableRow>
       </UiTableBody>
     </UiTable>

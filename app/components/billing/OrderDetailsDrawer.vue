@@ -239,7 +239,7 @@ function canConfirmPayment(p: PaymentDto) {
           </div>
           <div>
             <span class="k">{{ t('orders.details.createdAt') }}</span>
-            <span class="v">{{ formatDate(order.createdAt, 'short', locale) }}</span>
+            <span class="v">{{ formatDate(order.createdAt, 'full', locale) }}</span>
           </div>
           <div v-if="order.comment">
             <span class="k">{{ t('orders.details.comment') }}</span>
@@ -366,7 +366,7 @@ function canConfirmPayment(p: PaymentDto) {
             <div class="pay-amount">{{ convertCurrency(p.amount, locale) }}</div>
             <div class="muted">
               {{ t(`payments.methodNames.${p.method}`) }} ·
-              {{ formatDate(p.createdAt, 'short', locale) }}
+              {{ formatDate(p.createdAt, 'full', locale) }}
             </div>
           </div>
           <span :class="paymentBadgeClass(p.status)">
@@ -385,9 +385,9 @@ function canConfirmPayment(p: PaymentDto) {
               v-if="p.status === 'PENDING' && canUpdateOrder(role)"
               class="btn-mini"
               :disabled="isPaymentPending"
-              @click="changePayment({ id: p.id, status: 'FAILED' })"
+              @click="changePayment({ id: p.id, status: 'CANCELLED' })"
             >
-              {{ t('payments.actions.fail') }}
+              {{ t('payments.actions.cancel') }}
             </button>
             <button
               v-if="p.status === 'SUCCEEDED' && canRefundPayment(role)"
@@ -420,7 +420,7 @@ function canConfirmPayment(p: PaymentDto) {
             class="pay-history"
           >
             <div v-for="h in p.statusHistory" :key="h.id" class="hist-line">
-              <span class="muted">{{ formatDate(h.createdAt, 'short', locale) }}</span>
+              <span class="muted">{{ formatDate(h.createdAt, 'full', locale) }}</span>
               <span>
                 {{ h.fromStatus ? t(`payments.status.${h.fromStatus}`) : '—' }} →
                 {{ t(`payments.status.${h.toStatus}`) }}
@@ -436,7 +436,7 @@ function canConfirmPayment(p: PaymentDto) {
           {{ t('orders.details.historyEmpty') }}
         </p>
         <div v-for="h in order.statusHistory" :key="h.id" class="hist-row">
-          <span class="muted">{{ formatDate(h.createdAt, 'short', locale) }}</span>
+          <span class="muted">{{ formatDate(h.createdAt, 'full', locale) }}</span>
           <span>
             {{ h.fromStatus ? t(`orders.status.${h.fromStatus}`) : '—' }} →
             {{ t(`orders.status.${h.toStatus}`) }}

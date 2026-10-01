@@ -6,7 +6,6 @@ import { paymentBadgeClass } from '~/utils/billing-status'
 import {
   changePaymentStatusApi,
   deletePaymentApi,
-  getOrdersApi,
   getPaymentsApi,
   refundPaymentApi,
 } from '~/utils/billing.api'
@@ -17,6 +16,7 @@ import {
   canUpdateOrder,
 } from '~/utils/billing-permissions'
 import BillingPaymentCreateDialog from '~/components/billing/PaymentCreateDialog.vue'
+import BillingPaymentDetailsDrawer from '~/components/billing/PaymentDetailsDrawer.vue'
 import type { PaymentListDto, PaymentStatus } from '~/types/backend.contracts'
 
 const { t, locale } = useI18n()
@@ -26,11 +26,13 @@ const queryClient = useQueryClient()
 useSeoMeta({ title: t('payments.seoTitle') })
 
 const statusFilter = ref<'' | PaymentStatus>('')
-const selectedOrderId = ref('')
 const error = ref('')
 
 const paymentDialog = ref<InstanceType<
   typeof BillingPaymentCreateDialog
+> | null>(null)
+const detailsDrawer = ref<InstanceType<
+  typeof BillingPaymentDetailsDrawer
 > | null>(null)
 
 const { data, isLoading, refetch } = useQuery({
@@ -40,22 +42,11 @@ const { data, isLoading, refetch } = useQuery({
   enabled: computed(() => authStore.isAuth),
 })
 
-const { data: ordersData } = useQuery({
-  queryKey: ['orders'],
-  queryFn: () => getOrdersApi(),
-  refetchInterval: false,
-  enabled: computed(() => authStore.isAuth),
-})
-
 const payments = computed(() => {
   const list = data.value ?? []
   if (!statusFilter.value) return list
   return list.filter((p) => p.status === statusFilter.value)
 })
-
-const selectedOrder = computed(() =>
-  (ordersData.value ?? []).find((o) => o.id === selectedOrderId.value),
-)
 
 function invalidate() {
   queryClient.invalidateQueries({ queryKey: ['payments'] })
@@ -92,12 +83,7 @@ const { mutate: remove } = useMutation({
 })
 
 function openCreate() {
-  if (!selectedOrder.value) return
-  paymentDialog.value?.open({
-    orderId: selectedOrder.value.id,
-    orderLabel: `№${selectedOrder.value.number} · ${selectedOrder.value.customerName}`,
-    remaining: selectedOrder.value.remaining,
-  })
+  paymentDialog.value?.open()
 }
 
 const STATUSES: PaymentStatus[] = [
@@ -125,15 +111,8 @@ const canConfirm = (p: PaymentListDto) =>
           {{ t(`payments.status.${s}`) }}
         </option>
       </select>
-      <select v-model="selectedOrderId" class="input">
-        <option value="" disabled hidden>{{ t('payments.order') }}</option>
-        <option v-for="o in (ordersData ?? [])" :key="o.id" :value="o.id">
-          №{{ o.number }} · {{ o.customerName }} · {{ o.total }}
-        </option>
-      </select>
       <UiButton
         v-if="canCreatePayment(authStore.user.role)"
-        :disabled="!selectedOrderId"
         @click="openCreate"
       >
         {{ t('payments.createTitle') }}
@@ -157,7 +136,12 @@ const canConfirm = (p: PaymentListDto) =>
         </UiTableRow>
       </UiTableHeader>
       <UiTableBody>
-        <UiTableRow v-for="p in payments" :key="p.id">
+        <UiTableRow
+          v-for="p in payments"
+          :key="p.id"
+          class="cursor-pointer hover:bg-white/5 transition-colors"
+          @click="detailsDrawer?.open(p.id)"
+        >
           <UiTableCell class="font-medium">№{{ p.orderNumber }}</UiTableCell>
           <UiTableCell>{{ p.customerName }}</UiTableCell>
           <UiTableCell>{{ convertCurrency(p.amount, locale) }}</UiTableCell>
@@ -167,8 +151,8 @@ const canConfirm = (p: PaymentListDto) =>
               {{ t(`payments.status.${p.status}`) }}
             </span>
           </UiTableCell>
-          <UiTableCell>{{ formatDate(p.createdAt, 'short', locale) }}</UiTableCell>
-          <UiTableCell>
+          <UiTableCell>{{ formatDate(p.createdAt, 'full', locale) }}</UiTableCell>
+          <UiTableCell @click.stop>
             <div class="row-actions">
               <button
                 v-if="canConfirm(p)"
@@ -180,9 +164,9 @@ const canConfirm = (p: PaymentListDto) =>
               <button
                 v-if="p.status === 'PENDING' && canUpdateOrder(authStore.user.role)"
                 class="btn-mini"
-                @click="changeStatus({ id: p.id, status: 'FAILED' })"
+                @click="changeStatus({ id: p.id, status: 'CANCELLED' })"
               >
-                {{ t('payments.actions.fail') }}
+                {{ t('payments.actions.cancel') }}
               </button>
               <button
                 v-if="
@@ -196,7 +180,9 @@ const canConfirm = (p: PaymentListDto) =>
               </button>
               <button
                 v-if="
-                  (p.status === 'PENDING' || p.status === 'FAILED') &&
+                  (p.status === 'PENDING' ||
+                    p.status === 'FAILED' ||
+                    p.status === 'CANCELLED') &&
                   canDeletePayment(authStore.user.role)
                 "
                 class="btn-mini danger"
@@ -211,6 +197,7 @@ const canConfirm = (p: PaymentListDto) =>
     </UiTable>
 
     <BillingPaymentCreateDialog ref="paymentDialog" @created="invalidate" />
+    <BillingPaymentDetailsDrawer ref="detailsDrawer" />
   </div>
 </template>
 
