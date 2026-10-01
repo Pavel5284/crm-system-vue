@@ -219,37 +219,13 @@ const canConfirm = (p: PaymentListDto) =>
   flex-wrap: wrap;
   align-items: center;
 }
-.input {
-  border: 1px solid #161c26;
-}
 .row-actions {
   display: flex;
   gap: 0.375rem;
   flex-wrap: wrap;
 }
-.btn-mini {
-  font-size: 0.75rem;
-  border: 1px solid #161c26;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  color: #aebed5;
-  white-space: nowrap;
-}
-.btn-mini:hover:not(:disabled) {
-  border-color: #482c65;
-  color: white;
-}
-.btn-mini.danger {
-  border-color: #5b2323;
-  color: #e5a3a3;
-}
 .muted {
   font-size: 0.85rem;
   opacity: 0.65;
-}
-.error {
-  font-size: 0.8rem;
-  color: #e5a3a3;
-  margin-bottom: 0.5rem;
 }
 </style>

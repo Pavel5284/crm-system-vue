@@ -109,6 +109,32 @@
   .btn-mini:disabled {
     opacity: 0.5;
   }
+  .btn-mini.danger {
+    border-color: #5b2323;
+    color: #e5a3a3;
+  }
+  /* Формы слайдоверов/диалогов: единый стиль вместо копий
+     в scoped-стилях каждого компонента. */
+  .field {
+    margin-bottom: 0.75rem;
+  }
+  .label {
+    display: block;
+    font-size: 0.75rem;
+    opacity: 0.75;
+    margin-bottom: 0.25rem;
+  }
+  .input {
+    border: 1px solid #161c26;
+  }
+  .input::placeholder {
+    color: #748092;
+  }
+  .error {
+    font-size: 0.75rem;
+    color: #e5a3a3;
+    margin: 0.5rem 0;
+  }
   .hint {
     font-size: 0.75rem;
     color: #748092;

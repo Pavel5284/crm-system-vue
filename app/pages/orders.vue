@@ -152,12 +152,6 @@ watch(
   margin-bottom: 1rem;
   flex-wrap: wrap;
 }
-.input {
-  border: 1px solid #161c26;
-}
-.input::placeholder {
-  color: #748092;
-}
 .muted {
   font-size: 0.85rem;
   opacity: 0.65;

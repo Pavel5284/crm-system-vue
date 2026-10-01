@@ -145,14 +145,4 @@ function removeItem(rows: ItemDraft[], key: number) {
   border-color: #a252c8;
   color: white;
 }
-.btn-mini.danger {
-  border-color: #5b2323;
-  color: #e5a3a3;
-}
-.input {
-  border: 1px solid #161c26;
-}
-.input::placeholder {
-  color: #748092;
-}
 </style>

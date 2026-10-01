@@ -165,7 +165,15 @@ const { mutate, isPending } = useMutation({
     :title="t('orders.createTitle')"
   >
     <template #body>
-      <div v-if="!props.dealId" class="mode-switch">
+      <BillingDialogShell
+        :error="error"
+        :submit-disabled="!canSubmit"
+        :submit-pending="isPending"
+        :idle-text="t('common.create')"
+        :pending-text="t('orders.creating')"
+        @submit="mutate()"
+      >
+        <div v-if="!props.dealId" class="mode-switch">
         <button
           type="button"
           :class="{ active: mode === 'deal' }"
@@ -233,12 +241,7 @@ const { mutate, isPending } = useMutation({
           class="input"
         />
       </div>
-
-      <p v-if="error" class="error">{{ error }}</p>
-
-      <UiButton type="button" class="submit" :disabled="!canSubmit" @click="mutate()">
-        {{ isPending ? t('orders.creating') : t('common.create') }}
-      </UiButton>
+      </BillingDialogShell>
     </template>
   </USlideover>
 </template>
@@ -261,32 +264,9 @@ const { mutate, isPending } = useMutation({
   border-color: #a252c8;
   color: white;
 }
-.field {
-  margin-bottom: 0.75rem;
-}
-.label {
-  display: block;
-  font-size: 0.75rem;
-  opacity: 0.75;
-  margin-bottom: 0.25rem;
-}
-.input {
-  border: 1px solid #161c26;
-}
-.input::placeholder {
-  color: #748092;
-}
 .hint {
   font-size: 0.75rem;
   color: #748092;
   margin-top: 0.25rem;
-}
-.submit {
-  width: 100%;
-}
-.error {
-  font-size: 0.75rem;
-  color: #e5a3a3;
-  margin-bottom: 0.5rem;
 }
 </style>

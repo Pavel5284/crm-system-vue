@@ -181,22 +181,11 @@ function openOrder() {
         <p v-if="error" class="error">{{ error }}</p>
 
         <h3 class="section">{{ t('payments.historyTitle') }}</h3>
-        <p v-if="!payment.statusHistory.length" class="muted">
-          {{ t('payments.historyEmpty') }}
-        </p>
-        <div
-          v-for="h in payment.statusHistory"
-          :key="h.id"
-          class="hist-row"
-        >
-          <span class="muted">{{ formatDate(h.createdAt, 'full', locale) }}</span>
-          <span>
-            {{ h.fromStatus ? t(`payments.status.${h.fromStatus}`) : '—' }} →
-            {{ t(`payments.status.${h.toStatus}`) }}
-          </span>
-          <span v-if="h.changedBy" class="muted">{{ h.changedBy.name }}</span>
-          <span v-if="h.comment" class="muted">{{ h.comment }}</span>
-        </div>
+        <BillingStatusHistory
+          :items="payment.statusHistory"
+          status-i18n-prefix="payments.status"
+          :empty-text="t('payments.historyEmpty')"
+        />
       </template>
     </template>
   </USlideover>
@@ -231,30 +220,9 @@ function openOrder() {
   gap: 0.375rem;
   margin-bottom: 0.75rem;
 }
-.btn-mini.danger {
-  border-color: #5b2323;
-  color: #e5a3a3;
-}
-.error {
-  font-size: 0.75rem;
-  color: #e5a3a3;
-  margin-bottom: 0.5rem;
-}
 .section {
   font-size: 0.85rem;
   font-weight: 600;
   margin: 0.75rem 0 0.375rem;
-}
-.muted {
-  font-size: 0.75rem;
-  opacity: 0.65;
-}
-.hist-row {
-  font-size: 0.78rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  padding: 0.375rem 0;
-  border-bottom: 1px solid #161c26;
 }
 </style>

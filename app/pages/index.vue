@@ -8,7 +8,7 @@ import {updateDealStatusApi} from "~/utils/crm.api"
 import {getApiErrorMessage} from "~/utils/api"
 import {parseMissingDealFields} from "~/utils/deal-move-error"
 import {generateColumnStyle} from "@/components/kanban/generate-gradient"
-import { formatDate } from '~/utils/formatDate'
+import { convertCurrency } from '~/utils/convertCurrency'
 import { VueDraggable } from 'vue-draggable-plus'
 
 const { t, locale } = useI18n()
@@ -45,11 +45,7 @@ function columnSum(column: IColumn): number {
   return column.items.reduce((sum, card) => sum + (Number(card.price) || 0), 0)
 }
 
-// Этап 7: просрочка — дедлайн прошёл, а сделка не на финальном этапе.
-function isOverdue(card: ICard): boolean {
-  if (!card.deadline || card.status === 'done') return false
-  return new Date(card.deadline).getTime() < Date.now()
-}
+// Этап 7: просрочка lives in KanbanCard (isCardOverdue) — здесь не дублируем.
 
 // Перенос без комментария: drag и меню сразу сохраняют новый этап
 // через PATCH /deals/:id/stage. Проверки переходов и полей — на бэкенде:
@@ -287,38 +283,29 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
         </div>
         <KanbanCreateDeal v-if="activeColumn.id === ENTRY_STAGE_ID && canCreate" :refetch="refetch" />
         <div v-if="activeColumn.items.length" class="space-y-3 mt-3">
-          <UiCard
+          <KanbanCard
             v-for="card in activeColumn.items"
             :key="card.id"
-            class="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-            :class="{ 'border-red-500/60': isOverdue(card) }"
-            role="button"
-            @click="store.set(card)"
+            :card="card"
+            class="overflow-hidden cursor-pointer"
+            @open="store.set"
           >
-            <UiCardHeader>
-              <UiCardTitle>{{ card.name }}</UiCardTitle>
-              <UiCardDescription class="mt-2 block">{{ convertCurrency(card.price, locale) }}</UiCardDescription>
-            </UiCardHeader>
-            <UiCardContent class="text-xs">{{ t('kanban.company') }}: {{ card.customerName }}</UiCardContent>
-            <UiCardContent class="text-xs">{{ t('kanban.responsible') }}: {{ card.responsibleName ?? '—' }}</UiCardContent>
-            <UiCardContent class="text-xs" :class="{ 'text-red-400 font-medium': isOverdue(card) }">
-              {{ t('kanban.deadline') }}: {{ card.deadline ? formatDate(card.deadline, 'short', locale) : '—' }}
-            </UiCardContent>
-            <UiCardFooter>{{ formatDate(card.createdAt, 'long', locale) }}</UiCardFooter>
-            <div v-if="allowedTargets(activeColumn.id).length > 0" class="px-4 pb-3 pt-1 border-t border-border/50 mt-1" @click.stop>
-              <label class="text-[11px] uppercase tracking-wide text-muted-foreground">{{ t('kanban.moveTo') }}</label>
-              <select
-                :value="activeColumn!.id"
-                @click.stop
-                @change="onMoveCard(card.id, ($event.target as HTMLSelectElement).value)"
-                class="mt-1 w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option v-for="c in movableColumns(activeColumn.id)" :key="c.id" :value="c.id" class="bg-background text-foreground">
-                  {{ t(c.name) }}{{ c.id === activeColumn!.id ? ' ✓' : '' }}
-                </option>
-              </select>
-            </div>
-          </UiCard>
+            <template #actions>
+              <div v-if="allowedTargets(activeColumn.id).length > 0" class="px-4 pb-3 pt-1 border-t border-border/50 mt-1" @click.stop>
+                <label class="text-[11px] uppercase tracking-wide text-muted-foreground">{{ t('kanban.moveTo') }}</label>
+                <select
+                  :value="activeColumn!.id"
+                  @click.stop
+                  @change="onMoveCard(card.id, ($event.target as HTMLSelectElement).value)"
+                  class="mt-1 w-full rounded-md border border-input bg-background px-2.5 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                >
+                  <option v-for="c in movableColumns(activeColumn.id)" :key="c.id" :value="c.id" class="bg-background text-foreground">
+                    {{ t(c.name) }}{{ c.id === activeColumn!.id ? ' ✓' : '' }}
+                  </option>
+                </select>
+              </div>
+            </template>
+          </KanbanCard>
         </div>
         <p v-else class="text-center text-sm text-muted-foreground py-10">{{ t('common.noData') }}</p>
       </div>
@@ -352,23 +339,11 @@ function onDragAdd(evt: { data?: unknown; newIndex?: number }, targetColumn: ICo
             v-for="card in column.items"
             :key="card.id"
           >
-            <UiCard
-              class="cursor-move hover:shadow-md transition-shadow"
-              :class="{ 'border-red-500/60': isOverdue(card) }"
-              role="button"
-              @click="store.set(card)"
-            >
-              <UiCardHeader>
-                <UiCardTitle>{{ card.name }}</UiCardTitle>
-                <UiCardDescription class="mt-2 block">{{ convertCurrency(card.price, locale) }}</UiCardDescription>
-              </UiCardHeader>
-              <UiCardContent class="text-xs">{{ t('kanban.company') }}: {{ card.customerName }}</UiCardContent>
-              <UiCardContent class="text-xs">{{ t('kanban.responsible') }}: {{ card.responsibleName ?? '—' }}</UiCardContent>
-              <UiCardContent class="text-xs" :class="{ 'text-red-400 font-medium': isOverdue(card) }">
-                {{ t('kanban.deadline') }}: {{ card.deadline ? formatDate(card.deadline, 'short', locale) : '—' }}
-              </UiCardContent>
-              <UiCardFooter>{{ formatDate(card.createdAt, 'long', locale) }}</UiCardFooter>
-            </UiCard>
+            <KanbanCard
+              :card="card"
+              class="cursor-move"
+              @open="store.set"
+            />
           </div>
         </VueDraggable>
       </div>

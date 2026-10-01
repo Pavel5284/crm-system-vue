@@ -97,7 +97,15 @@ const { mutate, isPending } = useMutation({
     :title="t('payments.createTitle')"
   >
     <template #body>
-      <p v-if="orderLabel" class="order-label">{{ orderLabel }}</p>
+      <BillingDialogShell
+        :error="error"
+        :submit-disabled="!canSubmit"
+        :submit-pending="isPending"
+        :idle-text="t('common.create')"
+        :pending-text="t('payments.creating')"
+        @submit="mutate()"
+      >
+        <p v-if="orderLabel" class="order-label">{{ orderLabel }}</p>
 
       <div v-if="!presetOrder" class="field">
         <label class="label">{{ t('payments.order') }}</label>
@@ -142,12 +150,7 @@ const { mutate, isPending } = useMutation({
           class="input"
         />
       </div>
-
-      <p v-if="error" class="error">{{ error }}</p>
-
-      <UiButton type="button" :disabled="!canSubmit" @click="mutate()">
-        {{ isPending ? t('payments.creating') : t('common.create') }}
-      </UiButton>
+      </BillingDialogShell>
     </template>
   </USlideover>
 </template>
@@ -158,18 +161,6 @@ const { mutate, isPending } = useMutation({
   opacity: 0.8;
   margin-bottom: 0.75rem;
 }
-.field {
-  margin-bottom: 0.75rem;
-}
-.label {
-  display: block;
-  font-size: 0.75rem;
-  opacity: 0.75;
-  margin-bottom: 0.25rem;
-}
-.input {
-  border: 1px solid #161c26;
-}
 .check {
   display: flex;
   align-items: center;
@@ -177,10 +168,5 @@ const { mutate, isPending } = useMutation({
   font-size: 0.8rem;
   margin-bottom: 0.75rem;
   cursor: pointer;
-}
-.error {
-  font-size: 0.75rem;
-  color: #e5a3a3;
-  margin-bottom: 0.5rem;
 }
 </style>
