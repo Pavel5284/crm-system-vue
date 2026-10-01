@@ -4,7 +4,7 @@ import { createLoginSchema } from '~/schemas/auth.schema'
 import { useLogin } from '~/composables/auth/useLogin'
 
 const { t } = useI18n()
-const { login, isPending, serverError } = useLogin()
+const { login, isPending} = useLogin()
 
 const schema = createLoginSchema(t)
 

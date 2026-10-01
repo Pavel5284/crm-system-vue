@@ -1,11 +1,15 @@
 ﻿<script lang="ts" setup>
+import { useForm as useTanStackForm } from '@tanstack/vue-form'
 import PhoneInput from '@crm/ui-kit/PhoneInput.vue'
 import AvatarUploader from '@crm/ui-kit/AvatarUploader.vue'
 import { getInitials } from '@crm/ui-kit/avatar'
-import { isPhoneDisplayValid } from '@crm/ui-kit/phone'
 import { getApiErrorMessage } from '~/utils/api'
-import { containsControlChars, CUSTOMER_TEXT_MAX_LENGTH, isValidEmailFormat } from '~/utils/validation'
+import { CUSTOMER_TEXT_MAX_LENGTH } from '~/utils/validation'
+import { createPhoneSchema } from '~/schemas/phone.schema'
+import { createOptionalTextSchema } from '~/schemas/optional-text.schema'
+import { formatFieldErrors } from '~/utils/form-errors'
 import { deleteCustomerAvatarApi, updateCustomerApi, updateCustomerAvatarApi } from '~/utils/crm.api'
+import type { CustomerDto } from '~/types/backend.contracts'
 
 const { t } = useI18n()
 
@@ -22,63 +26,86 @@ const isLocalOpen = computed({
   }
 })
 
-const nameRef = ref('')
-const emailRef = ref('')
-const phoneRef = ref('')
-const contactPersonRef = ref('')
-const avatarUrlRef = ref('')
-const fromSourceRef = ref('')
+interface CustomerFormValues {
+  name: string
+  email: string
+  phone: string
+  contactPerson: string
+  fromSource: string
+}
+
+const emptyValues: CustomerFormValues = {
+  name: '',
+  email: '',
+  phone: '',
+  contactPerson: '',
+  fromSource: '',
+}
+
+const toFormValues = (c: CustomerDto): CustomerFormValues => ({
+  name: c.name,
+  email: c.email,
+  phone: c.phone ?? '',
+  contactPerson: c.contactPerson ?? '',
+  fromSource: c.fromSource ?? '',
+})
+
+// Валидация при каждом вводе (onChange) + повторный прогон на сабмите:
+// сюда попадаем только при валидной форме.
+const form = useTanStackForm({
+  defaultValues: { ...emptyValues },
+  onSubmit: async ({ value }) => {
+    if (!store.customer) return
+    errorRef.value = ''
+    try {
+      const updated = await updateCustomerApi(store.customer.id, {
+        name: value.name.trim(),
+        email: value.email.trim(),
+        phone: value.phone.trim() || null,
+        contactPerson: value.contactPerson.trim() || null,
+        fromSource: value.fromSource.trim() || null,
+      })
+      await props.refetch()
+      // слайдовер НЕ закрываем: обновляем стор ответом и сбрасываем
+      // dirty актуальными значениями (сторож ниже тоже сделает reset).
+      store.customer = updated
+      form.reset(toFormValues(updated))
+    }
+    catch (e) {
+      errorRef.value = getApiErrorMessage(e)
+    }
+  },
+})
+
+const CustomerField = form.Field
+const formValues = form.useStore((state) => state.values)
+const isDirty = form.useStore((state) => state.isDirty)
+const canSubmit = form.useStore((state) => state.canSubmit)
+const isSubmitting = form.useStore((state) => state.isSubmitting)
+
+// Правила сырых полей (телефон/тексты) — зеркало backend UpdateCustomerDto.
+// Имя и email валидируются внутри готовых FormNameField/FormEmailField
+// (email — :required="false": пустое значение валидно, в отличие от auth).
+const phoneSchema = createPhoneSchema(t)
+const customerTextSchema = createOptionalTextSchema(t, { maxLength: CUSTOMER_TEXT_MAX_LENGTH })
+
+// Текст ошибки под сырым полем (у готовых Form* inside — свой resolveError).
+const resolveError = (errors: unknown[]): string | undefined =>
+  errors.length ? formatFieldErrors(errors) : undefined
 
 watch(() => store.customer, (customer) => {
   if (!customer) return
-  nameRef.value = customer.name
-  emailRef.value = customer.email
-  phoneRef.value = customer.phone ?? ''
-  contactPersonRef.value = customer.contactPerson ?? ''
   avatarUrlRef.value = customer.avatarUrl || ''
-  fromSourceRef.value = customer.fromSource ?? ''
+  form.reset(toFormValues(customer))
 }, { immediate: true })
 
-const isSaving = ref(false)
+const avatarUrlRef = ref('')
+
 const isAvatarSaving = ref(false)
 const errorRef = ref('')
 
-const phoneError = computed(() => {
-  const value = phoneRef.value.trim()
-  if (!value || isPhoneDisplayValid(value)) return ''
-  return t('settings.profile.validation.phoneInvalid')
-})
-
-// Проверка полей перед сохранением: бэкенд тоже валидирует (UpdateCustomerDto),
-// но мусор лучше не отправлять в сеть. Управляющие символы (\n, NUL и т.п.)
-// в однострочных полях — потенциальная инъекция переносов в логи/хранилище.
-const customerFieldsError = computed(() => {
-  const name = nameRef.value.trim()
-  if (!name) return t('validation.nameRequired')
-  if (name.length > CUSTOMER_TEXT_MAX_LENGTH) return t('validation.textTooLong', { max: CUSTOMER_TEXT_MAX_LENGTH })
-  if (containsControlChars(nameRef.value)) return t('validation.nameInvalid')
-  const email = emailRef.value.trim()
-  if (email && !isValidEmailFormat(email)) return t('validation.emailInvalid')
-  for (const value of [contactPersonRef.value, fromSourceRef.value]) {
-    const text = value.trim()
-    if (text.length > CUSTOMER_TEXT_MAX_LENGTH) return t('validation.textTooLong', { max: CUSTOMER_TEXT_MAX_LENGTH })
-    if (text && containsControlChars(text)) return t('validation.invalidCharacters')
-  }
-  return ''
-})
-
-const isDirty = computed(() => {
-  const c = store.customer
-  if (!c) return false
-  return nameRef.value !== c.name
-    || emailRef.value !== c.email
-    || (phoneRef.value || '') !== (c.phone ?? '')
-    || (contactPersonRef.value || '') !== (c.contactPerson ?? '')
-    || (fromSourceRef.value || '') !== (c.fromSource ?? '')
-})
-
 const customerInitials = computed(() =>
-  getInitials(nameRef.value || store.customer?.name || ''),
+  getInitials(formValues.value.name || store.customer?.name || ''),
 )
 
 async function onCustomerAvatarUpload(dataUrl: string) {
@@ -109,33 +136,6 @@ async function onCustomerAvatarRemove() {
     errorRef.value = getApiErrorMessage(e)
   } finally {
     isAvatarSaving.value = false
-  }
-}
-
-async function onSave() {
-  if (!store.customer) return
-  errorRef.value = ''
-  const fieldsError = customerFieldsError.value || phoneError.value
-  if (fieldsError) {
-    errorRef.value = fieldsError
-    return
-  }
-  isSaving.value = true
-  try {
-    const updated = await updateCustomerApi(store.customer.id, {
-      name: nameRef.value.trim(),
-      email: emailRef.value.trim(),
-      phone: phoneRef.value.trim() || null,
-      contactPerson: contactPersonRef.value.trim() || null,
-      fromSource: fromSourceRef.value.trim() || null,
-    })
-    await props.refetch()
-    // слайдовер НЕ закрываем: обновляем стор ответом, чтобы сбросить isDirty
-    store.customer = updated
-  } catch (e) {
-    errorRef.value = getApiErrorMessage(e)
-  } finally {
-    isSaving.value = false
   }
 }
 </script>
@@ -171,31 +171,73 @@ async function onSave() {
         <p class="text-xs text-muted-foreground">{{ t('avatar.hint') }}</p>
       </div>
 
-      <div class="space-y-3">
-        <UiInput :placeholder="t('customers.slideover.namePlaceholder')" type="text" class="input" v-model="nameRef"/>
-        <UiInput placeholder="Email" type="email" class="input" v-model="emailRef"/>
-        <PhoneInput v-model="phoneRef" :placeholder="t('settings.profile.phonePlaceholder')" :hint="t('settings.profile.phoneHint')" :error="phoneError"/>
-        <UiInput :placeholder="t('customers.slideover.contactPersonPlaceholder')" type="text" class="input" v-model="contactPersonRef"/>
-        <UiInput :placeholder="t('customers.slideover.sourcePlaceholder')" type="text" class="input" v-model="fromSourceRef"/>
-      </div>
+      <form autocomplete="on" @submit.prevent="() => form.handleSubmit()">
+        <div class="field">
+          <label class="label">{{ t('customers.slideover.namePlaceholder') }}</label>
+          <FormNameField
+            :form="form"
+            :max-length="CUSTOMER_TEXT_MAX_LENGTH"
+            :placeholder="t('customers.slideover.namePlaceholder')"
+          />
+        </div>
+        <div class="field">
+          <label class="label">{{ t('customers.slideover.emailPlaceholder') }}</label>
+          <FormEmailField
+            :form="form"
+            :required="false"
+            :placeholder="t('customers.slideover.emailPlaceholder')"
+          />
+        </div>
+        <div class="field">
+          <label class="label">{{ t('customers.slideover.phonePlaceholder') }}</label>
+          <CustomerField name="phone" :validators="{ onChange: phoneSchema }" v-slot="{ field }">
+            <PhoneInput
+              :modelValue="field.state.value as string"
+              :placeholder="t('settings.profile.phonePlaceholder')"
+              :hint="t('settings.profile.phoneHint')"
+              :error="resolveError(field.state.meta.errors) ?? ''"
+              @update:modelValue="(val: string) => field.handleChange(val)"
+              @blur="field.handleBlur"
+            />
+          </CustomerField>
+        </div>
+        <div class="field">
+          <label class="label">{{ t('customers.slideover.contactPersonPlaceholder') }}</label>
+          <CustomerField name="contactPerson" :validators="{ onChange: customerTextSchema }" v-slot="{ field }">
+            <UiInput
+              :modelValue="field.state.value as string"
+              :placeholder="t('customers.slideover.contactPersonPlaceholder')"
+              type="text"
+              class="input"
+              :error="resolveError(field.state.meta.errors)"
+              @update:modelValue="(val: string | number) => field.handleChange(val as string)"
+              @blur="field.handleBlur"
+            />
+          </CustomerField>
+        </div>
+        <div class="field">
+          <label class="label">{{ t('customers.slideover.sourcePlaceholder') }}</label>
+          <CustomerField name="fromSource" :validators="{ onChange: customerTextSchema }" v-slot="{ field }">
+            <UiInput
+              :modelValue="field.state.value as string"
+              :placeholder="t('customers.slideover.sourcePlaceholder')"
+              type="text"
+              class="input"
+              :error="resolveError(field.state.meta.errors)"
+              @update:modelValue="(val: string | number) => field.handleChange(val as string)"
+              @blur="field.handleBlur"
+            />
+          </CustomerField>
+        </div>
 
-      <p v-if="errorRef" class="text-red-500 text-sm mt-3">{{ errorRef }}</p>
+        <p v-if="errorRef" class="text-red-500 text-sm mt-3">{{ errorRef }}</p>
 
-      <div class="flex items-center gap-3 mt-5">
-        <UiButton type="button" :disabled="isSaving || !isDirty || !!phoneError || !!customerFieldsError" @click="onSave">
-          {{ isSaving ? t('customers.slideover.saving') : t('customers.slideover.save') }}
-        </UiButton>
-      </div>
+        <div class="flex items-center gap-3 mt-5">
+          <UiButton type="submit" :disabled="!isDirty || !canSubmit">
+            {{ isSubmitting ? t('customers.slideover.saving') : t('customers.slideover.save') }}
+          </UiButton>
+        </div>
+      </form>
     </template>
   </USlideover>
 </template>
-
-<style scoped>
-.input {
-  border: 1px solid #161c26;
-}
-.input::placeholder {
-  color: #748092;
-}
-</style>
-

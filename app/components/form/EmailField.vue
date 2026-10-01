@@ -3,6 +3,7 @@
 
   Как пользоваться:
     <FormEmailField :form="form" />
+    <FormEmailField :form="form" :required="false" /> — пустое значение валидно.
 
   Что происходит внутри:
     1. FormField регистрирует поле в родительской форме и при каждом вводе
@@ -13,7 +14,7 @@
 -->
 <script setup lang="ts">
 import type { Component } from 'vue'
-import { createEmailSchema } from '~/schemas/email.schema'
+import { createEmailSchema, createOptionalEmailSchema } from '~/schemas/email.schema'
 import { formatFieldErrors } from '~/utils/form-errors'
 
 interface Props {
@@ -22,6 +23,8 @@ interface Props {
   form: { Field: unknown }
   // Ключ поля в значениях формы (form.state.values[fieldName]).
   fieldName?: string
+  // Обязательность: false — пустое значение валидно (карточка клиента).
+  required?: boolean
   placeholder?: string
   name?: string
   autocomplete?: string
@@ -30,6 +33,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   fieldName: 'email',
+  required: true,
   placeholder: undefined,
   name: 'email',
   autocomplete: 'email',
@@ -39,7 +43,7 @@ const props = withDefaults(defineProps<Props>(), {
 const { t } = useI18n()
 
 // Правило валидации (zod). Применяется ниже через :validators.
-const emailSchema = createEmailSchema(t)
+const emailSchema = props.required ? createEmailSchema(t) : createOptionalEmailSchema(t)
 const emailPlaceholder = computed(() => props.placeholder ?? t('validation.emailPlaceholder'))
 
 // Компонент поля той формы, что передали в :form.
