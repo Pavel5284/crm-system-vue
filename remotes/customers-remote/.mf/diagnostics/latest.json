@@ -1,0 +1,10 @@
+{
+  "latestErrorEvent": {
+    "code": "TYPE-001",
+    "message": "Failed to generate type declaration. Execute the below cmd to reproduce and fix the error. #TYPE-001\nargs: {\"cmd\":\"npx vue-tsc --project C:\\\\projects\\\\crm-system\\\\crm-system-vue\\\\remotes\\\\customers-remote\\\\node_modules\\\\.federation\\\\tsconfig.ff3676a6d449a89d893c71be837b5b13.json\"}\nView the docs to see how to solve: https://module-federation.io/guide/troubleshooting/type#type-001",
+    "args": {
+      "cmd": "npx vue-tsc --project C:\\projects\\crm-system\\crm-system-vue\\remotes\\customers-remote\\node_modules\\.federation\\tsconfig.ff3676a6d449a89d893c71be837b5b13.json"
+    },
+    "timestamp": 1790879732007
+  }
+}

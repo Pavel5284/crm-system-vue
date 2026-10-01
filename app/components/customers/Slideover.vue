@@ -1,15 +1,9 @@
 ﻿<script lang="ts" setup>
-import { useForm as useTanStackForm } from '@tanstack/vue-form'
-import PhoneInput from '@crm/ui-kit/PhoneInput.vue'
-import AvatarUploader from '@crm/ui-kit/AvatarUploader.vue'
-import { getInitials } from '@crm/ui-kit/avatar'
+import CustomerForm from '@crm/customer-form/CustomerForm.vue'
+import { CUSTOMER_FORM_LIMITS, type CustomerFormLabels } from '@crm/customer-form/types'
 import { getApiErrorMessage } from '~/utils/api'
-import { CUSTOMER_TEXT_MAX_LENGTH } from '~/utils/validation'
-import { createPhoneSchema } from '~/schemas/phone.schema'
-import { createOptionalTextSchema } from '~/schemas/optional-text.schema'
-import { formatFieldErrors } from '~/utils/form-errors'
 import { deleteCustomerAvatarApi, updateCustomerApi, updateCustomerAvatarApi } from '~/utils/crm.api'
-import type { CustomerDto } from '~/types/backend.contracts'
+import type { UpdateCustomerPayload } from '~/types/backend.contracts'
 
 const { t } = useI18n()
 
@@ -26,87 +20,67 @@ const isLocalOpen = computed({
   }
 })
 
-interface CustomerFormValues {
-  name: string
-  email: string
-  phone: string
-  contactPerson: string
-  fromSource: string
-}
+// Все строки формы — из host-i18n (лимиты — из пакета, ими же
+// интерполируем сообщения валидации).
+const labels = computed<CustomerFormLabels>(() => ({
+  nameLabel: t('customers.slideover.namePlaceholder'),
+  namePlaceholder: t('customers.slideover.namePlaceholder'),
+  emailLabel: t('customers.slideover.emailPlaceholder'),
+  emailPlaceholder: t('customers.slideover.emailPlaceholder'),
+  phoneLabel: t('customers.slideover.phonePlaceholder'),
+  phonePlaceholder: t('settings.profile.phonePlaceholder'),
+  phoneHint: t('settings.profile.phoneHint'),
+  contactLabel: t('customers.slideover.contactPersonPlaceholder'),
+  contactPlaceholder: t('customers.slideover.contactPersonPlaceholder'),
+  sourceLabel: t('customers.slideover.sourcePlaceholder'),
+  sourcePlaceholder: t('customers.slideover.sourcePlaceholder'),
+  avatarHint: t('avatar.hint'),
+  save: t('customers.slideover.save'),
+  saving: t('customers.slideover.saving'),
+  nameRequired: t('validation.nameRequired'),
+  nameTooLong: t('validation.nameTooLong'),
+  nameInvalid: t('validation.nameInvalid'),
+  emailTooLong: t('validation.emailTooLong'),
+  emailInvalid: t('validation.emailInvalid'),
+  phoneInvalid: t('settings.profile.validation.phoneInvalid'),
+  textTooLong: t('validation.textTooLong', { max: CUSTOMER_FORM_LIMITS.textMaxLength }),
+  textInvalid: t('validation.invalidCharacters'),
+}))
 
-const emptyValues: CustomerFormValues = {
-  name: '',
-  email: '',
-  phone: '',
-  contactPerson: '',
-  fromSource: '',
-}
-
-const toFormValues = (c: CustomerDto): CustomerFormValues => ({
-  name: c.name,
-  email: c.email,
-  phone: c.phone ?? '',
-  contactPerson: c.contactPerson ?? '',
-  fromSource: c.fromSource ?? '',
-})
-
-// Валидация при каждом вводе (onChange) + повторный прогон на сабмите:
-// сюда попадаем только при валидной форме.
-const form = useTanStackForm({
-  defaultValues: { ...emptyValues },
-  onSubmit: async ({ value }) => {
-    if (!store.customer) return
-    errorRef.value = ''
-    try {
-      const updated = await updateCustomerApi(store.customer.id, {
-        name: value.name.trim(),
-        email: value.email.trim(),
-        phone: value.phone.trim() || null,
-        contactPerson: value.contactPerson.trim() || null,
-        fromSource: value.fromSource.trim() || null,
-      })
-      await props.refetch()
-      // слайдовер НЕ закрываем: обновляем стор ответом и сбрасываем
-      // dirty актуальными значениями (сторож ниже тоже сделает reset).
-      store.customer = updated
-      form.reset(toFormValues(updated))
-    }
-    catch (e) {
-      errorRef.value = getApiErrorMessage(e)
-    }
-  },
-})
-
-const CustomerField = form.Field
-const formValues = form.useStore((state) => state.values)
-const isDirty = form.useStore((state) => state.isDirty)
-const canSubmit = form.useStore((state) => state.canSubmit)
-const isSubmitting = form.useStore((state) => state.isSubmitting)
-
-// Правила сырых полей (телефон/тексты) — зеркало backend UpdateCustomerDto.
-// Имя и email валидируются внутри готовых FormNameField/FormEmailField
-// (email — :required="false": пустое значение валидно, в отличие от auth).
-const phoneSchema = createPhoneSchema(t)
-const customerTextSchema = createOptionalTextSchema(t, { maxLength: CUSTOMER_TEXT_MAX_LENGTH })
-
-// Текст ошибки под сырым полем (у готовых Form* inside — свой resolveError).
-const resolveError = (errors: unknown[]): string | undefined =>
-  errors.length ? formatFieldErrors(errors) : undefined
-
-watch(() => store.customer, (customer) => {
-  if (!customer) return
-  avatarUrlRef.value = customer.avatarUrl || ''
-  form.reset(toFormValues(customer))
-}, { immediate: true })
+const avatarLabels = computed(() => ({
+  upload: t('avatar.upload'),
+  remove: t('avatar.remove'),
+  fileTooLarge: t('avatar.fileTooLarge'),
+  onlyImage: t('avatar.onlyImage'),
+  readError: t('avatar.readError'),
+}))
 
 const avatarUrlRef = ref('')
 
+watch(() => store.customer, (customer) => {
+  avatarUrlRef.value = customer?.avatarUrl || ''
+}, { immediate: true })
+
+const isSaving = ref(false)
 const isAvatarSaving = ref(false)
 const errorRef = ref('')
 
-const customerInitials = computed(() =>
-  getInitials(formValues.value.name || store.customer?.name || ''),
-)
+// Сюда попадаем только при валидной форме (проверка — внутри пакета).
+async function onSave(payload: UpdateCustomerPayload) {
+  if (!store.customer) return
+  errorRef.value = ''
+  isSaving.value = true
+  try {
+    const updated = await updateCustomerApi(store.customer.id, payload)
+    await props.refetch()
+    // слайдовер НЕ закрываем: обновляем стор ответом
+    store.customer = updated
+  } catch (e) {
+    errorRef.value = getApiErrorMessage(e)
+  } finally {
+    isSaving.value = false
+  }
+}
 
 async function onCustomerAvatarUpload(dataUrl: string) {
   if (!store.customer) return
@@ -148,96 +122,22 @@ async function onCustomerAvatarRemove() {
     :description="t('customers.slideover.description')"
   >
     <template #body>
-      <div class="mb-5 flex flex-col items-center gap-3">
-        <AvatarUploader
-          v-model="avatarUrlRef"
-          :initials="customerInitials"
-          :size="96"
-          v-model:saving="isAvatarSaving"
-          :labels="{
-            upload: t('avatar.upload'),
-            remove: t('avatar.remove'),
-            fileTooLarge: t('avatar.fileTooLarge'),
-            onlyImage: t('avatar.onlyImage'),
-            readError: t('avatar.readError'),
-          }"
-          @upload="onCustomerAvatarUpload"
-          @remove="onCustomerAvatarRemove"
-        >
-          <template #icon="{ saving }">
-            <Icon :name="saving ? 'lucide:loader-2' : 'lucide:camera'" size="16" :class="saving && 'animate-spin'" />
-          </template>
-        </AvatarUploader>
-        <p class="text-xs text-muted-foreground">{{ t('avatar.hint') }}</p>
-      </div>
-
-      <form autocomplete="on" @submit.prevent="() => form.handleSubmit()">
-        <div class="field">
-          <label class="label">{{ t('customers.slideover.namePlaceholder') }}</label>
-          <FormNameField
-            :form="form"
-            :max-length="CUSTOMER_TEXT_MAX_LENGTH"
-            :placeholder="t('customers.slideover.namePlaceholder')"
-          />
-        </div>
-        <div class="field">
-          <label class="label">{{ t('customers.slideover.emailPlaceholder') }}</label>
-          <FormEmailField
-            :form="form"
-            :required="false"
-            :placeholder="t('customers.slideover.emailPlaceholder')"
-          />
-        </div>
-        <div class="field">
-          <label class="label">{{ t('customers.slideover.phonePlaceholder') }}</label>
-          <CustomerField name="phone" :validators="{ onChange: phoneSchema }" v-slot="{ field }">
-            <PhoneInput
-              :modelValue="field.state.value as string"
-              :placeholder="t('settings.profile.phonePlaceholder')"
-              :hint="t('settings.profile.phoneHint')"
-              :error="resolveError(field.state.meta.errors) ?? ''"
-              @update:modelValue="(val: string) => field.handleChange(val)"
-              @blur="field.handleBlur"
-            />
-          </CustomerField>
-        </div>
-        <div class="field">
-          <label class="label">{{ t('customers.slideover.contactPersonPlaceholder') }}</label>
-          <CustomerField name="contactPerson" :validators="{ onChange: customerTextSchema }" v-slot="{ field }">
-            <UiInput
-              :modelValue="field.state.value as string"
-              :placeholder="t('customers.slideover.contactPersonPlaceholder')"
-              type="text"
-              class="input"
-              :error="resolveError(field.state.meta.errors)"
-              @update:modelValue="(val: string | number) => field.handleChange(val as string)"
-              @blur="field.handleBlur"
-            />
-          </CustomerField>
-        </div>
-        <div class="field">
-          <label class="label">{{ t('customers.slideover.sourcePlaceholder') }}</label>
-          <CustomerField name="fromSource" :validators="{ onChange: customerTextSchema }" v-slot="{ field }">
-            <UiInput
-              :modelValue="field.state.value as string"
-              :placeholder="t('customers.slideover.sourcePlaceholder')"
-              type="text"
-              class="input"
-              :error="resolveError(field.state.meta.errors)"
-              @update:modelValue="(val: string | number) => field.handleChange(val as string)"
-              @blur="field.handleBlur"
-            />
-          </CustomerField>
-        </div>
-
-        <p v-if="errorRef" class="text-red-500 text-sm mt-3">{{ errorRef }}</p>
-
-        <div class="flex items-center gap-3 mt-5">
-          <UiButton type="submit" :disabled="!isDirty || !canSubmit">
-            {{ isSubmitting ? t('customers.slideover.saving') : t('customers.slideover.save') }}
-          </UiButton>
-        </div>
-      </form>
+      <CustomerForm
+        :customer="store.customer"
+        :labels="labels"
+        :avatar-labels="avatarLabels"
+        :avatar-url="avatarUrlRef"
+        :avatar-saving="isAvatarSaving"
+        :saving="isSaving"
+        :server-error="errorRef"
+        @save="onSave"
+        @upload-avatar="onCustomerAvatarUpload"
+        @remove-avatar="onCustomerAvatarRemove"
+      >
+        <template #avatar-icon="{ saving }">
+          <Icon :name="saving ? 'lucide:loader-2' : 'lucide:camera'" size="16" :class="saving && 'animate-spin'" />
+        </template>
+      </CustomerForm>
     </template>
   </USlideover>
 </template>

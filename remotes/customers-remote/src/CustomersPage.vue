@@ -11,11 +11,10 @@ import {
 } from 'reka-ui'
 import { computed, onMounted, ref } from 'vue'
 import type { CustomerDto, CustomersPageProps, MfeLocale, UpdateCustomerPayload } from '@crm/mfe-contracts'
-import { getInitials } from '@crm/ui-kit/avatar'
-import { isPhoneDisplayValid } from '@crm/ui-kit/phone'
+import CustomerForm from '@crm/customer-form/CustomerForm.vue'
+import CustomerTable from '@crm/customer-form/CustomerTable.vue'
+import { CUSTOMER_FORM_LIMITS, type CustomerFormLabels, type CustomerTableLabels } from '@crm/customer-form/types'
 import { cn } from './lib/cn'
-import AvatarUploader from '@crm/ui-kit/AvatarUploader.vue'
-import PhoneInput from '@crm/ui-kit/PhoneInput.vue'
 
 // ВАЖНО: тему/styles.css здесь НЕ импортируем. Remote рендерится внутри
 // страницы хоста и пользуется его собранным CSS 1-в-1 (те же классы —
@@ -49,6 +48,13 @@ const STRINGS: Record<MfeLocale, Record<string, string>> = {
     sourcePh: 'Источник привлечения',
     save: 'Сохранить',
     saving: 'Сохранение...',
+    nameRequired: 'Введите имя',
+    nameTooLong: `Название слишком длинное (макс. ${CUSTOMER_FORM_LIMITS.textMaxLength})`,
+    nameInvalid: 'Недопустимые символы в имени',
+    emailTooLong: `Слишком длинный email (макс. ${CUSTOMER_FORM_LIMITS.emailMaxLength})`,
+    emailInvalid: 'Некорректный email',
+    textTooLong: `Слишком длинный текст (макс. ${CUSTOMER_FORM_LIMITS.textMaxLength})`,
+    textInvalid: 'Недопустимые символы',
     avatarHint: 'PNG, JPG, WEBP, GIF до 2MB',
     avatarUpload: 'Загрузить аватар',
     avatarRemove: 'Удалить аватар',
@@ -79,6 +85,13 @@ const STRINGS: Record<MfeLocale, Record<string, string>> = {
     sourcePh: 'Source',
     save: 'Save',
     saving: 'Saving...',
+    nameRequired: 'Name is required',
+    nameTooLong: `Name is too long (max ${CUSTOMER_FORM_LIMITS.textMaxLength})`,
+    nameInvalid: 'Invalid characters in name',
+    emailTooLong: `Email is too long (max ${CUSTOMER_FORM_LIMITS.emailMaxLength})`,
+    emailInvalid: 'Invalid email',
+    textTooLong: `Text is too long (max ${CUSTOMER_FORM_LIMITS.textMaxLength})`,
+    textInvalid: 'Invalid characters',
     avatarHint: 'PNG, JPG, WEBP, GIF up to 2MB',
     avatarUpload: 'Upload avatar',
     avatarRemove: 'Remove avatar',
@@ -90,10 +103,8 @@ const STRINGS: Record<MfeLocale, Record<string, string>> = {
   },
 }
 
-// Классы — 1-в-1 из host (`ui/table/*`, `ui/input/Input.vue`,
-// `ui/button/index.ts`, `@crm/ui-kit/AvatarUploader.vue`), чтобы remote
-// выглядел как слайдовер home page (там тот же USlideover).
-const INPUT_CLASS = 'file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input h-9 w-full min-w-0 rounded-md border bg-transparent px-3 py-1 text-base shadow-xs transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive'
+// Классы кнопок — 1-в-1 host `ui/button` (классы полей формы
+// переехали в @crm/customer-form вместе с разметкой).
 const BTN_BASE = 'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-base font-medium transition-all cursor-pointer disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 has-[>svg]:px-3'
 const BTN_DEFAULT = 'bg-primary text-primary-foreground hover:opacity-75'
 
@@ -141,27 +152,64 @@ async function fetchCustomers(): Promise<void> {
 
 onMounted(() => { void fetchCustomers() })
 
-// --- Слайдовер (локальное состояние вместо host-стора useCustomerSlideStore) ---
+// --- Слайдовер: тело формы — общее (@crm/customer-form), здесь только
+// оболочка Dialog, список и HTTP. Строки формы — из STRINGS ниже.
 const selected = ref<CustomerDto | null>(null)
 const isOpen = ref(false)
-const nameRef = ref('')
-const emailRef = ref('')
-const phoneRef = ref('')
-const contactPersonRef = ref('')
 const avatarUrlRef = ref('')
-const fromSourceRef = ref('')
 const isSaving = ref(false)
 const isAvatarSaving = ref(false)
 const saveError = ref('')
 
+const formLabels = computed<CustomerFormLabels>(() => ({
+  nameLabel: t('namePh'),
+  namePlaceholder: t('namePh'),
+  emailLabel: 'Email',
+  emailPlaceholder: 'Email',
+  phoneLabel: t('phonePh'),
+  phonePlaceholder: t('phonePh'),
+  phoneHint: t('phoneHint'),
+  contactLabel: t('contactPh'),
+  contactPlaceholder: t('contactPh'),
+  sourceLabel: t('sourcePh'),
+  sourcePlaceholder: t('sourcePh'),
+  avatarHint: t('avatarHint'),
+  save: t('save'),
+  saving: t('saving'),
+  nameRequired: t('nameRequired'),
+  nameTooLong: t('nameTooLong'),
+  nameInvalid: t('nameInvalid'),
+  emailTooLong: t('emailTooLong'),
+  emailInvalid: t('emailInvalid'),
+  phoneInvalid: t('phoneInvalid'),
+  textTooLong: t('textTooLong'),
+  textInvalid: t('textInvalid'),
+}))
+
+const avatarLabels = computed(() => ({
+  upload: t('avatarUpload'),
+  remove: t('avatarRemove'),
+  fileTooLarge: t('avatarFileTooLarge'),
+  onlyImage: t('avatarOnlyImage'),
+  readError: t('avatarReadError'),
+}))
+
+const tableLabels = computed<CustomerTableLabels>(() => ({
+  listTitle: t('listTitle'),
+  loading: t('loading'),
+  empty: t('empty'),
+  avatarCol: t('avatar'),
+  nameCol: t('name'),
+  emailCol: 'Email',
+  phoneCol: t('phone'),
+  contactCol: t('contact'),
+  sourceCol: t('source'),
+  dealsCol: t('deals'),
+}))
+
 function open(customer: CustomerDto): void {
   selected.value = customer
-  nameRef.value = customer.name
-  emailRef.value = customer.email
-  phoneRef.value = customer.phone ?? ''
-  contactPersonRef.value = customer.contactPerson ?? ''
   avatarUrlRef.value = customer.avatarUrl || ''
-  fromSourceRef.value = customer.fromSource ?? ''
   saveError.value = ''
   isOpen.value = true
 }
@@ -171,44 +219,15 @@ function close(): void {
   isOpen.value = false
 }
 
-const isDirty = computed(() => {
-  const c = selected.value
-  if (!c) return false
-  return (
-    nameRef.value !== c.name
-    || emailRef.value !== c.email
-    || (phoneRef.value || '') !== (c.phone ?? '')
-    || (contactPersonRef.value || '') !== (c.contactPerson ?? '')
-    || (fromSourceRef.value || '') !== (c.fromSource ?? '')
-  )
-})
-
-const phoneError = computed(() => {
-  const value = phoneRef.value.trim()
-  if (!value || isPhoneDisplayValid(value)) return ''
-  return t('phoneInvalid')
-})
-
-const initials = computed(() =>
-  getInitials(nameRef.value || selected.value?.name || ''),
-)
-
-async function onSave(): Promise<void> {
-  if (!selected.value || phoneError.value) return
+// Сюда попадаем только при валидной форме (проверка — внутри пакета).
+async function onSave(payload: UpdateCustomerPayload): Promise<void> {
+  if (!selected.value) return
   saveError.value = ''
   isSaving.value = true
   try {
-    const payload: UpdateCustomerPayload = {
-      name: nameRef.value,
-      email: emailRef.value,
-      phone: phoneRef.value || null,
-      contactPerson: contactPersonRef.value || null,
-      fromSource: fromSourceRef.value || null,
-    }
     const updated = await request<CustomerDto>(`/customers/${selected.value.id}`, { method: 'PATCH', body: JSON.stringify(payload) })
     await fetchCustomers()
-    // слайдовер НЕ закрываем (как в host): обновляем выбранного ответом,
-    // чтобы сбросить isDirty
+    // слайдовер НЕ закрываем (как в host): обновляем выбранного ответом
     selected.value = updated
   } catch (e) {
     saveError.value = e instanceof Error ? e.message : String(e)
@@ -251,64 +270,22 @@ async function onAvatarRemove(): Promise<void> {
 
 <template>
   <div class="px-1 py-2">
-    <h1 class="font-bold text-2x1 mb-10">{{ t('listTitle') }}</h1>
-
-    <div v-if="isLoading">{{ t('loading') }}</div>
-
-    <div v-else-if="loadError" class="grid gap-3 justify-start">
+    <div v-if="loadError" class="grid gap-3 justify-start">
       <p>{{ t('loadError') }}: {{ loadError }}</p>
       <button type="button" :class="cn(BTN_BASE, BTN_DEFAULT)" @click="fetchCustomers">{{ t('retry') }}</button>
     </div>
 
-    <div v-else-if="!customers.length" class="text-muted-foreground">{{ t('empty') }}</div>
-
-    <div v-else data-slot="table-container" class="relative w-full overflow-auto">
-      <table data-slot="table" class="w-full caption-bottom text-sm">
-        <thead data-slot="table-header" class="[&_tr]:border-b">
-          <tr data-slot="table-row" class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors">
-            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap w-[80px]">{{ t('avatar') }}</th>
-            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap w-[200px]">{{ t('name') }}</th>
-            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap w-[200px]">Email</th>
-            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">{{ t('phone') }}</th>
-            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">{{ t('contact') }}</th>
-            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">{{ t('source') }}</th>
-            <th data-slot="table-head" class="text-foreground h-10 px-2 text-left align-middle font-medium whitespace-nowrap">{{ t('deals') }}</th>
-          </tr>
-        </thead>
-        <tbody data-slot="table-body" class="[&_tr:last-child]:border-0">
-          <tr
-            v-for="customer in customers"
-            :key="customer.id"
-            data-slot="table-row"
-            class="hover:bg-muted/50 data-[state=selected]:bg-muted border-b transition-colors cursor-pointer"
-            @click="open(customer)"
-          >
-            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap">
-              <img
-                v-if="customer.avatarUrl"
-                :src="customer.avatarUrl"
-                :alt="customer.name"
-                width="50"
-                height="50"
-                class="w-[50px] h-[50px] rounded-full object-cover shrink-0"
-              />
-              <div
-                v-else
-                class="w-[50px] h-[50px] rounded-full bg-[#1a2332] border border-[#161c26] flex items-center justify-center shrink-0"
-              >
-                <User :size="22" class="text-slate-500" />
-              </div>
-            </td>
-            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ customer.name }}</td>
-            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ customer.email }}</td>
-            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ customer.phone ?? '—' }}</td>
-            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ customer.contactPerson ?? '—' }}</td>
-            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ customer.fromSource }}</td>
-            <td data-slot="table-cell" class="p-2 align-middle whitespace-nowrap font-medium">{{ customer.dealsCount ?? '—' }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+    <CustomerTable
+      v-else
+      :customers="customers"
+      :labels="tableLabels"
+      :loading="isLoading"
+      @select="open"
+    >
+      <template #avatar-fallback>
+        <User :size="22" class="text-slate-500" />
+      </template>
+    </CustomerTable>
 
     <!-- Разметка и классы — 1-в-1 host `USlideover` (side=right):
          тема slideover из .nuxt/ui/slideover.ts, резолвится из CSS хоста. -->
@@ -337,45 +314,23 @@ async function onAvatarRemove(): Promise<void> {
           </div>
 
           <div data-slot="body" class="flex-1 overflow-y-auto p-4 sm:p-6">
-          <div class="mb-5 flex flex-col items-center gap-3">
-            <AvatarUploader
-              v-model="avatarUrlRef"
-              :initials="initials"
-              :size="96"
-              v-model:saving="isAvatarSaving"
-              :labels="{
-                upload: t('avatarUpload'),
-                remove: t('avatarRemove'),
-                fileTooLarge: t('avatarFileTooLarge'),
-                onlyImage: t('avatarOnlyImage'),
-                readError: t('avatarReadError'),
-              }"
-              @upload="onAvatarDataUrl"
-              @remove="onAvatarRemove"
-            >
-              <template #icon="{ saving }">
-                <Loader2 v-if="saving" :size="16" class="animate-spin" />
-                <Camera v-else :size="16" />
-              </template>
-            </AvatarUploader>
-            <p class="text-xs text-muted-foreground">{{ t('avatarHint') }}</p>
-          </div>
-
-          <div class="space-y-3">
-            <input v-model="nameRef" type="text" :class="INPUT_CLASS" :placeholder="t('namePh')" />
-            <input v-model="emailRef" type="email" :class="INPUT_CLASS" placeholder="Email" />
-            <PhoneInput v-model="phoneRef" :placeholder="t('phonePh')" :hint="t('phoneHint')" :error="phoneError" />
-            <input v-model="contactPersonRef" type="text" :class="INPUT_CLASS" :placeholder="t('contactPh')" />
-            <input v-model="fromSourceRef" type="text" :class="INPUT_CLASS" :placeholder="t('sourcePh')" />
-          </div>
-
-          <p v-if="saveError" class="text-red-500 text-sm mt-3">{{ saveError }}</p>
-
-          <div class="flex items-center gap-3 mt-5">
-            <button type="button" :class="cn(BTN_BASE, BTN_DEFAULT)" :disabled="isSaving || !isDirty || !!phoneError" @click="onSave">
-              {{ isSaving ? t('saving') : t('save') }}
-            </button>
-          </div>
+          <CustomerForm
+            :customer="selected"
+            :labels="formLabels"
+            :avatar-labels="avatarLabels"
+            :avatar-url="avatarUrlRef"
+            :avatar-saving="isAvatarSaving"
+            :saving="isSaving"
+            :server-error="saveError"
+            @save="onSave"
+            @upload-avatar="onAvatarDataUrl"
+            @remove-avatar="onAvatarRemove"
+          >
+            <template #avatar-icon="{ saving }">
+              <Loader2 v-if="saving" :size="16" class="animate-spin" />
+              <Camera v-else :size="16" />
+            </template>
+          </CustomerForm>
           </div>
         </DialogContent>
       </DialogPortal>

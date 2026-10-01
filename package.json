@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@crm/ui-kit": "workspace:*",
+    "@crm/customer-form": "workspace:*",
     "@crm/ui-theme": "workspace:*",
     "@module-federation/runtime": "^2.9.0",
     "@nuxt/icon": "^2.4.1",

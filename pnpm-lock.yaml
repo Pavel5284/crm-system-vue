@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@crm/customer-form':
+        specifier: workspace:*
+        version: link:packages/customer-form
       '@crm/ui-kit':
         specifier: workspace:*
         version: link:packages/ui-kit
@@ -127,6 +130,24 @@ importers:
         specifier: 2.2.12
         version: 2.2.12(typescript@6.0.3)
 
+  packages/customer-form:
+    dependencies:
+      '@crm/mfe-contracts':
+        specifier: workspace:*
+        version: link:../mfe-contracts
+      '@crm/ui-kit':
+        specifier: workspace:*
+        version: link:../ui-kit
+      '@tanstack/vue-form':
+        specifier: ^1.33.5
+        version: 1.33.5(vue@3.5.42(typescript@6.0.3))
+      vue:
+        specifier: ^3.5.0
+        version: 3.5.42(typescript@6.0.3)
+      zod:
+        specifier: ^4.5.4
+        version: 4.5.4
+
   packages/mfe-contracts:
     dependencies:
       vue:
@@ -149,6 +170,9 @@ importers:
 
   remotes/customers-remote:
     dependencies:
+      '@crm/customer-form':
+        specifier: workspace:*
+        version: link:../../packages/customer-form
       '@crm/mfe-contracts':
         specifier: workspace:*
         version: link:../../packages/mfe-contracts

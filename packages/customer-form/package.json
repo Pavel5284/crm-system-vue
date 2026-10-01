@@ -1,0 +1,22 @@
+{
+  "name": "@crm/customer-form",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Общая форма клиента для host и MFE-remotes: разметка, лейблы и валидация в одном месте. Без Nuxt/i18n-зависимостей: все строки — пропсом labels, HTTP — событиями наружу.",
+  "exports": {
+    "./CustomerForm.vue": "./src/CustomerForm.vue",
+    "./CustomerTable.vue": "./src/CustomerTable.vue",
+    "./schemas": "./src/schemas.ts",
+    "./types": "./src/types.ts"
+  },
+  "dependencies": {
+    "@crm/mfe-contracts": "workspace:*",
+    "@crm/ui-kit": "workspace:*",
+    "@tanstack/vue-form": "^1.33.5",
+    "zod": "^4.5.4"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  }
+}

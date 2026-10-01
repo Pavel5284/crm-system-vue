@@ -6,6 +6,7 @@
    (напр. -bottom-2 -right-2 из AvatarUploader), вычищаются из CSS хоста,
    т.к. node_modules не входит в автосканирование Tailwind v4. */
 @source "../../../packages/ui-kit/src";
+@source "../../../packages/customer-form/src";
 
 @layer base {
   * {

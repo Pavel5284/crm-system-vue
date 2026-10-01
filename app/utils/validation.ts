@@ -9,20 +9,9 @@ export const CUSTOMER_TEXT_MAX_LENGTH = 200
 // Текст комментария к сделке (comments/dto) — max 2000.
 export const COMMENT_TEXT_MAX_LENGTH = 2000
 
-const EMAIL_FORMAT_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-
-export const isValidEmailFormat = (value: string): boolean =>
-  EMAIL_FORMAT_RE.test(value)
-
-// Управляющие символы (NUL, \n, \r, \t, DEL и остальные C0):
-// в однострочных полях им неоткуда взяться от живого пользователя,
-// а для логов/хранилища это грязь (инъекция переносов, обрыв строк).
-// NB: пароли НЕ проверяем — там допустим любой состав, их нейтрализует хеш.
-// eslint-disable-next-line no-control-regex -- guard намеренно ищет управляющие символы.
-const CONTROL_CHARS_RE = /[\u0000-\u001F\u007F]/
-
-export const containsControlChars = (value: string): boolean =>
-  CONTROL_CHARS_RE.test(value)
+// Regex-предикаты — из общего пакета (единственный источник для host и remotes).
+// NB: пароли ими НЕ проверяем — там допустим любой состав, их нейтрализует хеш.
+export { containsControlChars, isValidEmailFormat } from '@crm/ui-kit/fields'
 
 // Печатный ASCII: от пробела до тильды — латиница, цифры, спецсимволы.
 // Пароли ограничиваем им, чтобы не было проблем с нормализацией Unicode
