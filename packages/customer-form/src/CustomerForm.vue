@@ -4,7 +4,14 @@ import { useForm as useTanStackForm } from '@tanstack/vue-form'
 import AvatarUploader from '@crm/ui-kit/AvatarUploader.vue'
 import PhoneInput from '@crm/ui-kit/PhoneInput.vue'
 import { getInitials } from '@crm/ui-kit/avatar'
-import { createCustomerFormSchemas, toFieldValidator } from './schemas'
+import {
+  emailRule,
+  nameRule,
+  phoneRule,
+  textRule,
+  toFieldValidator,
+} from '@crm/validation'
+import { CUSTOMER_FORM_LIMITS } from './types'
 import type {
   CustomerFormAvatarLabels,
   CustomerFormCustomer,
@@ -94,13 +101,37 @@ const isDirty = form.useStore((state) => state.isDirty)
 const canSubmit = form.useStore((state) => state.canSubmit)
 const isSubmitting = form.useStore((state) => state.isSubmitting)
 
-const schemas = createCustomerFormSchemas(props.labels)
+// Проводка labels в общие правила @crm/validation (вся логика — там).
 // Адаптеры строим один раз (не в шаблоне): TanStack зовёт их при каждом вводе.
 const validators = {
-  name: toFieldValidator(schemas.name),
-  email: toFieldValidator(schemas.email),
-  phone: toFieldValidator(schemas.phone),
-  text: toFieldValidator(schemas.text),
+  name: toFieldValidator(
+    nameRule(
+      {
+        required: props.labels.nameRequired,
+        tooLong: props.labels.nameTooLong,
+        invalid: props.labels.nameInvalid,
+      },
+      { maxLength: CUSTOMER_FORM_LIMITS.textMaxLength },
+    ),
+  ),
+  email: toFieldValidator(
+    // required-сообщение не нужно: email здесь всегда опционален.
+    emailRule(
+      {
+        required: '',
+        tooLong: props.labels.emailTooLong,
+        invalid: props.labels.emailInvalid,
+      },
+      { required: false },
+    ),
+  ),
+  phone: toFieldValidator(phoneRule({ invalid: props.labels.phoneInvalid })),
+  text: toFieldValidator(
+    textRule(
+      { tooLong: props.labels.textTooLong, invalid: props.labels.textInvalid },
+      { maxLength: CUSTOMER_FORM_LIMITS.textMaxLength },
+    ),
+  ),
 }
 
 // Первая ошибка поля (схемы выдают по одной за раз).

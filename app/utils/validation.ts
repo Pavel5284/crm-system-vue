@@ -9,9 +9,9 @@ export const CUSTOMER_TEXT_MAX_LENGTH = 200
 // Текст комментария к сделке (comments/dto) — max 2000.
 export const COMMENT_TEXT_MAX_LENGTH = 2000
 
-// Regex-предикаты — из общего пакета (единственный источник для host и remotes).
+// Regex-предикаты — из общего пакета правил (единственный источник).
 // NB: пароли ими НЕ проверяем — там допустим любой состав, их нейтрализует хеш.
-export { containsControlChars, isValidEmailFormat } from '@crm/ui-kit/fields'
+export { containsControlChars, isValidEmailFormat } from '@crm/validation'
 
 // Печатный ASCII: от пробела до тильды — латиница, цифры, спецсимволы.
 // Пароли ограничиваем им, чтобы не было проблем с нормализацией Unicode

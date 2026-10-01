@@ -15,5 +15,5 @@
     "isolatedModules": true,
     "esModuleInterop": true
   },
-  "include": ["ui-kit/src", "ui-theme/src", "mfe-contracts/src", "customer-form/src"]
+  "include": ["ui-kit/src", "ui-theme/src", "mfe-contracts/src", "customer-form/src", "validation/src"]
 }

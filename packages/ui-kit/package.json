@@ -8,7 +8,6 @@
     "./AvatarUploader.vue": "./src/AvatarUploader.vue",
     "./PhoneInput.vue": "./src/PhoneInput.vue",
     "./avatar": "./src/avatar.ts",
-    "./fields": "./src/fields.ts",
     "./phone": "./src/phone.ts"
   },
   "dependencies": {

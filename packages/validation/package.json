@@ -1,0 +1,14 @@
+{
+  "name": "@crm/validation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Единый дом правил валидации полей: чистые предикаты и zod-фабрики с инжектом сообщений. Без Vue/Nuxt/i18n: строки передаёт вызывающая сторона. Бэкенд — отдельным зеркалом в @app/shared (другой проект).",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@crm/ui-kit": "workspace:*",
+    "zod": "^4.5.4"
+  }
+}

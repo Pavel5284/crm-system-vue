@@ -12,8 +12,8 @@
   заголовок, состояния загрузки/пустоты, 7 колонок (включая контактное
   лицо). Выбор строки — событием `select`. Фолбэк аватара — слот
   `avatar-fallback` (иконки различаются: Nuxt-Icon vs lucide).
-- `schemas` (`@crm/customer-form/schemas`) — zod-правила
-  (`createCustomerFormSchemas(labels)`), зеркало backend UpdateCustomerDto.
+- `schemas` — удалены: правила переехали в `@crm/validation`,
+  здесь осталась только проводка labels (см. `CustomerForm.vue`).
 - `types` (`@crm/customer-form/types`) — `CustomerFormLabels`,
   `CustomerFormAvatarLabels`, `CustomerFormCustomer`, лимиты
   `CUSTOMER_FORM_LIMITS`.

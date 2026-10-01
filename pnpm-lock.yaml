@@ -17,6 +17,9 @@ importers:
       '@crm/ui-theme':
         specifier: workspace:*
         version: link:packages/ui-theme
+      '@crm/validation':
+        specifier: workspace:*
+        version: link:packages/validation
       '@module-federation/runtime':
         specifier: ^2.9.0
         version: 2.9.0
@@ -138,6 +141,9 @@ importers:
       '@crm/ui-kit':
         specifier: workspace:*
         version: link:../ui-kit
+      '@crm/validation':
+        specifier: workspace:*
+        version: link:../validation
       '@tanstack/vue-form':
         specifier: ^1.33.5
         version: 1.33.5(vue@3.5.42(typescript@6.0.3))
@@ -167,6 +173,15 @@ importers:
         version: 3.5.42(typescript@6.0.3)
 
   packages/ui-theme: {}
+
+  packages/validation:
+    dependencies:
+      '@crm/ui-kit':
+        specifier: workspace:*
+        version: link:../ui-kit
+      zod:
+        specifier: ^4.5.4
+        version: 4.5.4
 
   remotes/customers-remote:
     dependencies:

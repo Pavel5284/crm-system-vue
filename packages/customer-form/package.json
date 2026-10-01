@@ -7,12 +7,12 @@
   "exports": {
     "./CustomerForm.vue": "./src/CustomerForm.vue",
     "./CustomerTable.vue": "./src/CustomerTable.vue",
-    "./schemas": "./src/schemas.ts",
     "./types": "./src/types.ts"
   },
   "dependencies": {
     "@crm/mfe-contracts": "workspace:*",
     "@crm/ui-kit": "workspace:*",
+    "@crm/validation": "workspace:*",
     "@tanstack/vue-form": "^1.33.5",
     "zod": "^4.5.4"
   },
