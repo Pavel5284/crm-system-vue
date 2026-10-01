@@ -26,10 +26,6 @@ const {mutate: removeDeal, isPending: isDeleting} = useMutation({
 
 const onDeleteClick = () => {
   if (!store.card) return
-  if (!confirmDelete.value) {
-    confirmDelete.value = true
-    return
-  }
   removeDeal(store.card.id)
 }
 
@@ -57,9 +53,24 @@ const onDeleteClick = () => {
       {{ formatDate(store.card?.createdAt, 'short', locale) }}
     </KanbanSlideoverLabel>
     <div v-if="store.card && canDeleteDeal(authStore.user.role)" class="mt-4">
-      <button class="btn-danger" :disabled="isDeleting" @click="onDeleteClick">
-        {{ confirmDelete ? t('kanban.slideover.deleteConfirm') : t('kanban.slideover.deleteButton') }}
+      <button
+        v-if="!confirmDelete"
+        class="btn-danger"
+        @click="confirmDelete = true"
+      >
+        {{ t('kanban.slideover.deleteButton') }}
       </button>
+      <div v-else class="confirm-box">
+        <p>{{ t('kanban.slideover.deleteConfirmText') }}</p>
+        <div class="confirm-actions">
+          <button class="btn-danger" :disabled="isDeleting" @click="onDeleteClick">
+            {{ t('kanban.slideover.deleteConfirm') }}
+          </button>
+          <button class="btn-mini" @click="confirmDelete = false">
+            {{ t('common.cancel') }}
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>

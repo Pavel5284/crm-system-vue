@@ -189,14 +189,6 @@ function unitText(unit: string | null): string {
   return label !== key ? ` ${label}` : ` ${unit}`
 }
 
-function onDeleteClick() {
-  if (!confirmDelete.value) {
-    confirmDelete.value = true
-    return
-  }
-  removeOrder()
-}
-
 function openPaymentDialog() {
   if (!order.value) return
   paymentDialog.value?.open({
@@ -294,14 +286,30 @@ function canConfirmPayment(p: PaymentDto) {
           >
             {{ t('orders.actions.edit') }}
           </button>
-          <button
-            v-if="canDeleteOrder(role)"
-            class="btn-mini danger"
-            :disabled="isDeleting"
-            @click="onDeleteClick"
-          >
-            {{ confirmDelete ? t('common.delete') + '?' : t('orders.actions.delete') }}
-          </button>
+          <div v-if="canDeleteOrder(role)" class="mt-1">
+            <button
+              v-if="!confirmDelete"
+              class="btn-mini danger"
+              @click="confirmDelete = true"
+            >
+              {{ t('orders.actions.delete') }}
+            </button>
+            <div v-else class="confirm-box">
+              <p>{{ t('orders.deleteConfirmText', { number: order.number }) }}</p>
+              <div class="confirm-actions">
+                <button
+                  class="btn-mini danger"
+                  :disabled="isDeleting"
+                  @click="removeOrder()"
+                >
+                  {{ t('orders.deleteConfirmYes') }}
+                </button>
+                <button class="btn-mini" @click="confirmDelete = false">
+                  {{ t('common.cancel') }}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <h3 class="section">{{ t('orders.items') }}</h3>

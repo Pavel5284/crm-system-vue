@@ -161,6 +161,7 @@
       "aboutDeal": "About deal",
       "deleteButton": "Delete deal",
       "deleteConfirm": "Confirm delete",
+      "deleteConfirmText": "Delete this deal permanently?",
       "responsible": "Responsible",
       "deadline": "Deadline",
       "changeDeadline": "Change",
@@ -318,6 +319,8 @@
       "allStatuses": "All statuses",
       "search": "Search by customer..."
     },
+    "deleteConfirmText": "Delete order #{number}? This cannot be undone.",
+    "deleteConfirmYes": "Yes, delete",
     "invoice": {
       "title": "Invoice",
       "orderNo": "Order",

@@ -161,6 +161,7 @@
       "aboutDeal": "О сделке",
       "deleteButton": "Удалить сделку",
       "deleteConfirm": "Подтвердить удаление",
+      "deleteConfirmText": "Удалить сделку без возможности восстановления?",
       "responsible": "Ответственный",
       "deadline": "Дедлайн",
       "changeDeadline": "Изменить",
@@ -318,6 +319,8 @@
       "allStatuses": "Все статусы",
       "search": "Поиск по клиенту..."
     },
+    "deleteConfirmText": "Удалить заказ №{number}? Действие необратимо.",
+    "deleteConfirmYes": "Да, удалить",
     "invoice": {
       "title": "Счёт на оплату",
       "orderNo": "Заказ",
