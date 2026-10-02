@@ -604,6 +604,8 @@ export type AuthErrorMessage =
   | 'Email уже подтверждён'
   | 'Письмо уже отправлено недавно. Повторите через 5 минут'
   | 'Unauthorized'
+  | 'Регистрация отключена в демо-режиме'
+  | 'В демо-режиме доступны только демо-аккаунты'
 
 export type CustomerErrorMessage =
   | `Клиент ${string} не найден`
@@ -665,8 +667,8 @@ export type NoDomainError = never
 
 // --- auth -------------------------------------------------------------------
 /** Ошибки конкретных эндпоинтов — используйте как 2-й дженерик `apiFetch<T, E>`. */
-export type RegisterError = Extract<AuthErrorMessage, 'Пользователь с таким email уже существует' | 'Не пройдена проверка CAPTCHA. Попробуйте снова'>
-export type LoginError = Extract<AuthErrorMessage, 'Неверный email или пароль' | `Слишком много неудачных попыток. Повторите через ${string}` | 'Email не подтверждён. Проверьте почту'>
+export type RegisterError = Extract<AuthErrorMessage, 'Пользователь с таким email уже существует' | 'Не пройдена проверка CAPTCHA. Попробуйте снова' | 'Регистрация отключена в демо-режиме'>
+export type LoginError = Extract<AuthErrorMessage, 'Неверный email или пароль' | `Слишком много неудачных попыток. Повторите через ${string}` | 'Email не подтверждён. Проверьте почту' | 'В демо-режиме доступны только демо-аккаунты'>
 export type VerifyEmailError = Extract<AuthErrorMessage, 'Токен не указан' | 'Неверный токен' | 'Срок действия токена истёк'>
 export type ResendVerificationError = Extract<AuthErrorMessage, 'Пользователь не найден' | 'Email уже подтверждён' | 'Письмо уже отправлено недавно. Повторите через 5 минут'>
 export type RefreshError = Extract<AuthErrorMessage, 'Unauthorized'>

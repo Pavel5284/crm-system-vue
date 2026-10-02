@@ -15,6 +15,10 @@ export default defineNuxtConfig({
         process.env.NUXT_PUBLIC_MFE_CUSTOMERS_REMOTE_URL || 'http://localhost:4174/remoteEntry.js',
       // local - без федерации, remote - только федерация, auto - remote с откатом на local
       mfeCustomersMode: process.env.NUXT_PUBLIC_MFE_CUSTOMERS || 'auto',
+      // демо-режим: регистрация закрыта (страница /register редиректит на /login),
+      // бэкенд при DEMO_MODE=true тоже режет регистрацию и вход не-демо. Флаги
+      // держать синхронно: NUXT_PUBLIC_DEMO_MODE=true <=> DEMO_MODE=true.
+      demoMode: process.env.NUXT_PUBLIC_DEMO_MODE === 'true',
     },
   },
   app: {

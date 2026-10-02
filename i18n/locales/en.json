@@ -94,7 +94,8 @@
     "seoTitle": "Login | CRM System",
     "loginButton": "Login",
     "noAccount": "Don't have an account? Register",
-    "error": "Error"
+    "error": "Error",
+    "demoModeNotice": "Demo mode: registration is disabled, demo accounts only"
   },
   "register": {
     "title": "Register",

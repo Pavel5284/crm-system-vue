@@ -7,7 +7,7 @@ useSeoMeta({
 
 definePageMeta({
   layout: false,
-  middleware: ['guest'],
+  middleware: ['guest', 'demo-closed'],
 })
 </script>
 
