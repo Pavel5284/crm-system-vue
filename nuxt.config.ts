@@ -6,19 +6,14 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL,
-      // Прямое пробуждение notifications-service из браузера (wake перед
-      // первым запросом истории). Без переменной — дефолт в service-wake.
+      // будим notifications-service напрямую из браузера перед первым запросом истории
       notificationsBaseUrl: process.env.NUXT_PUBLIC_NOTIFICATIONS_BASE_URL,
-      // Cloudflare Turnstile (капча на регистрации). Без ключа виджет
-      // не рендерится, бэкенд без TURNSTILE_SECRET_KEY проверку пропускает.
+      // капча на регистрации, без ключа виджет просто не показываем
       turnstileSiteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY,
-      // Микрофронтенды (вариант B). URL версионированного remoteEntry.js,
-      // НЕ latest: обновление ремоута — отдельным изменением env (правило №3).
+      // remote для микрофронта клиентов, кладем конкретный файл а не latest
       mfeCustomersRemoteUrl:
         process.env.NUXT_PUBLIC_MFE_CUSTOMERS_REMOTE_URL || 'http://localhost:4174/remoteEntry.js',
-      // local — текущее поведение (SSR, без федерации);
-      // remote — только федеративный модуль + экран ошибки при падении;
-      // auto (default) — remote, при его падении тихий фолбэк на локальный.
+      // local - без федерации, remote - только федерация, auto - remote с откатом на local
       mfeCustomersMode: process.env.NUXT_PUBLIC_MFE_CUSTOMERS || 'auto',
     },
   },

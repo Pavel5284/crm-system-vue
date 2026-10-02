@@ -1,7 +1,6 @@
 import type { DealHighlightField } from '~/stores/deal-slide.store'
 
-// Имена полей модели Deal (как их возвращает бэкенд в requiredFields)
-// в ключи подсветки слайдовера.
+// бэк отдает имена полей модели, тут мапим в подсветку слайовера
 const FIELD_MAP: Record<string, DealHighlightField> = {
   customerId: 'company',
   description: 'description',
@@ -9,7 +8,7 @@ const FIELD_MAP: Record<string, DealHighlightField> = {
   deadline: 'deadline',
 }
 
-// Подписи полей для тостов (ключи i18n).
+// подписи для тостов
 const FIELD_LABEL_KEYS: Record<string, string> = {
   customerId: 'kanban.slideover.company',
   description: 'kanban.slideover.descriptionLabel',
@@ -27,9 +26,7 @@ const ROLE_KEYS: Record<string, string> = {
   LOGIST: 'roles.logist',
 }
 
-// Из сообщения вида
-// '... заполните обязательные поля: description, deadline'
-// вытаскивает ключи подсветки. Для остальных ошибок (роль, правило) — [].
+// из "... заполните обязательные поля: description, deadline" достаем подсветку
 export function parseMissingDealFields(message: string): DealHighlightField[] {
   const match = message.match(/обязательные поля:\s*(.+)/i)
   if (!match?.[1]) return []
@@ -41,10 +38,7 @@ export function parseMissingDealFields(message: string): DealHighlightField[] {
   return [...new Set(fields)]
 }
 
-// Человекочитаемый текст ошибки переноса для тоста:
-//   '... из стадии "to-be-agreed" в стадию "in-progress" ... поля: responsibleUserId, deadline'
-// → '... из стадии «На согласовании» в стадию «В производстве» ... поля: Ответственный, Дедлайн'.
-// Не-деловые сообщения возвращает как есть.
+// меняем технические id стадий/ролей на русские названия для тоста
 export function humanizeDealError(message: string, t: (key: string) => string): string {
   if (!/стади|обязательные поля|запрещён|не найдена/i.test(message)) return message
   let out = message

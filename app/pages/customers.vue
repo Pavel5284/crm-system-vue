@@ -5,8 +5,7 @@ import MfeCustomersSkeleton from '~/components/mfe/CustomersSkeleton.vue'
 import MfeRemoteUnavailable from '~/components/mfe/RemoteUnavailable.vue'
 import { loadCustomersRemote } from '~/composables/useCustomersRemote'
 
-// Shell страницы: роутингом владеет host (правило №2), remote отдаёт
-// только компонент. Федеративный кусок рендерится строго на клиенте.
+// шелл страницы, роутингом владеет хост, remote отдает только компонент
 const { t, locale } = useI18n()
 const config = useRuntimeConfig()
 
@@ -17,10 +16,8 @@ useSeoMeta({
 type MfeMode = 'local' | 'remote' | 'auto'
 const mode = ((config.public.mfeCustomersMode as string | undefined) || 'auto') as MfeMode
 const remoteUrl = config.public.mfeCustomersRemoteUrl as string
-// Тот же base URL, что использует сам хост (useApiBaseUrl с фолбэком),
-// а не сырой runtimeConfig: иначе при пустом NUXT_PUBLIC_API_BASE_URL
-// хост работает за счёт фолбэка, а remote фетчит относительный URL
-// и получает HTML самой страницы вместо JSON API.
+// тот же base что и у хоста, иначе remote уйдет на относительный url
+// и получит html страницы вместо json
 const apiBaseUrl = useApiBaseUrl()
 
 const remoteComponent = shallowRef<Component | null>(null)
@@ -41,14 +38,13 @@ function retry(): void {
   void load()
 }
 
-// local: прежнее поведение с SSR. remote/auto: только клиент (SEO не нужен за логином).
+// local с ssr, remote/auto только на клиенте
 if (mode !== 'local') {
   onMounted(() => { void load() })
 }
 </script>
 
 <template>
-  <!-- Без федерации: 1-в-1 как было, SSR сохранён -->
   <MfeCustomersLocal v-if="mode === 'local'" />
 
   <ClientOnly v-else>
@@ -58,9 +54,7 @@ if (mode !== 'local') {
       :api-base-url="apiBaseUrl"
       :locale="locale"
     />
-    <!-- auto: тихий фолбэк на локальную реализацию при падении remote -->
     <MfeCustomersLocal v-else-if="mode === 'auto' && failed" />
-    <!-- remote: упавший раздел не роняет CRM — экран деградации с повтором -->
     <MfeRemoteUnavailable v-else-if="failed" @retry="retry" />
     <MfeCustomersSkeleton v-else />
     <template #fallback>

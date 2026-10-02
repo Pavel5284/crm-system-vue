@@ -62,10 +62,9 @@ const selectedDeal = computed(() =>
   deals.value.find((d) => d.id === selectedDealId.value),
 )
 
-// Заполненные позиции — итог заказа, когда они есть.
+// если позиции заполнены - итог из них
 const namedItems = computed(() => items.value.filter((row) => row.name.trim()))
 
-// Сумма позиций — итог заказа, когда позиции есть.
 const itemsSum = computed(() => {
   const raw = namedItems.value.reduce(
     (sum, row) => sum + (Number(row.price) || 0) * (Number(row.quantity) || 0),
@@ -76,8 +75,7 @@ const itemsSum = computed(() => {
 
 const hasItems = computed(() => namedItems.value.length > 0)
 
-// Есть позиции — итог всегда из них (ручной ввод заблокирован).
-// Нет позиций — сумма вводится вручную (напр. цена сделки).
+// с позициями ручной ввод суммы лочим
 watch(
   [itemsSum, hasItems],
   ([sum, withItems]) => {
@@ -86,8 +84,7 @@ watch(
   { immediate: true },
 )
 
-// Предзаполнение суммы из сделки при открытии / смене сделки.
-// Только пока нет позиций: с позициями итог всегда из них.
+// при открытии подставляем цену сделки, если позиций еще нет
 watch([isOpen, selectedDealId, () => deals.value], ([open]) => {
   if (!open || mode.value !== 'deal' || namedItems.value.length) return
   if (totalInput.value) return
@@ -119,8 +116,7 @@ const canSubmit = computed(() => {
   if (mode.value === 'manual' && !selectedCustomerId.value) return false
   const total = totalInput.value.trim()
   if (total !== '' && !(Number(total) >= 0)) return false
-  // Нужна либо сумма, либо хотя бы одна заполненная позиция.
-  // Строки без названия — черновики: в итог и на сервер не идут.
+  // пустые строки без названия не считаем
   if (total === '' && !namedItems.value.length) return false
   for (const row of namedItems.value) {
     if (!(Number(row.quantity) > 0) || !(Number(row.price) >= 0)) return false
@@ -136,8 +132,7 @@ const { mutate, isPending } = useMutation({
     else payload.customerId = selectedCustomerId.value
     const trimmedComment = comment.value.trim()
     if (trimmedComment) payload.comment = trimmedComment
-    // Итог всегда из позиций, если они есть (бэкенд посчитает сам).
-    // Ручная сумма — только когда позиций нет.
+    // бэк сам посчитает итог из позиций
     const rows = toOrderItemPayload(items.value)
     if (rows.length) {
       payload.items = rows

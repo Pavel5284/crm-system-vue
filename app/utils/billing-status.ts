@@ -4,11 +4,7 @@ import type {
   PaymentStatus,
 } from '~/types/backend.contracts'
 
-/**
- * CSS-классы бейджей статусов биллинга (стили — глобально,
- * в `app/assets/css/tailwind.css`, слой `components`).
- * Единая точка вместо трёх копий `statusClass` по компонентам.
- */
+// классы бейджей, стили лежат в tailwind.css
 export const orderBadgeClass = (status: OrderStatus | string): string => {
   switch (status) {
     case 'PAID':
@@ -40,8 +36,7 @@ export const paymentBadgeClass = (status: PaymentStatus | string): string => {
   }
 }
 
-// Коды единиц измерения позиций (хранятся в БД как есть, отображаются
-// через `orders.units.*` с фолбэком на сырое значение для старых строк).
+// единицы как лежат в базе, старые строки показываем как есть
 export const UNIT_CODES = [
   'PCS',
   'KG',
@@ -58,7 +53,7 @@ export const UNIT_CODES = [
 
 export const CUSTOM_UNIT = '__custom'
 
-// Черновик позиции в редакторе (диалог создания + правка заказа).
+// черновик строки в редакторе
 export interface ItemDraft {
   key: number
   name: string
@@ -68,7 +63,7 @@ export interface ItemDraft {
   unitCustom: string
 }
 
-// Строки без названия — черновики, в payload не идут.
+// без названия - не отправляем
 export function toOrderItemPayload(rows: ItemDraft[]): OrderItemInput[] {
   return rows
     .filter((row) => row.name.trim())

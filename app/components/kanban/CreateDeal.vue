@@ -26,7 +26,7 @@ const [name, nameAttrs] = defineField('name')
 const [description, descriptionAttrs] = defineField('description')
 const [price, priceAttrs] = defineField('price')
 
-// Клиент сделки: выбор существующего (combobox) или создание нового.
+// клиент либо из списка либо новый руками
 const customerMode = ref<'select' | 'new'>('select')
 const { data: customersData } = useQuery({
   queryKey: ['customers'],
@@ -73,9 +73,8 @@ function clearSelectedCustomer() {
 function onCustomerClickOutside(e: MouseEvent) {
   if (customerComboboxRef.value && !customerComboboxRef.value.contains(e.target as Node)) {
     isCustomerDropdownOpen.value = false
-    // Если текст не соответствует выбранному — сбрасываем выбор
     if (selectedCustomer.value && selectedCustomer.value.name !== customerSearch.value) {
-      // оставляем текст как фильтр, но выбор уже сброшен в onCustomerInput
+      // текст оставили как фильтр, выбор уже сброшен выше в onCustomerInput
     }
   }
 }
@@ -98,8 +97,7 @@ const isCustomerValid = computed(() => {
   const email = newEmail.value.trim()
   if (!name || !email || !isValidEmailFormat(email)) return false
   if (name.length > CUSTOMER_TEXT_MAX_LENGTH || containsControlChars(newName.value)) return false
-  // Управляющие символы в однострочных полях — потенциальная инъекция
-  // переносов в логи/хранилище; бэкенд (NewCustomerDto) проверяет тоже.
+  // переносы в однострочных полях режем и тут и на бэке
   for (const value of [newContact.value, newSource.value]) {
     const text = value.trim()
     if (text.length > CUSTOMER_TEXT_MAX_LENGTH) return false
@@ -121,7 +119,7 @@ const {mutate, isPending} = useMutation({
       name: data.name,
       description: data.description,
       price: Number(data.price),
-      // Этап 5: ответственный обязателен — по умолчанию создатель сделки.
+      // без ответственного бэк не даст создать, по умолчанию вешаем на себя
       responsibleUserId: authStore.user.id,
     }
     if (customerMode.value === 'select') {
@@ -156,8 +154,7 @@ const {mutate, isPending} = useMutation({
 })
 const onSubmit = handleSubmit(values => {
   submitError.value = ''
-  // Название сделки — однострочное: управляющие символы и сверхлимит
-  // отклоняем здесь (бэкенд CreateDealDto — тоже).
+  // бэк тоже проверяет, но лучше отбить сразу
   const dealName = values.name.trim()
   if (dealName.length > CUSTOMER_TEXT_MAX_LENGTH) {
     submitError.value = t('validation.textTooLong', { max: CUSTOMER_TEXT_MAX_LENGTH })

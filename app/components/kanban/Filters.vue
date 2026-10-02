@@ -8,7 +8,7 @@ const props = defineProps<{
 const { t } = useI18n()
 const filtersStore = useDealFiltersStore()
 
-// Варианты фильтра по ответственному — из загруженных сделок.
+// ответственных берем из того что уже загружено, отдельный запрос не делаем
 const responsibleOptions = computed(() => {
   const names = (props.columns ?? [])
     .flatMap((col) => col.items)
@@ -17,8 +17,7 @@ const responsibleOptions = computed(() => {
   return [...new Set(names)].sort((a, b) => a.localeCompare(b))
 })
 
-// Клиент — выпадающее меню: уникальные наименования из customerName
-// (единственный источник — связанный клиент по customerId).
+// компании тоже из загруженного, отдельного справочника пока нет
 const companyOptions = computed(() => {
   const names = (props.columns ?? [])
     .flatMap((col) => col.items)
@@ -29,7 +28,6 @@ const companyOptions = computed(() => {
 </script>
 
 <template>
-  <!-- Фильтры доски (локальные, без новых запросов) -->
   <div class="mb-4 grid grid-cols-2 gap-2 md:grid-cols-4 xl:grid-cols-5">
     <UiInput
       v-model="filtersStore.query"

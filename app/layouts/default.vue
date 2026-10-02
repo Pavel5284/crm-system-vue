@@ -11,7 +11,11 @@ const checkAuth = async (): Promise<void> => {
   }
   try {
     const me = await getMeApi()
-    if (!me.authenticated) throw new Error("Not authenticated")
+    if (!me.authenticated) {
+      authStore.clear()
+      await navigateTo("/login")
+      return
+    }
     const profile = await getProfileApi()
     authStore.set({
       id: profile.id,
@@ -60,7 +64,7 @@ onBeforeUnmount(() => {
 
 <template>
   <LayoutLoader v-if="isLoadingStore.isLoading" />
-  <section :class="isAuth ? 'grid' : ''" style="min-height: 100vh">
+  <section :class="isAuth ? 'shell' : ''" class="min-h-screen">
     <LayoutSidebar v-if="isAuth" class="hidden lg:flex" />
     <div v-if="isAuth && showMobileMenu" class="fixed inset-0 z-50 lg:hidden">
       <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showMobileMenu = false" />
@@ -73,7 +77,7 @@ onBeforeUnmount(() => {
     </div>
     <div :class="isAuth ? 'flex flex-col min-h-0 min-w-0' : ''">
       <LayoutHeader v-if="isAuth" @toggle-menu="showMobileMenu = !showMobileMenu" />
-      <div :style="isAuth ? 'padding:20px' : ''" class="flex-1 min-w-0">
+      <div :class="isAuth ? 'p-5' : ''" class="flex-1 min-w-0">
         <slot />
       </div>
     </div>
@@ -81,12 +85,13 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.grid {
+/* сайдбар 240px + контент, на мобиле в одну колонку */
+.shell {
   display: grid;
   grid-template-columns: 240px 1fr;
 }
 @media (max-width: 1024px) {
-  .grid {
+  .shell {
     display: block;
   }
 }

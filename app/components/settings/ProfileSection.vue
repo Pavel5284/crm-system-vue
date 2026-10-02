@@ -19,7 +19,6 @@ type ProfileFormValues = {
 
 const authStore = useAuthStore()
 
-// Должность по умолчанию для новой анкеты.
 const POSITION_DEFAULT = 'Менеджер' as const
 
 const avatarInitials = computed(() => {

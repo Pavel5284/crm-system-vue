@@ -1,12 +1,8 @@
 import type { ICard } from '~/components/kanban/kanban.types'
 import { getDealApi } from '~/utils/crm.api'
 
-/**
- * Открытие слайовера сделки из уведомлений (и любых других мест вне канбана).
- * Слайовер живёт на странице канбана (`/`), поэтому:
- * - если мы не на `/` — сначала переходим туда, затем открываем;
- * - карточку собираем из GET /deals/:id (тот же маппинг, что в useKanbanQuery).
- */
+// слайовер живет на канбане, поэтому если мы не на '/' - сначала туда
+// карточку собираем тем же маппингом что и в useKanbanQuery
 export const useOpenDeal = () => {
   const router = useRouter()
   const route = useRoute()
@@ -31,7 +27,7 @@ export const useOpenDeal = () => {
       }
       if (route.path !== '/') {
         await router.push('/')
-        // Даём канбану смонтироваться и повесить слайовер.
+        // без тика слайовер иногда не успевает повеситься
         await nextTick()
       }
       store.set(card)

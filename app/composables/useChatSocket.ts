@@ -93,7 +93,7 @@ export const useChatSocket = () => {
   })
 
   onBeforeUnmount(() => {
-    // не рвать глобальный сокет при размонтировании одной страницы
+    // сокет общий на приложение, тут специально ничего не делаем
   })
 
   return { isConnected: readonly(isConnected), typingPartnerId: readonly(typingPartnerId), connect, disconnect, sendTyping }

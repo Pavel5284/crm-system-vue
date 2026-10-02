@@ -1,7 +1,4 @@
-// Форматирование ошибок полей TanStack Form в строку для `:error` инпутов.
-// Zod через адаптер валидации может отдавать как строки, так и объекты
-// вида { message } — приводим всё к строке, дубликаты схлопываем
-// (полевая и форменная валидации могут вернуть один и тот же текст).
+// zod иногда отдает объект { message }, приводим к строке
 export const formatFieldError = (err: unknown): string => {
   if (typeof err === 'string') return err
   if (err && typeof err === 'object' && 'message' in err) {

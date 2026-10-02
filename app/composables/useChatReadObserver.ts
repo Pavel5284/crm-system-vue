@@ -1,8 +1,7 @@
 import type { Ref } from 'vue'
 
-// «Прочитано» по факту просмотра: сообщение помечается, только когда
-// пользователь пролистал до него и увидел на экране (IntersectionObserver).
-// threshold 0.5 для очень высоких пузырей недостижим — берём 0.3.
+// помечаем прочитанным только то что реально увидели на экране
+// 0.5 для высоких пузырей не срабатывает, взяли 0.3
 export function useChatReadObserver(container: Ref<HTMLElement | null>) {
   const chatStore = useChatStore()
   const authStore = useAuthStore()
@@ -38,7 +37,7 @@ export function useChatReadObserver(container: Ref<HTMLElement | null>) {
       .filter((i) => i >= 0)
     pendingVisibleIds.clear()
     if (visibleIdx.length === 0) return
-    // «вплоть до самого нижнего увиденного» — всё выше тоже увидено
+    // все что выше нижнего увиденного тоже считаем увиденным
     const upTo = msgs[Math.max(...visibleIdx)]!
     await chatStore.markVisibleMessagesRead(partnerId, upTo.id)
   }
@@ -71,7 +70,7 @@ export function useChatReadObserver(container: Ref<HTMLElement | null>) {
   }
 
   onUnmounted(() => {
-    // увиденное на экране — фиксируем, даже если уходим (fire-and-forget)
+    // перед уходом со страницы фиксируем увиденное
     if (readFlushTimer) {
       clearTimeout(readFlushTimer)
       readFlushTimer = null

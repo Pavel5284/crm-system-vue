@@ -7,9 +7,6 @@ import {useRegister} from "~/composables/auth/useRegister.ts";
 const { t } = useI18n()
 const { register, isPending, serverError, successMessage } = useRegister()
 
-// siteKey читаем напрямую из конфига — сам виджет живет в TurnstileWidget
-// (невидимый, рендерится скрытым). onSubmit срабатывает только при валидной
-// форме: сначала execute() капчи, запрос на бэк — только с токеном.
 const turnstileSiteKey = (useRuntimeConfig().public.turnstileSiteKey || '') as string
 const turnstileRef = ref<{ execute: () => Promise<string>, reset: () => void } | null>(null)
 const captchaPending = ref(false)
@@ -24,8 +21,6 @@ const form = useTanStackForm({
     confirmPassword: '',
   },
   validators: {
-    // Один прогон: onChange-ошибки TanStack перепроверяет и на сабмите,
-    // второй валидатор здесь же давал тот же текст дважды в meta.errors.
     onChange: schema,
   },
   onSubmit: async ({ value }) => {
@@ -34,12 +29,12 @@ const form = useTanStackForm({
       password: value.password,
       name: value.name.trim(),
     }
-    // Без site key (dev) капчи нет — сразу в бэкенд.
+    // в деве без ключа капчи нет
     if (!turnstileSiteKey) {
       await register(payload)
       return
     }
-    // Капча только после валидной формы и клика: сначала токен, потом запрос.
+    // капчу дергаем только после валидной формы
     let captchaToken = ''
     captchaPending.value = true
     try {
@@ -60,7 +55,7 @@ const form = useTanStackForm({
       await register({ ...payload, captchaToken })
     }
     finally {
-      // Токен Turnstile одноразовый — сбрасываем после каждой попытки.
+      // токен одноразовый
       turnstileRef.value?.reset()
     }
   },

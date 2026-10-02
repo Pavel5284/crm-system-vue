@@ -1,7 +1,4 @@
-// Cloudflare Turnstile: явный рендер невидимого виджета, токен одноразовый.
-// Без site key (dev) — no-op: render ничего не делает, execute реджектится.
-// Флоу: виджет рендерится скрытым при монтировании, челлендж запускается
-// только по execute() (после валидной формы) и возвращает Promise с токеном.
+// turnstile в невидимом режиме, токен живет один запрос
 export type TurnstileSize = 'normal' | 'compact' | 'flexible' | 'invisible'
 
 export interface TurnstileRenderOpts {
@@ -54,7 +51,7 @@ export const useTurnstile = () => {
   let widgetId: string | null = null
   let poll: ReturnType<typeof setInterval> | null = null
 
-  // Ожидание готовности виджета (CDN-скрипт грузится асинхронно).
+  // скрипт с cdn может еще не подгрузиться
   let readyResolve: ((ok: boolean) => void) | null = null
   let readyPromise: Promise<boolean> | null = null
   const whenReady = (): Promise<boolean> => {
@@ -71,7 +68,7 @@ export const useTurnstile = () => {
     readyResolve = null
   }
 
-  // Один незавершенный execute: новый вызов отменяет предыдущий промис.
+  // если юзер дважды кликнул - старый промис отменяем
   let pendingVerify: {
     resolve: (token: string) => void
     reject: (e: Error) => void
@@ -84,7 +81,6 @@ export const useTurnstile = () => {
     }
   }
 
-  // Скрипт с CDN грузится асинхронно — ждем window.turnstile поллингом.
   const render = (opts: TurnstileRenderOpts = {}) => {
     if (!siteKey) return
     if (widgetId) return
@@ -130,8 +126,6 @@ export const useTurnstile = () => {
     }
   }
 
-  // Запуск челленджа по требованию (после валидной формы).
-  // Резолвится токеном, реджектится при ошибке/истечении/отсутствии виджета.
   const execute = async (): Promise<string> => {
     if (!siteKey) throw new Error('turnstile-disabled')
     const ok = await whenReady()

@@ -6,8 +6,6 @@ export interface LoginPayload {
   password: string
 }
 
-// Вход через TanStack Query: локальный isPending вместо глобального
-// useIsLoadingStore, серверная ошибка в serverError, успех — редирект домой.
 export const useLogin = () => {
   const router = useRouter()
   const authStore = useAuthStore()

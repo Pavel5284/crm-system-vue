@@ -19,7 +19,7 @@ const onResend = async () => {
     if (res) emit('resent', res.message)
   }
   catch {
-    // текст уже в serverError
+    // ошибка уже лежит в serverError, тут глотаем
   }
 }
 </script>

@@ -1,21 +1,7 @@
-/**
- * Единый источник правды о HTTP-контрактах бэкенда (api-gateway).
- *
- * Зеркало ответов Nest-контроллеров из `apps/api-gateway/src/modules/*`.
- * Даты на проводе — ISO-строки (`JSON.stringify` превращает `Date` в `string`).
- *
- * Как синхронизировать: при изменении ответа бэкенда поменять тип здесь
- * 1-в-1 (имя + поля), `apiFetch<T, E>` подхватит новый тип автоматически.
- * Источник текстов ошибок — `throw new XException('...')` в `*.service.ts`
- * и `RpcException({ message })` в tasks/notifications сервисах.
- *
- * Все ответы с бэкенда идут через `TransformInterceptor`:
- * провод — `{ success: true, data: T }`, `apiFetch` разворачивает и
- * возвращает уже `T`. Здесь описаны именно `T` (внутренние `data`).
- * Исключение — 204 No Content (`POST /auth/logout`, `DELETE /comments/:id`,
- * `DELETE /tasks/:id`): тела нет, используйте `NoContent`
- * (`apiFetch<NoContent>` резолвится в `undefined`).
- */
+// контракты gateway, зеркало ответов нести. даты - ISO строки.
+// если бэк поменял ответ - правим тут 1в1, apiFetch подхватит сам.
+// все ответы идут через { success: true, data }, apiFetch разворачивает в data.
+// кроме 204 (logout, удаление) - там тела нет.
 
 export type NoContent = undefined
 
@@ -130,7 +116,7 @@ export interface CustomerDto {
   fromSource: string | null
   createdAt: string
   updatedAt: string
-  /** Только в GET /customers: производное «Количество сделок» (count по customerId). */
+  /** Только в GET /customers: кол-во сделок */
   dealsCount?: number
 }
 
@@ -144,7 +130,7 @@ export interface UpdateCustomerPayload {
 
 export type DealStatus = 'todo' | 'to-be-agreed' | 'in-progress' | 'produced' | 'done'
 
-/** Клиент сделки — джойн по customerId (client_id), единственный источник правды. */
+/** клиент сделки, джойн по customerId */
 export interface DealCustomerRef {
   id: string
   name: string
@@ -185,9 +171,7 @@ export interface CreateDealPayload {
   name: string
   description: string
   price: number
-  /** Существующий клиент (выбор из списка). Ровно одно из customerId / newCustomer. */
   customerId?: string
-  /** Новый клиент (создаётся вместе со сделкой). */
   newCustomer?: NewCustomerPayload
   responsibleUserId: string
   deadline?: string
@@ -374,13 +358,7 @@ export interface TasksQuery {
 // Notifications
 // ---------------------------------------------------------------------------
 
-/**
- * Реестр типов уведомлений (расширяемо: новый тип = новое значение +
- * ветка в `app/utils/notifications.presentation.ts` + payload ниже).
- * - DEAL_ASSIGNED — юзера назначили ответственным за сделку
- * - TASK_ASSIGNED — новая задача для юзера
- * - TASK_DUE_SOON / DEAL_DEADLINE_SOON — напоминание о дедлайне
- */
+// типы уведомлений, новый тип = новая ветка в notifications.presentation
 export type NotificationType =
   | 'TASK_ASSIGNED'
   | 'TASK_COMPLETED'
@@ -389,13 +367,13 @@ export type NotificationType =
   | 'DEAL_DEADLINE_SOON'
   | 'DEAL_ASSIGNED'
 
-/** Уведомления со сделкой несут dealId — клик открывает слайовер сделки. */
+/** со сделкой - открывают слайовер по клику */
 export type DealNotificationType =
   | 'DEAL_STAGE_CHANGED'
   | 'DEAL_DEADLINE_SOON'
   | 'DEAL_ASSIGNED'
 
-/** Уведомления о задачах несут taskId (слайовер сделки не открывают). */
+/** по задачам, слайовер не открывают */
 export type TaskNotificationType = 'TASK_ASSIGNED' | 'TASK_COMPLETED' | 'TASK_DUE_SOON'
 
 export interface TaskNotificationPayload {
@@ -427,9 +405,7 @@ export interface NotificationDto {
 }
 
 /**
- * Realtime-событие `notification` из `NotificationsGateway`
- * (`apps/api-gateway/.../notifications.gateway.ts`): тот же DTO,
- * но без `read` — как эмитит `NotificationsService.notify`.
+ * realtime `notification` из gateway, тоже самое но без read
  */
 export interface NotificationEvent {
   id: string

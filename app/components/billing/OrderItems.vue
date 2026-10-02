@@ -20,8 +20,7 @@ const props = defineProps<{
 const { t } = useI18n()
 const queryClient = useQueryClient()
 
-// Правка заказа (только DRAFT/CONFIRMED — как на бэкенде).
-// Позиции заменяются целиком, итог бэкенд пересчитает сам.
+// правим только черновик/подтвержденный, итог бэк пересчитает
 const canEditOrder = computed(
   () =>
     canUpdateOrder(props.role) &&
@@ -33,8 +32,7 @@ const editComment = ref('')
 const editItems = ref<ItemDraft[]>([])
 const editError = ref('')
 
-// Слайдовер может переиспользовать компонент для другого заказа
-// без размонтирования — сбрасываем черновик при смене заказа.
+// слайовер переиспользует компонент без размонтирования под другой заказ
 watch(
   () => props.order.id,
   () => {
@@ -81,8 +79,6 @@ const { mutate: saveEdit, isPending: isSaving } = useMutation({
   },
 })
 
-// Подпись единицы в списке позиций (код → локализация,
-// старые строки — как есть).
 function unitText(unit: string | null): string {
   if (!unit) return ''
   const key = `orders.units.${unit}`

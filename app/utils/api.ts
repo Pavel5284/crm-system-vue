@@ -34,9 +34,8 @@ const SUCCESS_TOAST_MAP: Record<string, string> = {
   "DELETE /users/profile/avatar": "api.avatarRemoved",
 }
 
-// Мутации без success-тоста: auth-флоу (своя UX-логика/редиректы) и отправка
-// сообщений в чат (сообщение и так видно в диалоге — тост был бы спамом).
-// Ошибки для этих путей по-прежнему показывают error-тост.
+// auth и отправка сообщений в чат без тоста об успехе, иначе спам
+// ошибки по ним все равно показываем
 const SILENT_SUCCESS_PATHS = [
   "/auth/login",
   "/auth/register",
@@ -58,8 +57,7 @@ const getSuccessMessageForRequest = (path: string, method?: string): string | nu
 }
 
 const getI18nT = (): ((key: string) => string) => {
-  // useI18n — только внутри setup; снаружи (обработчики событий, apiFetch)
-  // берём глобальный инстанс i18n (с bind — иначе t теряет контекст).
+  // вне setup useI18n падает, берем глобальный инстанс
   try {
     const { t } = useI18n()
     return t as (key: string) => string
@@ -80,18 +78,14 @@ export type ApiToast = Pick<ReturnType<typeof useToast>, 'add'>
 
 let cachedToast: ApiToast | null = null
 
-// Захват инстанса вызывается один раз из app.vue (внутри setup).
+// тостер кладем сюда один раз из app.vue
 export const setApiToast = (toast: ApiToast | null): void => {
   cachedToast = toast
 }
 
 const getToast = (): ApiToast | null => {
   if (cachedToast) return cachedToast
-  // useToast() внутри вызывает inject(toastMaxInjectionKey): когда нет
-  // активного инстанса (async-продолжения apiFetch, обработчики, сокеты),
-  // Vue варнит "inject() can only be used inside setup()" на каждый вызов,
-  // хотя тост за счет useState все равно срабатывает. Поэтому вне setup —
-  // только кеш, useToast() здесь не вызываем.
+  // вне setup useToast дергать нельзя - сыпет ворнингами, поэтому только кеш
   if (!getCurrentInstance()) return null
   try {
     const toast = useToast()
@@ -114,12 +108,12 @@ export const useApiBaseUrl = (): string => {
   }
 }
 
-// deprecated stubs: токены в httpOnly cookie, в JS не доступны
+// токены в httpOnly куках, в js их нет - стабы остались для совместимости
 export const setTokens = (_tokens: { accessToken: string; refreshToken: string }): void => {}
 export const hasTokens = (): boolean => false
 export const clearTokens = (): void => {}
 
-// Очистка legacy localStorage ключей (httpOnly миграция)
+// чистим остатки после переезда на httpOnly
 if (typeof window !== "undefined") {
   try {
     localStorage.removeItem("noname_access_token")
@@ -155,7 +149,7 @@ export const apiFetch = async <T, TError extends string = string>(path: string, 
 
   const request = async (): Promise<T> => {
     const baseURL = useApiBaseUrl()
-    // на сервере пробрасываем cookie входящего запроса (иначе httpOnly auth не уйдет)
+    // на сервере кидаем куку ручками, иначе httpOnly авторизация не уйдет
     const serverHeaders: Record<string, string> = {}
     if (import.meta.server) {
       try {
@@ -173,7 +167,7 @@ export const apiFetch = async <T, TError extends string = string>(path: string, 
         ...fetchOptions.headers,
       },
     } as Parameters<typeof $fetch>[1])
-    // 204 No Content (logout, delete comment/task): тела нет — резолвим в undefined
+    // 204 (logout, удаление) - тела нет, отдаем undefined
     if (res === null || res === undefined || res === "") return undefined as T
     if (isSuccessResponse<T>(res)) return res.data
     if (isRecord(res) && "success" in res) return undefined as T
@@ -206,8 +200,7 @@ export const apiFetch = async <T, TError extends string = string>(path: string, 
       }
       return
     }
-    // Дефолт: любая мутация (POST/PATCH/PUT/DELETE) показывает тост «Сохранено».
-    // Технические/фоновые запросы — в исключениях ниже.
+    // по умолчанию любая мутация показывает "Сохранено", кроме списка ниже
     const effectiveMethod = (method ?? (fetchOptions.method as string) ?? "GET").toUpperCase()
     const isMutation = effectiveMethod === "POST" || effectiveMethod === "PATCH"
       || effectiveMethod === "PUT" || effectiveMethod === "DELETE"

@@ -2,18 +2,16 @@ import type { NotificationDto, NotificationType } from '~/types/backend.contract
 
 const str = (v: unknown): string | null => (typeof v === 'string' && v ? v : null)
 
-/** dealId из payload — только уведомления со сделкой открывают слайовер. */
+// только уведомления со сделкой открывают слайовер
 export const getNotificationDealId = (n: Pick<NotificationDto, 'payload'>): string | null =>
   str((n.payload as Record<string, unknown>)?.dealId)
 
-/** taskId для задач (слайовер сделки не открывают — задел на будущее). */
 export const getNotificationTaskId = (n: Pick<NotificationDto, 'payload'>): string | null =>
   str((n.payload as Record<string, unknown>)?.taskId)
 
 export const isDealNotification = (n: Pick<NotificationDto, 'type' | 'payload'>): boolean =>
   getNotificationDealId(n) !== null
 
-/** Ключ иконки lucide для типа (расширяемо: новый тип → новая ветка). */
 export const getNotificationIcon = (type: NotificationType): string => {
   switch (type) {
     case 'DEAL_ASSIGNED':
@@ -33,7 +31,6 @@ export const getNotificationIcon = (type: NotificationType): string => {
   }
 }
 
-/** Заголовок уведомления (i18n-ключ + fallback). */
 export const getNotificationTitleKey = (type: NotificationType): string => {
   switch (type) {
     case 'DEAL_ASSIGNED':
@@ -53,13 +50,11 @@ export const getNotificationTitleKey = (type: NotificationType): string => {
   }
 }
 
-/** Подзаголовок: имя сделки/задачи из payload. */
 export const getNotificationSubtitle = (n: NotificationDto): string => {
   const p = n.payload as Record<string, unknown>
   return str(p.name) ?? str(p.title) ?? ''
 }
 
-/** Детали: клиент / переход стадии / дедлайн — опционально по типу. */
 export const getNotificationDetails = (n: NotificationDto): string | null => {
   const p = n.payload as Record<string, unknown>
   const parts: string[] = []

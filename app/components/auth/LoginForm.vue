@@ -14,10 +14,8 @@ const form = useTanStackForm({
     password: '',
   },
   validators: {
-    // Один прогон: onChange-ошибки TanStack перепроверяет и на сабмите.
     onChange: schema,
   },
-  // Сюда попадаем только при валидной форме.
   onSubmit: async ({ value }) => {
     await login({ email: value.email.trim(), password: value.password })
   },

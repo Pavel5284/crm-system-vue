@@ -3,18 +3,13 @@ import { isAsciiPrintable, PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '~/ut
 import type { TranslateFn } from './email.schema'
 
 export interface PasswordValidationMessages {
-  // Текст на пустое значение (в min-режиме для пустого используется tooShort).
   empty: string
   tooLong: string
-  // Текст на значение короче minLength; по умолчанию совпадает с empty.
   tooShort?: string
-  // Текст на не-ASCII символы: пароли только на печатном ASCII.
   invalid: string
 }
 
-// minLength: false — без проверки минимума (политику не раскрываем,
-// только empty + верхний лимит). Иначе min + max (зеркало backend DTO).
-// В обоих режимах состав ограничен печатным ASCII (см. isAsciiPrintable).
+// false - без минимума (для логина чтобы не палить политику), иначе min+max как на бэке
 export const createPasswordSchemaFromMessages = (
   messages: PasswordValidationMessages,
   options: { minLength?: number | false } = {},
@@ -44,9 +39,7 @@ export const createPasswordSchemaFromMessages = (
     .refine((v) => isAsciiPrintable(v), messages.invalid)
 }
 
-// Правило для password-полей: сообщения всегда одинаковые (validation.*),
-// политикой минимума управляет вызывающий: login — { minLength: false },
-// остальные — дефолт (min 8). Для особых случаев — createPasswordSchemaFromMessages.
+// сообщения всегда из validation.*, минимумом рулит вызывающий
 export const createPasswordSchema = (
   t: TranslateFn,
   options: { minLength?: number | false } = {},

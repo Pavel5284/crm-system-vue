@@ -4,7 +4,6 @@ import { resendVerificationApi } from '~/utils/auth.api'
 
 export const RESEND_COOLDOWN_SEC = 60
 
-// Повторная отправка письма + кулдаун через useIntervalFn (автоочистка на unmount).
 export const useResendVerification = () => {
   const serverError = ref('')
   const cooldown = ref(0)

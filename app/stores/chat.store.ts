@@ -2,10 +2,10 @@
 import type { ChatUser, ChatMessage, Conversation } from "~/utils/chat.api"
 import { getConversationsApi, getMessagesApi, getUnreadCountApi, getUnreadDialogsApi, markMessagesReadApi, sendMessageApi, searchUsersApi } from "~/utils/chat.api"
 
-// Страница истории: совпадает с дефолтом бэкенда (limit=50)
+// лимит как на бэке
 const MESSAGES_PAGE_LIMIT = 50
 
-// Имя/почта вида UUID — не данные для показа, а заглушка
+// uuid вместо имени - заглушка, показываем email
 const isUuidLike = (s: string | null | undefined): boolean =>
   !!s && /^[0-9a-f-]{36}$/i.test(s.trim())
 
@@ -14,7 +14,6 @@ export const useChatStore = defineStore("chat", {
     conversations: [] as Conversation[],
     messagesByPartner: {} as Record<string, ChatMessage[]>,
     messagesHasMore: {} as Record<string, boolean>,
-    // Позиции скролла по диалогам — восстановить при возврате на /chats
     messageScrollTops: {} as Record<string, number>,
     selectedPartner: null as ChatUser | null,
     searchResults: [] as ChatUser[],
@@ -24,7 +23,6 @@ export const useChatStore = defineStore("chat", {
     isSending: false,
     isSearching: false,
     unreadCount: 0,
-    // Диалогов с непрочитанными — именно это показывает бейдж Chats в меню
     unreadDialogsCount: 0,
   }),
   getters: {
@@ -68,7 +66,6 @@ export const useChatStore = defineStore("chat", {
       this.isLoadingConversations = true
       try {
         this.conversations = await getConversationsApi()
-        // диалоги уже несут unreadCount — бейдж меню считаем локально, без запросов
         this.unreadDialogsCount = this.conversations.filter((c) => (c.unreadCount ?? 0) > 0).length
       } catch {
         this.conversations = []
@@ -82,7 +79,6 @@ export const useChatStore = defineStore("chat", {
       try {
         const msgs = await getMessagesApi(partnerId, { limit: MESSAGES_PAGE_LIMIT })
         this.messagesByPartner[partnerId] = msgs
-        // полная страница — возможно, выше есть ещё история
         this.messagesHasMore[partnerId] = msgs.length >= MESSAGES_PAGE_LIMIT
       } catch {
         this.messagesByPartner[partnerId] = []
@@ -168,10 +164,9 @@ export const useChatStore = defineStore("chat", {
           ?? { id: partnerId, name: partnerId, email: partnerId, avatarUrl: null }
         this.conversations.unshift({ partner, lastMessage: msg, unreadCount: 0 })
       }
-      // Диалог считается открытым, только если пользователь реально смотрит
-      // /chats с этим собеседником: selectedPartner переживает уход со
-      // страницы, поэтому одной сверки id недостаточно — иначе сообщение,
-      // пришедшее после ухода, тихо помечалось прочитанным и бейдж не рос.
+      // диалог открыт только если юзер реально на /chats с этим собеседником
+      // selectedPartner переживает уход со страницы, поэтому сверяем еще и путь
+      // иначе пришедшее после ухода тихо помечалось прочитанным
       const isViewing = this.selectedPartner?.id === partnerId
         && useRoute().path === '/chats'
       const incoming = msg.senderId !== myId
@@ -184,8 +179,7 @@ export const useChatStore = defineStore("chat", {
         }
         void this.handleUnreadMessage(msg, partnerId)
       }
-      // Диалог открыт: «прочитано» ставит только observer видимости
-      // (chats.vue) — здесь сообщение остаётся непрочитанным до просмотра.
+      // диалог открыт - прочитанное ставит observer в chats.vue, тут не трогаем
     },
     lookupPartner(partnerId: string): ChatUser | undefined {
       if (this.selectedPartner?.id === partnerId) return this.selectedPartner
@@ -195,8 +189,7 @@ export const useChatStore = defineStore("chat", {
     async handleUnreadMessage(msg: ChatMessage, partnerId: string): Promise<void> {
       let partner = this.lookupPartner(partnerId)
       if (!partner || isUuidLike(partner.name)) {
-        // Имени нет — сервер источник правды (там имя/email отправителя).
-        // loadConversations заодно подтягивает точные счётчики.
+        // имени нет - дергаем сервер, там точные данные
         try {
           await this.loadConversations()
           await this.fetchUnreadCount()
@@ -221,12 +214,10 @@ export const useChatStore = defineStore("chat", {
     showNewMessageToast(msg: ChatMessage, partner: ChatUser | undefined): void {
       try {
         const toast = useToast()
-        // UUID вместо имени/почты не показываем — лучше заголовок без имени
         const display = partner && !isUuidLike(partner.name)
           ? partner.name
           : partner && partner.email.includes('@') ? partner.email : ''
-        // useI18n() вне setup-компонента бросает — берём t из инстанса,
-        // иначе (как было) падал весь блок и тост не всплывал вообще.
+        // useI18n вне setup падает и роняет весь тост, берем t из инстанса
         const nuxtApp = useNuxtApp() as unknown as { $i18n?: { t: (k: string, p?: Record<string, unknown>) => string } }
         const t = nuxtApp.$i18n?.t ?? ((k: string) => k)
         const title = display ? t('chats.newMessageFrom', { name: display }) : t('chats.newMessage')
@@ -243,25 +234,21 @@ export const useChatStore = defineStore("chat", {
         const res = await markMessagesReadApi(upToMessageId)
         marked = res.read
       } catch (e) {
-        // Не глотаем молча: иначе рассинхрон фронта и сервера (например,
-        // эндпоинта нет на серверном бэкенде) выглядит как «observer не работает»
+        // не глотаем молча иначе рассинхрон фронта и сервера выглядит как баг observerа
         console.error('[chat] markVisibleMessagesRead failed:', e)
         return
       }
-      // createdAt — ISO-строки одного формата, сравнение лексикографическое
       const upTo = target.createdAt
       const myId = useAuthStore().user.id
       for (const m of msgs) {
         if (!m.read && m.senderId !== myId && m.createdAt <= upTo) m.read = true
       }
-      // гасим бейдж диалога на помеченное сервером количество
+      // гасим бейдж на то что подтвердил сервер
       const entry = this.conversations.find((c) => c.partner.id === partnerId)
       if (entry) entry.unreadCount = Math.max(0, (entry.unreadCount ?? 0) - marked)
       await this.fetchUnreadDialogsCount()
     },
-    // Получатель прочитал: прилетело chat:read — переворачиваем галочки
-    // у своих сообщений вплоть до увиденного. Счётчик не трогаем:
-    // unread считает только входящие.
+    // получатель прочитал - переворачиваем галочки у своих, счетчик не трогаем
     markAsReadByRecipient(readerId: string, upToCreatedAt: string): void {
       const myId = useAuthStore().user.id
       const msgs = this.messagesByPartner[readerId] ?? []

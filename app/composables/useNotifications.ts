@@ -6,8 +6,7 @@ import { wakeNotificationsService } from "~/utils/service-wake"
 
 type ConnectionStatus = "connecting" | "connected" | "disconnected" | "unauthorized" | "error"
 
-// Храним DTO с флагом read — зелёный индикатор горит только при read === false.
-// WS-событие приходит без read → считаем его непрочитанным.
+// ws приходит без read, такое считаем непрочитанным
 const status = ref<ConnectionStatus>("disconnected")
 const socketId = ref<string>("")
 const items = ref<NotificationDto[]>([])
@@ -34,7 +33,7 @@ const upsertIncoming = (incoming: NotificationEvent): void => {
   const idx = items.value.findIndex((n) => n.id === incoming.id)
   const dto: NotificationDto = { ...incoming, payload: incoming.payload ?? {}, read: false }
   if (idx >= 0) {
-    // Повторный пуш по тому же id не должен воскрешать прочитанное.
+    // чтобы повторный пуш не поднимал уже прочитанное обратно
     if (!items.value[idx]!.read) items.value[idx] = dto
     return
   }
@@ -44,13 +43,10 @@ const upsertIncoming = (incoming: NotificationEvent): void => {
 
 const sleep = (ms: number): Promise<void> => new Promise((r) => { setTimeout(r, ms) })
 
-// Паузы между повторами при 503 «сервис просыпается»: холодный старт
-// free-плана бывает дольше минуты, бэкенд уже пнул /health, ждём пробуждения.
+// render на фришке просыпается по минуте, поэтому ждем подольше
+// TODO: выкинуть этот wake-костыль когда уедем с фришки на нормальный хостинг
 const WAKE_RETRY_DELAYS = [25_000, 35_000, 45_000]
 
-// Загрузка истории с автоповторами при 503 «сервис просыпается».
-// Вынесено отдельно, чтобы бросок последней ошибки ловился вызывающим
-// кодом, а не локальным catch (иначе — ворнинг инспекций).
 const fetchWithWakeRetries = async (): Promise<NotificationDto[]> => {
   for (let attempt = 0; ; attempt++) {
     try {
@@ -73,8 +69,6 @@ const fetchNotifications = async (force = false): Promise<void> => {
   loadError.value = false
   loadingPromise = (async () => {
     try {
-      // Браузер держит wake-соединение к /health сервиса (как ручное открытие),
-      // затем запрос к gateway идёт уже в тёплый сервис. Один раз за сессию.
       await wakeNotificationsService()
       const list = await fetchWithWakeRetries()
       items.value = [...list]
@@ -82,8 +76,7 @@ const fetchNotifications = async (force = false): Promise<void> => {
         .slice(0, 100)
       isLoaded.value = true
     } catch {
-      // Спящий микросервис (504) / сеть: показываем ошибку с повтором,
-      // а не вечную загрузку. WS-пуши продолжат работать.
+      // если сервис спит - показываем ошибку с кнопкой повтора
       loadError.value = true
     } finally {
       isLoading.value = false
@@ -111,7 +104,7 @@ const markAllRead = async (): Promise<void> => {
   try {
     await markAllNotificationsReadApi()
   } catch {
-    // Фолбэк: bulk-эндпоинт недоступен (старый бэкенд) — помечаем по одному.
+    // на старом бэке нет bulk, помечаем по одному
     try {
       const unread = items.value.filter((_, i) => !prev[i])
       await Promise.all(unread.map((n) => markNotificationReadApi(n.id)))
@@ -121,8 +114,7 @@ const markAllRead = async (): Promise<void> => {
   }
 }
 
-// Удаление прочитанных из БД (п. «Удалять прочитанные»): список реально
-// очищается, а не только гаснет. Непрочитанные не трогаем.
+// удаляем прочитанные из базы, непрочитанные не трогаем
 const deleteRead = async (): Promise<void> => {
   if (!hasRead.value) return
   const snapshot = [...items.value]
@@ -141,7 +133,6 @@ export const useNotifications = () => {
       return
     }
     status.value = "connecting"
-    // REST-история — источник правды о прочитанных; WS — только live-пуши.
     void fetchNotifications()
     const baseUrl = useApiBaseUrl()
     const socketOrigin = baseUrl.replace(/\/api\/?$/, "") || "http://localhost:3000"
@@ -194,7 +185,6 @@ export const useNotifications = () => {
   return {
     status: readonly(status),
     socketId: readonly(socketId),
-    // Новое имя — источник правды; старое оставляем как алиас.
     items: readonly(items),
     notifications: readonly(items),
     unreadCount: readonly(unreadCount),

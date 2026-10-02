@@ -1,16 +1,4 @@
-<!--
-  PositionSelect — поле должности TanStack-формы с зашитой валидацией.
-
-  Как пользоваться:
-    <FormPositionSelect :form="profileForm" />
-
-  Что происходит внутри:
-    1. FormField регистрирует поле в родительской форме и при каждом вводе
-       прогоняет его через правило positionSchema (zod: макс. 100 символов).
-    2. Найденные ошибки лежат в field.state.meta.errors и рисуются под селектом.
-    3. Старое произвольное значение, которого нет в списке, подмешивается
-       в опции как есть — чтобы не терять данные при загрузке.
--->
+<!-- селект должности -->
 <script setup lang="ts">
 import type { Component } from 'vue'
 import { z } from 'zod'
@@ -21,7 +9,7 @@ interface PositionOption {
   labelKey?: string
 }
 
-// Канонические значения, сохраняемые в БД; labelKey — перевод для отображения.
+// то что реально лежит в базе, labelKey для показа
 const POSITION_OPTIONS: PositionOption[] = [
   { value: 'Менеджер', labelKey: 'settings.profile.positionOptions.manager' },
   { value: 'Старший менеджер', labelKey: 'settings.profile.positionOptions.seniorManager' },
@@ -33,10 +21,7 @@ const POSITION_OPTIONS: PositionOption[] = [
 ]
 
 interface Props {
-  // Форма, которой принадлежит поле (результат useForm() родителя).
-  // От нее нужен только компонент Field — он связывает селект со стейтом формы.
   form: { Field: unknown }
-  // Ключ поля в значениях формы (form.state.values[fieldName]).
   fieldName?: string
   disabled?: boolean
 }
@@ -48,16 +33,11 @@ const props = withDefaults(defineProps<Props>(), {
 
 const { t } = useI18n()
 
-// Правило валидации (zod). Применяется ниже через :validators.
 const positionSchema = z.string().max(100, t('settings.profile.validation.positionMax'))
 
-// Компонент поля той формы, что передали в :form.
-// Каст нужен, потому что полный тип Field у TanStack — 20+ дженериков,
-// а нам важно лишь одно: это Vue-компонент.
 const FormField = props.form.Field as Component
 
-// Опции селекта: текущее значение, которого нет в списке, добавляем,
-// чтобы не терять данные при загрузке.
+// если в базе лежит что-то старое чего нет в списке - показываем как есть чтобы не потерять
 const resolveOptions = (current: string): PositionOption[] => {
   const cur = current?.trim()
   if (cur && !POSITION_OPTIONS.some((o) => o.value === cur)) {
@@ -68,12 +48,6 @@ const resolveOptions = (current: string): PositionOption[] => {
 </script>
 
 <template>
-  <!--
-    :name — под каким ключом поле живет в форме.
-    :validators — правило, которое TanStack прогоняет при каждом вводе (onChange).
-    v-slot="{ field }" — API поля: текущее значение (field.state.value),
-      ошибки (field.state.meta.errors) и обработчики (handleChange/handleBlur).
-  -->
   <FormField :name="props.fieldName" :validators="{ onChange: positionSchema }" v-slot="{ field }">
     <div>
       <select

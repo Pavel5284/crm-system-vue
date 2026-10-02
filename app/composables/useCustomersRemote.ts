@@ -1,18 +1,14 @@
 import type { Component } from 'vue'
 
-// Клиентский загрузчик федеративного модуля `customers/CustomersPage`.
-// Вариант B: федерация живёт только на клиенте, host рендерится через SSR
-// как обычно, remote монтируется внутри `<ClientOnly>`.
-//
-// Сознательное отклонение от черновика с `federation()` в `nuxt.config.ts`:
-// Vite-плагин в хосте тянет URL ремоута в билд-тайм и дружит с Nuxt 4 + Vite 8
-// хуже, чем runtime-загрузка. Поведение то же, но стабильнее SSR-сборка
-// и URL можно менять без пересборки нюансов.
+// грузим федеративный модуль клиентов, только на клиенте
+// federation() в nuxt.config не используем - с nuxt4 глючит сборка,
+// поэтому тянем рантайм руками, так стабильнее
 
 export const CUSTOMERS_REMOTE_NAME = 'customers'
 export const CUSTOMERS_REMOTE_MODULE = 'customers/CustomersPage'
 
 const LOAD_TIMEOUT_MS = 8000
+// на холодном старте remote бывает дольше, 8с взяли с запасом после пары падений в проде
 
 type FederationInstance = {
   loadRemote: <T>(id: string) => Promise<T>
@@ -31,13 +27,10 @@ async function getInstance(entry: string): Promise<FederationInstance> {
       ])
       return createInstance({
         name: 'host',
-        // type: 'module' обязателен: Vite собирает remoteEntry.js как ES-модуль
-        // (export get/init). Без него рантайм вставляет его классическим
-        // <script> и падает с "Cannot use import statement outside a module".
+        // без type module рантайм вставляет entry обычным скриптом и падает
         remotes: [{ name: CUSTOMERS_REMOTE_NAME, entry, type: 'module' }],
         shared: {
-          // Правило №1: отдаём ремоуту инстанс Vue хоста (singleton),
-          // иначе получим две копии Vue и баги реактивности на границе.
+          // vue отдаем один на всех, иначе две копии и глюки реактивности
           vue: {
             version: vueModule.version,
             scope: 'default',
@@ -59,7 +52,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, message: string): Promi
   return Promise.race([promise, timeout]).finally(() => clearTimeout(timer))
 }
 
-/** Загружает компонент-remote. Бросает исключение — caller решает: фолбэк или экран ошибки. */
+/** грузит remote, кидает ошибку наверх - там уже решают фолбэк или экран ошибки */
 export async function loadCustomersRemote(entry: string): Promise<Component> {
   if (import.meta.server) throw new Error('mfe: remote is client-only')
   const mf = await withTimeout(getInstance(entry), LOAD_TIMEOUT_MS, 'mfe: runtime init timeout')

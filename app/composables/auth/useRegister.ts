@@ -9,8 +9,6 @@ export interface RegisterPayload {
   captchaToken?: string
 }
 
-// Регистрация через TanStack Query: локальный isPending вместо глобального
-// useIsLoadingStore, редирект при auto-login, сообщение при pending-верификации.
 export const useRegister = () => {
   const router = useRouter()
   const serverError = ref('')
@@ -27,7 +25,7 @@ export const useRegister = () => {
     successMessage.value = ''
     try {
       const res = await mutateAsync(payload)
-      // SKIP_EMAIL_VERIFICATION=true: бэк ставит httpOnly cookie — уходим на login.
+      // когда верификация выключена бэк сразу ставит куку и можно на логин
       if (isRegisterAutoLogin(res)) {
         await router.push('/login')
         return res

@@ -3,9 +3,7 @@ import { setApiToast } from '~/utils/api'
 
 const { locale } = useI18n()
 
-// useToast() внутри дергает inject() — вызывать можно только внутри setup.
-// Захватываем инстанс один раз в корне: utils/api дальше берет кеш
-// и не вызывает useToast() вне setup (иначе ворнинг на каждый запрос).
+// тостер цепляем тут, т.к. вне setup useToast не работает
 if (import.meta.client) {
   setApiToast(useToast())
 }
